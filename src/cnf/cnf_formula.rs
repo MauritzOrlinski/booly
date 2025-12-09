@@ -42,7 +42,7 @@ impl CnfFormula {
 
     pub fn apply_assignment(
         &mut self,
-        assignment: &mut Assignment,
+        assignment: &Assignment,
         reverse: bool,
         unit_queue: &mut VecDeque<usize>,
     ) -> Result<(), AssignException> {

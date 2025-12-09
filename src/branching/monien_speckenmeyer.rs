@@ -2,10 +2,10 @@ use crate::assignment::assignment::{Assignment, AssignmentReason};
 use crate::branching::chose_next_assignment::{Branching, MultiAssignment};
 use crate::cnf::cnf_formula::CnfFormula;
 
-struct MonienSpeckenmeyer;
+pub(crate) struct MonienSpeckenmeyer;
 
 impl Branching for MonienSpeckenmeyer {
-    fn chose_branches(cnf_formula: CnfFormula) -> Vec<MultiAssignment> {
+    fn chose_branches(cnf_formula: &CnfFormula) -> Vec<MultiAssignment> {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
