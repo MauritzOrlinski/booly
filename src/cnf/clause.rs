@@ -1,9 +1,19 @@
+use crate::assignment::assignment::AssignmentValue;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Polarity {
     Positive,
     Negative,
+}
+
+impl Polarity {
+    pub fn get_satisfying_assignment(&self) -> AssignmentValue {
+        match self {
+            Polarity::Positive => AssignmentValue::True,
+            Polarity::Negative => AssignmentValue::False
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
