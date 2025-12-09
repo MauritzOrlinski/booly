@@ -7,6 +7,7 @@ use std::collections::{HashMap, VecDeque};
 pub(crate) struct CnfFormula {
     pub(crate) clauses: HashMap<usize, Clause>,
     pub(crate) variables: HashMap<usize, Variable>,
+    unassigned_variables: usize,
 }
 
 impl CnfFormula {
@@ -36,6 +37,7 @@ impl CnfFormula {
         }
         CnfFormula {
             clauses,
+            unassigned_variables: variables.len(),
             variables,
         }
     }
@@ -64,9 +66,11 @@ impl CnfFormula {
 
         if !reverse {
             assignee.value = Some(assignment.value.clone());
+            self.unassigned_variables -= 1;
         } else {
             assignee.value = None;
             unit_queue.clear();
+            self.unassigned_variables += 1;
         }
 
         for clause_id in satisfied_clause_ids {
