@@ -122,7 +122,7 @@ mod tests {
 
         let snapshot = cnf.clone();
 
-        let mut assignment = Assignment::new(1, &AssignmentValue::True, Branching);
+        let mut assignment = Assignment::new(1, AssignmentValue::True, Branching);
         cnf.apply_assignment(&mut assignment, false, &mut VecDeque::new());
         cnf.apply_assignment(&mut assignment, true, &mut VecDeque::new());
 
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn test_unit_queue() {
         let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4, 5]]);
-        let mut assignment = Assignment::new(1, &AssignmentValue::False, Branching);
+        let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
         let mut queue: VecDeque<usize> = VecDeque::new();
 
         cnf.apply_assignment(&mut assignment, false, &mut queue);

@@ -10,16 +10,16 @@ pub enum AssignmentValue {
     False,
 }
 
-pub struct Assignment<'a> {
+pub struct Assignment {
     pub(crate) variable_id: usize,
-    pub(crate) value: &'a AssignmentValue,
+    pub(crate) value: AssignmentValue,
     pub(crate) reason: AssignmentReason,
 }
 
-impl<'a> Assignment<'a> {
+impl Assignment {
     pub fn new(
         variable_id: usize,
-        value: &'a AssignmentValue,
+        value: AssignmentValue,
         reason: AssignmentReason,
     ) -> Self {
         Assignment {
