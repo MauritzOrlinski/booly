@@ -1,10 +1,10 @@
-use crate::assignment::assignment::{Assignment, AssignmentValue};
+use crate::assignment::assignment::Assignment;
 use crate::cnf::clause::{Clause, Polarity};
 use crate::cnf::variable::Variable;
 use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct CnfFormula {
+pub struct CnfFormula {
     pub(crate) clauses: HashMap<usize, Clause>,
     pub(crate) variables: HashMap<usize, Variable>,
     unsat_clauses: usize,
@@ -127,6 +127,7 @@ pub struct AssignException;
 mod tests {
     use super::*;
     use crate::assignment::assignment::AssignmentReason::Branching;
+    use crate::assignment::assignment::AssignmentValue;
 
     #[test]
     fn test_formula_assign_is_reversible() {

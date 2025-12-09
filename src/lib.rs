@@ -1,5 +1,5 @@
 mod cnf;
-mod parser;
+pub mod parser;
 mod assignment;
-mod dpll;
+pub mod dpll;
 mod branching;

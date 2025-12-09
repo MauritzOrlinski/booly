@@ -1,4 +1,4 @@
-use crate::assignment::assignment::{Assignment, AssignmentValue};
+use crate::assignment::assignment::AssignmentValue;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {

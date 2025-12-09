@@ -12,7 +12,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|(id, clause)| clause.to_string())
+                .map(|(_, clause)| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )

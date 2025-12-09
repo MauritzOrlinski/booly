@@ -9,7 +9,7 @@ impl Branching for MonienSpeckenmeyer {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
-            .map(|(id, clause)| clause)
+            .map(|(_, clause)| clause)
             .min_by(|a, b| (&a.unassigned_variables).cmp(&b.unassigned_variables))
             .unwrap();
 
