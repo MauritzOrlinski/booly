@@ -7,7 +7,7 @@ use std::collections::{HashMap, VecDeque};
 pub(crate) struct CnfFormula {
     pub(crate) clauses: HashMap<usize, Clause>,
     pub(crate) variables: HashMap<usize, Variable>,
-    unassigned_variables: usize,
+    unsat_clauses: usize,
 }
 
 impl CnfFormula {
@@ -36,8 +36,8 @@ impl CnfFormula {
             clauses.insert(clause_id, Clause::new(literals));
         }
         CnfFormula {
+            unsat_clauses: clauses.len(),
             clauses,
-            unassigned_variables: variables.len(),
             variables,
         }
     }
@@ -50,14 +50,15 @@ impl CnfFormula {
         let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
 
         assignee.value = Some(assignment.value.clone());
-        self.unassigned_variables -= 1;
 
-        let (satisfied_clause_ids, unsatisfied_clause_ids) = assignee.clause_id_slices_for(assignment.value);
+        let (satisfied_clause_ids, unsatisfied_clause_ids) =
+            assignee.clause_id_slices_for(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
 
             if matches!(clause.satisfied_by, None) {
+                self.unsat_clauses -= 1;
                 clause.satisfied_by = Some(assignment.variable_id);
             }
         }
@@ -93,14 +94,15 @@ impl CnfFormula {
 
         assignee.value = None;
         unit_queue.clear();
-        self.unassigned_variables += 1;
 
-        let (satisfied_clause_ids, unsatisfied_clause_ids) = assignee.clause_id_slices_for(assignment.value);
+        let (satisfied_clause_ids, unsatisfied_clause_ids) =
+            assignee.clause_id_slices_for(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
 
             if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
+                self.unsat_clauses += 1;
                 clause.satisfied_by = None;
             }
         }
@@ -112,6 +114,10 @@ impl CnfFormula {
                 clause.unassigned_variables += 1;
             }
         }
+    }
+
+    pub fn is_satisfied(&self) -> bool {
+        self.unsat_clauses <= 0
     }
 }
 
@@ -145,5 +151,48 @@ mod tests {
         assert!(!queue.is_empty());
         cnf.reverse_assignment(&mut assignment, &mut queue);
         assert!(queue.is_empty());
+    }
+
+    #[test]
+    fn test_satisfy_occurance_in_single_clause() {
+        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4]]);
+
+        assert!(!cnf.is_satisfied());
+
+        let unit_queue = &mut VecDeque::new();
+
+        let first_assignment = &Assignment::new(1, AssignmentValue::True, Branching);
+        let second_assignment = &Assignment::new(3, AssignmentValue::True, Branching);
+
+        let _ = cnf.apply_assignment(first_assignment, unit_queue);
+
+        assert!(!cnf.is_satisfied());
+
+        let _ = cnf.apply_assignment(second_assignment, unit_queue);
+
+        assert!(cnf.is_satisfied());
+
+        let _ = cnf.reverse_assignment(second_assignment, unit_queue);
+
+        assert!(!cnf.is_satisfied());
+    }
+
+    #[test]
+    fn test_satisfy_occurance_in_multiple_clauses() {
+        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![1, 3]]);
+
+        assert!(!cnf.is_satisfied());
+
+        let unit_queue = &mut VecDeque::new();
+        let assignment = &Assignment::new(1, AssignmentValue::True, Branching);
+
+        let _ = cnf.apply_assignment(assignment, unit_queue);
+
+        assert!(cnf.is_satisfied());
+
+        let _ = cnf.reverse_assignment(assignment, unit_queue);
+
+        assert!(!cnf.is_satisfied());
+
     }
 }

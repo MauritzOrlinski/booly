@@ -12,15 +12,24 @@ pub fn dpll(cnf_formula: &mut CnfFormula) {
 
     for branch in branches {
         'single_assignment: for single_assignment in branch {
-            let assignment_result = cnf_formula.apply_assignment(&single_assignment, &mut unit_queue);
-            match assignment_result {
-                Ok(_) => continue,
-                Err(_) => {
-                    while let Some(assignment) = assignment_stack.pop() {
-                        let assignment_result = cnf_formula.reverse_assignment(&single_assignment, &mut unit_queue);
-                    }
-                }
+            let assignment_result =
+                cnf_formula.apply_assignment(&single_assignment, &mut unit_queue);
+            assignment_stack.push(single_assignment);
+
+            if matches!(assignment_result, Err(_)) {
+                undo_assignment_stack(cnf_formula, &mut assignment_stack, &mut unit_queue);
+                break 'single_assignment;
             }
         }
+    }
+}
+
+pub fn undo_assignment_stack(
+    cnf_formula: &mut CnfFormula,
+    assignment_stack: &mut Vec<Assignment>,
+    unit_queue: &mut VecDeque<usize>,
+) {
+    while let Some(assignment) = assignment_stack.pop() {
+        cnf_formula.reverse_assignment(&assignment, unit_queue);
     }
 }
