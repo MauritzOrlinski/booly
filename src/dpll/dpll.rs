@@ -12,12 +12,12 @@ pub fn dpll(cnf_formula: &mut CnfFormula) {
 
     for branch in branches {
         'single_assignment: for single_assignment in branch {
-            let assignment_result = cnf_formula.apply_assignment(&single_assignment, false, &mut unit_queue);
+            let assignment_result = cnf_formula.apply_assignment(&single_assignment, &mut unit_queue);
             match assignment_result {
                 Ok(_) => continue,
                 Err(_) => {
                     while let Some(assignment) = assignment_stack.pop() {
-                        let assignment_result = cnf_formula.apply_assignment(&single_assignment, false, &mut unit_queue);
+                        let assignment_result = cnf_formula.reverse_assignment(&single_assignment, &mut unit_queue);
                     }
                 }
             }

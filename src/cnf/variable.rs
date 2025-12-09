@@ -1,4 +1,4 @@
-use crate::assignment::assignment::AssignmentValue;
+use crate::assignment::assignment::{Assignment, AssignmentValue};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
@@ -13,6 +13,16 @@ impl Variable {
             value: None,
             positive_occurrences: vec![],
             negative_occurrences: vec![],
+        }
+    }
+
+    pub(crate) fn clause_id_slices_for(
+        &self,
+        value: AssignmentValue,
+    ) -> (&[usize], &[usize]) {
+        match value {
+            AssignmentValue::True => (&self.positive_occurrences, &self.negative_occurrences),
+            AssignmentValue::False => (&self.negative_occurrences, &self.positive_occurrences),
         }
     }
 }

@@ -45,44 +45,20 @@ impl CnfFormula {
     pub fn apply_assignment(
         &mut self,
         assignment: &Assignment,
-        reverse: bool,
         unit_queue: &mut VecDeque<usize>,
     ) -> Result<(), AssignException> {
         let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
 
-        let satisfied_clause_ids: &Vec<usize>;
-        let unsatisfied_clause_ids: &Vec<usize>;
+        assignee.value = Some(assignment.value.clone());
+        self.unassigned_variables -= 1;
 
-        match assignment.value {
-            AssignmentValue::True => {
-                satisfied_clause_ids = &assignee.positive_occurrences;
-                unsatisfied_clause_ids = &assignee.negative_occurrences;
-            }
-            AssignmentValue::False => {
-                satisfied_clause_ids = &assignee.negative_occurrences;
-                unsatisfied_clause_ids = &assignee.positive_occurrences;
-            }
-        }
-
-        if !reverse {
-            assignee.value = Some(assignment.value.clone());
-            self.unassigned_variables -= 1;
-        } else {
-            assignee.value = None;
-            unit_queue.clear();
-            self.unassigned_variables += 1;
-        }
+        let (satisfied_clause_ids, unsatisfied_clause_ids) = assignee.clause_id_slices_for(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
-            if !reverse {
-                if matches!(clause.satisfied_by, None) {
-                    clause.satisfied_by = Some(assignment.variable_id);
-                }
-            } else {
-                if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
-                    clause.satisfied_by = None;
-                }
+
+            if matches!(clause.satisfied_by, None) {
+                clause.satisfied_by = Some(assignment.variable_id);
             }
         }
 
@@ -90,26 +66,52 @@ impl CnfFormula {
 
         for clause_id in unsatisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
-            if !reverse {
-                if matches!(clause.satisfied_by, None) {
-                    clause.unassigned_variables -= 1;
-                }
-                if clause.unassigned_variables == 1 {
-                    unit_queue.push_back(*clause_id);
-                } else if clause.unassigned_variables <= 0 {
-                    assignment_error = true;
-                }
-            } else {
-                if matches!(clause.satisfied_by, None) {
-                    clause.unassigned_variables += 1;
-                }
+
+            if matches!(clause.satisfied_by, None) {
+                clause.unassigned_variables -= 1;
+            }
+            if clause.unassigned_variables == 1 {
+                unit_queue.push_back(*clause_id);
+            } else if clause.unassigned_variables <= 0 {
+                assignment_error = true;
             }
         }
 
         if assignment_error {
-            return Err(AssignException);
+            Err(AssignException)
+        } else {
+            Ok(())
         }
-        Ok(())
+    }
+
+    pub fn reverse_assignment(
+        &mut self,
+        assignment: &Assignment,
+        unit_queue: &mut VecDeque<usize>,
+    ) {
+        let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
+
+        assignee.value = None;
+        unit_queue.clear();
+        self.unassigned_variables += 1;
+
+        let (satisfied_clause_ids, unsatisfied_clause_ids) = assignee.clause_id_slices_for(assignment.value);
+
+        for clause_id in satisfied_clause_ids {
+            let clause = self.clauses.get_mut(clause_id).unwrap();
+
+            if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
+                clause.satisfied_by = None;
+            }
+        }
+
+        for clause_id in unsatisfied_clause_ids {
+            let clause = self.clauses.get_mut(clause_id).unwrap();
+
+            if matches!(clause.satisfied_by, None) {
+                clause.unassigned_variables += 1;
+            }
+        }
     }
 }
 
@@ -127,8 +129,8 @@ mod tests {
         let snapshot = cnf.clone();
 
         let mut assignment = Assignment::new(1, AssignmentValue::True, Branching);
-        cnf.apply_assignment(&mut assignment, false, &mut VecDeque::new());
-        cnf.apply_assignment(&mut assignment, true, &mut VecDeque::new());
+        cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
+        cnf.reverse_assignment(&mut assignment, &mut VecDeque::new());
 
         assert_eq!(snapshot, cnf);
     }
@@ -139,9 +141,9 @@ mod tests {
         let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
         let mut queue: VecDeque<usize> = VecDeque::new();
 
-        cnf.apply_assignment(&mut assignment, false, &mut queue);
+        cnf.apply_assignment(&mut assignment, &mut queue);
         assert!(!queue.is_empty());
-        cnf.apply_assignment(&mut assignment, true, &mut queue);
+        cnf.reverse_assignment(&mut assignment, &mut queue);
         assert!(queue.is_empty());
     }
 }
