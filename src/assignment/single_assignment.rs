@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Formatter;
+
 #[derive(Debug, Clone)]
 pub enum AssignmentReason {
     Forced,
@@ -19,23 +22,37 @@ impl AssignmentValue {
     }
 }
 
-#[derive(Clone)]
-pub struct Assignment {
+#[derive(Clone, Debug)]
+pub struct SingleAssignment {
     pub(crate) variable_id: usize,
     pub(crate) value: AssignmentValue,
     pub(crate) reason: AssignmentReason,
 }
 
-impl Assignment {
+impl SingleAssignment {
     pub fn new(
         variable_id: usize,
         value: AssignmentValue,
         reason: AssignmentReason,
     ) -> Self {
-        Assignment {
+        SingleAssignment {
             variable_id,
             value,
             reason,
         }
+    }
+}
+
+impl fmt::Display for SingleAssignment {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            match self.value {
+                AssignmentValue::True => "",
+                AssignmentValue::False => "-",
+            },
+            self.variable_id
+        )
     }
 }
