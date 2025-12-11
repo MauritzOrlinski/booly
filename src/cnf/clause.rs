@@ -1,25 +1,12 @@
-use crate::assignment::assignment::AssignmentValue;
 use std::collections::HashMap;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum Polarity {
-    Positive,
-    Negative,
-}
-
-impl Polarity {
-    pub fn get_satisfying_assignment(&self) -> AssignmentValue {
-        match self {
-            Polarity::Positive => AssignmentValue::True,
-            Polarity::Negative => AssignmentValue::False
-        }
-    }
-}
+use std::fmt;
+use std::fmt::Formatter;
+use crate::cnf::literals::{Literals, Polarity};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
     pub(crate) satisfied_by: Option<usize>,
-    pub(crate) literals: HashMap<usize, Polarity>,
+    pub(crate) literals: Literals,
     pub(crate) unassigned_variables: usize,
 }
 
@@ -28,7 +15,17 @@ impl Clause {
         Clause {
             satisfied_by: None,
             unassigned_variables: literals.len(),
-            literals,
+            literals: Literals::new(literals)
         }
+    }
+}
+
+impl fmt::Display for Clause {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} 0",
+            self.literals.to_string()
+        )
     }
 }
