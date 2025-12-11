@@ -48,6 +48,6 @@ mod tests {
 p cnf 4 2
 1 2 0
 3 4 0";
-        let cnf = parse_cnf(parse_input).unwrap();
+        let _ = parse_cnf(parse_input).unwrap();
     }
 }
