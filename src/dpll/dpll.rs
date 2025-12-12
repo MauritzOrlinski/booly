@@ -44,11 +44,11 @@ impl Dpll {
 
     #[instrument(
         skip_all,
-        fields(variables = %self.cnf_formula.variables)
+        fields(variables = %self.cnf_formula.variables, unsat_clauses=self.cnf_formula.unsat_clauses),
     )]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
-            info!("Found satisfying assignment: {}", self.cnf_formula);
+            info!("Found satisfying assignment: {}", self.cnf_formula.variables);
             return Satisfied;
         }
 
@@ -93,6 +93,7 @@ impl Dpll {
                     Satisfied => Satisfied,
                     Unknown => panic!("This should not happen."),
                     Unsatisfiable => {
+                        self.undo_assignment_stack(depth + 1);
                         let (_, assignment) = self.assignment_stack.pop().unwrap();
                         self.cnf_formula.reverse_assignment(&assignment);
                         self.unit_queue.clear();
@@ -145,7 +146,7 @@ impl Dpll {
                 return Unsatisfiable;
             }
             if self.cnf_formula.is_satisfied() {
-                trace!("Branch has been satisfied while doing unit propagation.");
+                trace!("Branch has been satisfied while doing unit propagation: {}", self.cnf_formula.variables);
                 return Satisfied;
             }
         }

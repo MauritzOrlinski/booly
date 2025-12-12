@@ -11,7 +11,7 @@ use crate::cnf::variables::Variables;
 pub struct CnfFormula {
     pub(crate) clauses: HashMap<usize, Clause>,
     pub(crate) variables: Variables,
-    unsat_clauses: usize,
+    pub(crate) unsat_clauses: usize,
 }
 
 impl CnfFormula {
@@ -66,6 +66,7 @@ impl CnfFormula {
             let clause = self.clauses.get_mut(clause_id).unwrap();
             if matches!(clause.satisfied_by, None) {
                 self.unsat_clauses -= 1;
+                trace!("Clause {}({}) satisfied by {}", clause_id, clause.literals, assignment);
                 clause.satisfied_by = Some(assignment.variable_id);
             }
         }
@@ -112,6 +113,7 @@ impl CnfFormula {
             let clause = self.clauses.get_mut(clause_id).unwrap();
             if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
                 self.unsat_clauses += 1;
+                trace!("Clause {}({}) is no longer satisfied by {}", clause_id, clause.literals, assignment);
                 clause.satisfied_by = None;
             }
         }
