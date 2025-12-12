@@ -40,7 +40,7 @@ impl fmt::Display for Literals {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "{} 0",
+            "{}",
             self.0
                 .iter()
                 .map(|(var_id, polarity)| match polarity {

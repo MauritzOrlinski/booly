@@ -3,6 +3,7 @@ use crate::cnf::clause::{Clause};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
+use tracing::{instrument, trace};
 use crate::cnf::literals::Polarity;
 use crate::cnf::variables::Variables;
 
@@ -45,6 +46,10 @@ impl CnfFormula {
         }
     }
 
+    #[instrument(
+        skip_all,
+        fields(assignment = %assignment),
+    )]
     pub fn apply_assignment(
         &mut self,
         assignment: &SingleAssignment,
@@ -52,15 +57,13 @@ impl CnfFormula {
     ) -> Result<(), AssignException> {
         let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
 
-        assignee.value = Some(assignment.value.clone());
+        assignee.value = Some(assignment.value);
 
         let (satisfied_clause_ids, unsatisfied_clause_ids) =
             assignee.clause_id_slices_for(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
-            clause.unassigned_variables -= 1;
-
             if matches!(clause.satisfied_by, None) {
                 self.unsat_clauses -= 1;
                 clause.satisfied_by = Some(assignment.variable_id);
@@ -72,10 +75,13 @@ impl CnfFormula {
         for clause_id in unsatisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
             clause.unassigned_variables -= 1;
-
+            if matches!(clause.satisfied_by, Some(_)) {
+                continue;
+            }
             if clause.unassigned_variables == 1 {
+                trace!("Adding unit clause {} ({}) to unit queue",clause_id, clause);
                 unit_queue.push_back(*clause_id);
-            } else if clause.unassigned_variables <= 0 && matches!(clause.satisfied_by, None) {
+            } else if clause.unassigned_variables <= 0 {
                 assignment_error = true;
             }
         }
@@ -87,6 +93,10 @@ impl CnfFormula {
         }
     }
 
+    #[instrument(
+        skip_all,
+        fields(assignment = %assignment),
+    )]
     pub fn reverse_assignment(
         &mut self,
         assignment: &SingleAssignment,
@@ -100,8 +110,6 @@ impl CnfFormula {
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
-            clause.unassigned_variables += 1;
-
             if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
                 self.unsat_clauses += 1;
                 clause.satisfied_by = None;

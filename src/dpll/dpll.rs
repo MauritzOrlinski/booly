@@ -5,7 +5,7 @@ use crate::branching::chose_next_assignment::{Branching};
 use crate::branching::monien_speckenmeyer::MonienSpeckenmeyer;
 use crate::cnf::cnf_formula::{AssignException, CnfFormula};
 use std::collections::VecDeque;
-use tracing::{instrument, trace};
+use tracing::{info, instrument, trace};
 use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
 use crate::dpll::dpll::DpllResult::{Unknown, Unsatisfiable, Satisfied};
 
@@ -48,6 +48,7 @@ impl Dpll {
     )]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
+            info!("Found satisfying assignment: {}", self.cnf_formula);
             return Satisfied;
         }
 
@@ -94,12 +95,14 @@ impl Dpll {
                     Unsatisfiable => {
                         let (_, assignment) = self.assignment_stack.pop().unwrap();
                         self.cnf_formula.reverse_assignment(&assignment);
+                        self.unit_queue.clear();
                         Unsatisfiable
                     }
                 }
             }
             Err(_) => {
                 self.cnf_formula.reverse_assignment(&assignment);
+                self.unit_queue.clear();
                 Unsatisfiable
             }
         }
@@ -112,6 +115,9 @@ impl Dpll {
     fn propagate_unit_clauses(&mut self, depth: u32) -> DpllResult {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(&unit_clause_id).unwrap();
+            if matches!(unit_clause.satisfied_by, Some(_)) {
+                continue;
+            }
             let satisfying_assignment = unit_clause
                 .literals
                 .iter()
@@ -194,7 +200,7 @@ mod tests {
     fn test_dpll_xor() {
         test_from_file(
             include_str!("../../inputs/test/sat/xor.cnf"),
-            DpllResult::Satisfied,
+            Satisfied,
         );
     }
 
@@ -202,7 +208,7 @@ mod tests {
     fn test_dpll_unit() {
         test_from_file(
             include_str!("../../inputs/test/sat/unit.cnf"),
-            DpllResult::Satisfied,
+            Satisfied,
         );
     }
 
@@ -210,7 +216,7 @@ mod tests {
     fn test_dpll_unique() {
         test_from_file(
             include_str!("../../inputs/test/sat/unique.cnf"),
-            DpllResult::Satisfied,
+            Satisfied,
         );
     }
 }
