@@ -3,9 +3,10 @@ use crate::assignment::single_assignment::AssignmentReason::Forced;
 use crate::assignment::single_assignment::SingleAssignment;
 use crate::branching::chose_next_assignment::{Branching};
 use crate::branching::monien_speckenmeyer::MonienSpeckenmeyer;
-use crate::cnf::cnf_formula::CnfFormula;
+use crate::cnf::cnf_formula::{AssignException, CnfFormula};
 use std::collections::VecDeque;
 use tracing::{instrument, trace};
+use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
 use crate::dpll::dpll::DpllResult::{Unknown, Unsatisfiable, Satisfied};
 
 #[derive(Debug, PartialEq)]
@@ -47,52 +48,61 @@ impl Dpll {
     )]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
-            return DpllResult::Satisfied;
+            return Satisfied;
         }
 
-        for branch in MonienSpeckenmeyer::chose_branches(&self.cnf_formula) {
-            let branch_result = self.dpll_single_branch(branch, depth);
-            if matches!(branch_result, DpllResult::Satisfied) {
-                return branch_result;
-            }
+        let unit_propagation_result = self.propagate_unit_clauses(depth);
+        match unit_propagation_result {
+            Satisfied => return Satisfied,
+            Unsatisfiable => return Unsatisfiable,
+            _ => (),
         }
 
-        Unsatisfiable
+        let branch_a = TrivialChooseNextVariable::chose(&self.cnf_formula);
+        let branch_b = branch_a.inverse();
+
+        match self.handle_assign_single_branch(branch_a, depth) {
+            Satisfied => return Satisfied,
+            Unknown => panic!("This should not happen."),
+            Unsatisfiable => ()
+        }
+
+        match self.handle_assign_single_branch(branch_b, depth) {
+            Satisfied => Satisfied,
+            Unknown => panic!("This should not happen."),
+            Unsatisfiable => Unsatisfiable
+        }
+
     }
 
     #[instrument(
         skip_all,
-        fields(branch = %branch)
+        fields(assignment = %assignment)
     )]
-    fn dpll_single_branch(&mut self, branch: Assignments, depth: u32) -> DpllResult {
+    fn handle_assign_single_branch(&mut self, assignment: SingleAssignment, depth: u32) -> DpllResult {
+        let assignment_result = self
+            .cnf_formula
+            .apply_assignment(&assignment, &mut self.unit_queue);
 
-        for single_assignment in branch {
-
-            let assignment_result = self
-                .cnf_formula
-                .apply_assignment(&single_assignment, &mut self.unit_queue);
-            self.assignment_stack.push((depth, single_assignment));
-
-            if matches!(assignment_result, Err(_)) {
-                self.undo_assignment_stack(depth);
-                self.unit_queue.clear();
-                return Unsatisfiable;
+        match assignment_result {
+            Ok(_) => {
+                self.assignment_stack.push((depth, assignment));
+                let branch_result = self.dpll(depth + 1);
+                match branch_result {
+                    Satisfied => Satisfied,
+                    Unknown => panic!("This should not happen."),
+                    Unsatisfiable => {
+                        let (_, assignment) = self.assignment_stack.pop().unwrap();
+                        self.cnf_formula.reverse_assignment(&assignment);
+                        Unsatisfiable
+                    }
+                }
             }
-
-            let unit_propagation_result = self.propagate_unit_clauses(depth);
-            match unit_propagation_result {
-                Satisfied => return Satisfied,
-                Unsatisfiable => return Unsatisfiable,
-                Unknown => (),
+            Err(_) => {
+                self.cnf_formula.reverse_assignment(&assignment);
+                Unsatisfiable
             }
-
         }
-
-        let branch_result = self.dpll(depth + 1);
-        if !matches!(&branch_result, DpllResult::Satisfied) {
-            self.undo_assignment_stack(depth);
-        }
-        branch_result
     }
 
     #[instrument(
@@ -123,8 +133,8 @@ impl Dpll {
             self.assignment_stack.push((depth, satisfying_assignment));
 
             if matches!(assignment_result, Err(_)) {
-                self.undo_assignment_stack(depth);
                 trace!("Could not assign unit clause. Branch is unsatisfiable.");
+                self.undo_assignment_stack(depth);
                 return Unsatisfiable;
             }
             if self.cnf_formula.is_satisfied() {
@@ -135,14 +145,18 @@ impl Dpll {
         Unknown
     }
 
+    #[instrument(
+        skip_all,
+        fields(depth = depth),
+    )]
     pub fn undo_assignment_stack(&mut self, depth: u32) {
         while let Some((stack_depth, assignment)) = self.assignment_stack.pop() {
             if stack_depth >= depth {
                 self.cnf_formula.reverse_assignment(&assignment);
             } else {
                 self.assignment_stack.push((stack_depth, assignment));
+                break;
             }
-
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum AssignmentReason {
     Forced,
     Branching,
@@ -39,6 +39,14 @@ impl SingleAssignment {
             variable_id,
             value,
             reason,
+        }
+    }
+    
+    pub fn inverse(&self) -> SingleAssignment {
+        SingleAssignment {
+            variable_id: self.variable_id,
+            value: self.value.get_inverse(),
+            reason: self.reason
         }
     }
 }
