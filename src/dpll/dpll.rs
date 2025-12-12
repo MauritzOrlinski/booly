@@ -1,6 +1,6 @@
 use crate::assignment::assignments::Assignments;
 use crate::assignment::single_assignment::AssignmentReason::Forced;
-use crate::assignment::single_assignment::SingleAssignment;
+use crate::assignment::single_assignment::{AssignmentValue, SingleAssignment};
 use crate::branching::chose_next_assignment::{Branching};
 use crate::branching::monien_speckenmeyer::MonienSpeckenmeyer;
 use crate::cnf::cnf_formula::{AssignException, CnfFormula};
@@ -117,13 +117,14 @@ impl Dpll {
                 .iter()
                 .find_map(|(variable_id, polarity)| {
                     let variable = self.cnf_formula.variables.get(variable_id).unwrap();
-                    variable.value.map(|value| {
-                        SingleAssignment::new(
+                    match variable.value {
+                        None => Some(SingleAssignment::new(
                             *variable_id,
                             polarity.get_satisfying_assignment(),
                             Forced,
-                        )
-                    })
+                        )),
+                        Some(_) => None
+                    }
                 })
                 .unwrap();
 

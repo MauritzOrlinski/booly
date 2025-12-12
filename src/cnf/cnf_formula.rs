@@ -75,7 +75,7 @@ impl CnfFormula {
 
             if clause.unassigned_variables == 1 {
                 unit_queue.push_back(*clause_id);
-            } else if clause.unassigned_variables <= 0 {
+            } else if clause.unassigned_variables <= 0 && matches!(clause.satisfied_by, None) {
                 assignment_error = true;
             }
         }
