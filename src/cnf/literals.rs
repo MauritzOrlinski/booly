@@ -1,4 +1,4 @@
-use crate::assignment::single_assignment::AssignmentValue;
+use crate::cnf::assignment::AssignmentValue;
 use std::collections::hash_map::Iter;
 use std::collections::HashMap;
 use std::fmt;

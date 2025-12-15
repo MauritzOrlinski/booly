@@ -1,8 +1,7 @@
-use crate::assignment::assignments::Assignments;
-use crate::assignment::single_assignment::AssignmentReason::Forced;
-use crate::assignment::single_assignment::{AssignmentValue, SingleAssignment};
+use crate::cnf::assignment::AssignmentReason::Forced;
+use crate::cnf::assignment::{Assignment};
 use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
-use crate::cnf::cnf_formula::{AssignException, CnfFormula};
+use crate::cnf::cnf_formula::{CnfFormula};
 use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
 use tracing::{info, instrument, trace};
@@ -28,7 +27,7 @@ impl DpllResult {
 pub struct Dpll {
     unit_queue: VecDeque<usize>,
     pub cnf_formula: CnfFormula,
-    assignment_stack: Vec<(u32, SingleAssignment)>,
+    assignment_stack: Vec<(u32, Assignment)>,
 }
 
 impl Dpll {
@@ -78,7 +77,7 @@ impl Dpll {
         skip_all,
         fields(assignment = %assignment)
     )]
-    fn handle_assign_single_branch(&mut self, assignment: SingleAssignment, depth: u32) -> DpllResult {
+    fn handle_assign_single_branch(&mut self, assignment: Assignment, depth: u32) -> DpllResult {
         let assignment_result = self
             .cnf_formula
             .apply_assignment(&assignment, &mut self.unit_queue);
@@ -123,7 +122,7 @@ impl Dpll {
                 .find_map(|(variable_id, polarity)| {
                     let variable = self.cnf_formula.variables.get(variable_id).unwrap();
                     match variable.value {
-                        None => Some(SingleAssignment::new(
+                        None => Some(Assignment::new(
                             *variable_id,
                             polarity.get_satisfying_assignment(),
                             Forced,

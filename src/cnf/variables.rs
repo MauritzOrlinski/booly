@@ -1,4 +1,4 @@
-use crate::assignment::single_assignment::AssignmentValue;
+use crate::cnf::assignment::AssignmentValue;
 use crate::cnf::variable::Variable;
 use std::collections::HashMap;
 use std::fmt;

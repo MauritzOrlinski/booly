@@ -1,15 +1,15 @@
-use crate::assignment::single_assignment::AssignmentReason::Branching;
-use crate::assignment::single_assignment::SingleAssignment;
+use crate::cnf::assignment::AssignmentReason::Branching;
+use crate::cnf::assignment::Assignment;
 use crate::cnf::cnf_formula::CnfFormula;
 
 pub trait ChooseNextVariable {
-    fn chose(cnf_formula: &CnfFormula) -> SingleAssignment;
+    fn chose(cnf_formula: &CnfFormula) -> Assignment;
 }
 
 pub struct TrivialChooseNextVariable;
 
 impl ChooseNextVariable for TrivialChooseNextVariable {
-    fn chose(cnf_formula: &CnfFormula) -> SingleAssignment {
+    fn chose(cnf_formula: &CnfFormula) -> Assignment {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
@@ -27,6 +27,6 @@ impl ChooseNextVariable for TrivialChooseNextVariable {
                 None
             }).unwrap();
 
-        SingleAssignment::new(variable_id, assignment_value, Branching)
+        Assignment::new(variable_id, assignment_value, Branching)
     }
 }

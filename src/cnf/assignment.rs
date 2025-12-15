@@ -23,27 +23,27 @@ impl AssignmentValue {
 }
 
 #[derive(Clone, Debug)]
-pub struct SingleAssignment {
+pub struct Assignment {
     pub(crate) variable_id: usize,
     pub(crate) value: AssignmentValue,
     pub(crate) reason: AssignmentReason,
 }
 
-impl SingleAssignment {
+impl Assignment {
     pub fn new(
         variable_id: usize,
         value: AssignmentValue,
         reason: AssignmentReason,
     ) -> Self {
-        SingleAssignment {
+        Assignment {
             variable_id,
             value,
             reason,
         }
     }
 
-    pub fn inverse(&self) -> SingleAssignment {
-        SingleAssignment {
+    pub fn inverse(&self) -> Assignment {
+        Assignment {
             variable_id: self.variable_id,
             value: self.value.get_inverse(),
             reason: self.reason,
@@ -51,7 +51,7 @@ impl SingleAssignment {
     }
 }
 
-impl fmt::Display for SingleAssignment {
+impl fmt::Display for Assignment {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
