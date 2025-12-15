@@ -1,5 +1,2 @@
-mod cnf;
-pub mod parser;
+pub mod cnf;
 pub mod dpll;
-mod branching;
-pub mod check;

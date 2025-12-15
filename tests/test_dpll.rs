@@ -1,7 +1,7 @@
-use dpml::check::check::check_satisfied;
+use dpml::dpll::verify::verify_satisfied;
 use dpml::dpll::dpll::DpllResult::{Satisfied, Unsatisfiable};
 use dpml::dpll::dpll::{Dpll, DpllResult};
-use dpml::parser::parser::parse_cnf;
+use dpml::cnf::parser::parse_cnf;
 
 fn test_from_file(cnf_string: &str, sat: DpllResult) {
     let cnf = parse_cnf(cnf_string).unwrap();
@@ -10,7 +10,7 @@ fn test_from_file(cnf_string: &str, sat: DpllResult) {
     let result = dpll.dpll(0);
     assert_eq!(result, sat);
     if sat == Satisfied {
-        assert!(check_satisfied(&dpll.cnf_formula))
+        assert!(verify_satisfied(&dpll.cnf_formula))
     }
 }
 

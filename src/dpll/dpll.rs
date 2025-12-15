@@ -1,6 +1,6 @@
 use crate::cnf::assignment::AssignmentReason::Forced;
 use crate::cnf::assignment::{Assignment};
-use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
+use crate::dpll::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
 use crate::cnf::cnf_formula::{CnfFormula};
 use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
@@ -169,8 +169,8 @@ impl Dpll {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::check::check::check_satisfied;
-    use crate::parser::parser::parse_cnf;
+    use crate::dpll::verify::verify_satisfied;
+    use crate::cnf::parser::parse_cnf;
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
     use tracing_tree::HierarchicalLayer;
@@ -191,7 +191,7 @@ mod tests {
 
         let result = dpll.dpll(0);
         assert_eq!(result, sat);
-        assert!(check_satisfied(&dpll.cnf_formula))
+        assert!(verify_satisfied(&dpll.cnf_formula))
     }
 
     #[test]
