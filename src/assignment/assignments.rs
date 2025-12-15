@@ -1,4 +1,4 @@
-use crate::assignment::single_assignment::{AssignmentValue, SingleAssignment};
+use crate::assignment::single_assignment::SingleAssignment;
 use std::fmt;
 use std::fmt::Formatter;
 use std::slice::Iter;

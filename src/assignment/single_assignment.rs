@@ -41,12 +41,12 @@ impl SingleAssignment {
             reason,
         }
     }
-    
+
     pub fn inverse(&self) -> SingleAssignment {
         SingleAssignment {
             variable_id: self.variable_id,
             value: self.value.get_inverse(),
-            reason: self.reason
+            reason: self.reason,
         }
     }
 }

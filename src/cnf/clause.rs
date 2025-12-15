@@ -1,7 +1,7 @@
+use crate::cnf::literals::{Literals, Polarity};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::cnf::literals::{Literals, Polarity};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
@@ -15,7 +15,7 @@ impl Clause {
         Clause {
             satisfied_by: None,
             unassigned_variables: literals.len(),
-            literals: Literals::new(literals)
+            literals: Literals::new(literals),
         }
     }
 }

@@ -1,7 +1,7 @@
 use dpml::check::check::check_satisfied;
+use dpml::dpll::dpll::DpllResult::{Satisfied, Unsatisfiable};
 use dpml::dpll::dpll::{Dpll, DpllResult};
 use dpml::parser::parser::parse_cnf;
-use dpml::dpll::dpll::DpllResult::{Satisfied, Unsatisfiable};
 
 fn test_from_file(cnf_string: &str, sat: DpllResult) {
     let cnf = parse_cnf(cnf_string).unwrap();

@@ -1,11 +1,11 @@
 use crate::assignment::single_assignment::SingleAssignment;
-use crate::cnf::clause::{Clause};
+use crate::cnf::clause::Clause;
+use crate::cnf::literals::Polarity;
+use crate::cnf::variables::Variables;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
 use tracing::{instrument, trace};
-use crate::cnf::literals::Polarity;
-use crate::cnf::variables::Variables;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {

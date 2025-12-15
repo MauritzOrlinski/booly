@@ -1,13 +1,11 @@
 use crate::assignment::assignments::Assignments;
 use crate::assignment::single_assignment::AssignmentReason::Forced;
 use crate::assignment::single_assignment::{AssignmentValue, SingleAssignment};
-use crate::branching::chose_next_assignment::{Branching};
-use crate::branching::monien_speckenmeyer::MonienSpeckenmeyer;
+use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
 use crate::cnf::cnf_formula::{AssignException, CnfFormula};
+use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
 use tracing::{info, instrument, trace};
-use crate::branching::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
-use crate::dpll::dpll::DpllResult::{Unknown, Unsatisfiable, Satisfied};
 
 #[derive(Debug, PartialEq)]
 pub enum DpllResult {
@@ -44,7 +42,8 @@ impl Dpll {
 
     #[instrument(
         skip_all,
-        fields(variables = %self.cnf_formula.variables, unsat_clauses=self.cnf_formula.unsat_clauses),
+        fields(variables = %self.cnf_formula.variables, unsat_clauses=self.cnf_formula.unsat_clauses
+        ),
     )]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
@@ -73,7 +72,6 @@ impl Dpll {
             Unknown => panic!("This should not happen."),
             Unsatisfiable => Unsatisfiable
         }
-
     }
 
     #[instrument(
@@ -174,8 +172,8 @@ mod tests {
     use super::*;
     use crate::check::check::check_satisfied;
     use crate::parser::parser::parse_cnf;
-    use tracing_subscriber::Registry;
     use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::Registry;
     use tracing_tree::HierarchicalLayer;
 
     fn init_tracing() {

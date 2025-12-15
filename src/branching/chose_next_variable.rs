@@ -1,5 +1,5 @@
-use crate::assignment::single_assignment::{SingleAssignment};
 use crate::assignment::single_assignment::AssignmentReason::Branching;
+use crate::assignment::single_assignment::SingleAssignment;
 use crate::cnf::cnf_formula::CnfFormula;
 
 pub trait ChooseNextVariable {
@@ -22,7 +22,7 @@ impl ChooseNextVariable for TrivialChooseNextVariable {
             .find_map(|(variable_id, literal_polarity)| {
                 let variable = cnf_formula.variables.get(variable_id).unwrap();
                 if matches!(variable.value, None) {
-                    return Some((*variable_id, literal_polarity.get_satisfying_assignment()))
+                    return Some((*variable_id, literal_polarity.get_satisfying_assignment()));
                 }
                 None
             }).unwrap();

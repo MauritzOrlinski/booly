@@ -1,8 +1,4 @@
 use crate::assignment::single_assignment::AssignmentValue;
-use crate::cnf::cnf_formula::CnfFormula;
-use std::collections::HashMap;
-use std::fmt;
-use std::fmt::Formatter;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
