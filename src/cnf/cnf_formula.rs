@@ -133,6 +133,10 @@ impl CnfFormula {
             .filter_map(|(clause_id, clause)| if clause.unassigned_variables == 1 { Some(*clause_id) } else { None })
             .collect()
     }
+    
+    pub fn get_variable_assignments(&self) -> String {
+        self.variables.to_string()
+    }
 }
 
 impl fmt::Display for CnfFormula {
