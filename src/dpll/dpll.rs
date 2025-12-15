@@ -29,7 +29,7 @@ impl DpllResult {
 #[derive(Debug)]
 pub struct Dpll {
     unit_queue: VecDeque<usize>,
-    cnf_formula: CnfFormula,
+    pub cnf_formula: CnfFormula,
     assignment_stack: Vec<(u32, SingleAssignment)>,
 }
 
@@ -188,7 +188,7 @@ mod tests {
     }
 
     fn test_from_file(cnf_string: &str, sat: DpllResult) {
-        init_tracing();
+        //init_tracing();
         let cnf = parse_cnf(cnf_string).unwrap();
         let mut dpll = Dpll::new(cnf);
 

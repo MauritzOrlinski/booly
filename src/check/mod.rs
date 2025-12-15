@@ -1,1 +1,1 @@
-pub(crate) mod check;
+pub mod check;
