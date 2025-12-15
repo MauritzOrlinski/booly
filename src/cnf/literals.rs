@@ -31,7 +31,7 @@ impl Literals {
         self.0.get(var)
     }
 
-    pub fn iter(&self) -> Iter<usize, Polarity> {
+    pub fn iter(&'_ self) -> Iter<'_, usize, Polarity> {
         self.0.iter()
     }
 }

@@ -109,7 +109,6 @@ name = "dpml"
 version = "0.1.0"
 dependencies = [
  "clap",
- "parse",
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
@@ -159,12 +158,6 @@ name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
-
-[[package]]
-name = "parse"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47351ddb9a500ad0b31aa5731980f2678886e44e96a5e3e0d837c5062a151239"
 
 [[package]]
 name = "pin-project-lite"

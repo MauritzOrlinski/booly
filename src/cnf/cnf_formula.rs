@@ -46,10 +46,10 @@ impl CnfFormula {
         }
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(assignment = %assignment),
-    )]
+    ))]
     pub fn apply_assignment(
         &mut self,
         assignment: &Assignment,
@@ -94,10 +94,10 @@ impl CnfFormula {
         }
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(assignment = %assignment),
-    )]
+    ))]
     pub fn reverse_assignment(
         &mut self,
         assignment: &Assignment,

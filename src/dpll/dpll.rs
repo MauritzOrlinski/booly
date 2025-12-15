@@ -39,11 +39,11 @@ impl Dpll {
         }
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(variables = %self.cnf_formula.variables, unsat_clauses=self.cnf_formula.unsat_clauses
         ),
-    )]
+    ))]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
             info!("Found satisfying assignment: {}", self.cnf_formula.variables);
@@ -73,10 +73,10 @@ impl Dpll {
         }
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(assignment = %assignment)
-    )]
+    ))]
     fn handle_assign_single_branch(&mut self, assignment: Assignment, depth: u32) -> DpllResult {
         let assignment_result = self
             .cnf_formula
@@ -106,10 +106,10 @@ impl Dpll {
         }
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(unit_queue = ?self.unit_queue),
-    )]
+    ))]
     fn propagate_unit_clauses(&mut self, depth: u32) -> DpllResult {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(&unit_clause_id).unwrap();
@@ -150,10 +150,10 @@ impl Dpll {
         Unknown
     }
 
-    #[instrument(
+    #[cfg_attr(feature = "trace", instrument(
         skip_all,
         fields(depth = depth),
-    )]
+    ))]
     pub fn undo_assignment_stack(&mut self, depth: u32) {
         while let Some((stack_depth, assignment)) = self.assignment_stack.pop() {
             if stack_depth >= depth {
@@ -171,21 +171,10 @@ mod tests {
     use super::*;
     use crate::dpll::verify::verify_satisfied;
     use crate::cnf::parser::parse_cnf;
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
-    use tracing_tree::HierarchicalLayer;
 
-    fn init_tracing() {
-        let layer = HierarchicalLayer::default()
-            .with_indent_lines(false)
-            .with_indent_amount(2);
-        let subscriber = Registry::default().with(layer);
-
-        tracing::subscriber::set_global_default(subscriber).ok();
-    }
+    
 
     fn test_from_file(cnf_string: &str, sat: DpllResult) {
-        //init_tracing();
         let cnf = parse_cnf(cnf_string).unwrap();
         let mut dpll = Dpll::new(cnf);
 
