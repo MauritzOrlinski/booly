@@ -1,8 +1,7 @@
 use crate::cnf::assignment::{Assignment, AssignmentValue};
 use crate::cnf::clause::Clause;
 use crate::cnf::literals::Polarity;
-use crate::cnf::variable::Variable;
-use crate::cnf::variables::Variables;
+use crate::cnf::variable::{Variable, Variables};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
