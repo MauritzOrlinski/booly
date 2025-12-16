@@ -23,8 +23,8 @@ impl Polarity {
 pub struct Literals(HashMap<usize, Polarity>);
 
 impl Literals {
-    pub fn new(source: HashMap<usize, Polarity>) -> Literals {
-        Literals(source)
+    pub fn new() -> Literals {
+        Literals(HashMap::new())
     }
 
     pub fn get_polarity_for_var(&self, var: &usize) -> Option<&Polarity> {
@@ -33,6 +33,14 @@ impl Literals {
 
     pub fn iter(&'_ self) -> Iter<'_, usize, Polarity> {
         self.0.iter()
+    }
+    
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    
+    pub fn insert(&mut self, var: usize, polarity: Polarity) {
+        self.0.insert(var, polarity);
     }
 }
 

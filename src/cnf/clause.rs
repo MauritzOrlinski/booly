@@ -11,11 +11,11 @@ pub struct Clause {
 }
 
 impl Clause {
-    pub fn new(literals: HashMap<usize, Polarity>) -> Self {
+    pub fn new(literals: Literals) -> Self {
         Clause {
             satisfied_by: None,
             unassigned_variables: literals.len(),
-            literals: Literals::new(literals),
+            literals,
         }
     }
 }

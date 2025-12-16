@@ -1,6 +1,6 @@
 use crate::cnf::assignment::{Assignment, AssignmentValue};
 use crate::cnf::clause::Clause;
-use crate::cnf::literals::Polarity;
+use crate::cnf::literals::{Literals, Polarity};
 use crate::cnf::variable::{Variable, Variables};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
@@ -20,23 +20,24 @@ impl CnfFormula {
         let mut clauses: HashMap<usize, Clause> = HashMap::new();
 
         for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
-            let mut literals: HashMap<usize, Polarity> = HashMap::new();
+            let mut literals = Literals::new();
 
             for crude_literal in crude_clause {
-                let identifier = crude_literal.abs() as usize;
+                let variable_id = crude_literal.abs() as usize;
                 let polarity = if *crude_literal > 0 {
                     Polarity::Positive
                 } else {
                     Polarity::Negative
                 };
-                let variable = variables.get_mut(identifier);
+                let variable = variables.get_mut(variable_id);
 
                 match polarity {
                     Polarity::Positive => variable.positive_occurrences.push(clause_id),
                     Polarity::Negative => variable.negative_occurrences.push(clause_id),
                 }
-                literals.insert(identifier, polarity);
+                literals.insert(variable_id, polarity);
             }
+
             clauses.insert(clause_id, Clause::new(literals));
         }
         CnfFormula {
