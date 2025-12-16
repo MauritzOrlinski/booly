@@ -1,5 +1,4 @@
-use crate::cnf::literals::{Literals, Polarity};
-use std::collections::HashMap;
+use crate::cnf::literals::{Literals};
 use std::fmt;
 use std::fmt::Formatter;
 

@@ -8,11 +8,4 @@ name = "main"
 path = "src/main.rs"
 
 [dependencies]
-tracing = "0.1"
-tracing-subscriber = "0.3"
-tracing-tree = "0.4"
 clap = {version = "4.5.50", features = ["derive"]}
-
-
-[features]
-trace = []

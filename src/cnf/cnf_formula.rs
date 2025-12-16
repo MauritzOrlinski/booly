@@ -1,11 +1,9 @@
-use crate::cnf::assignment::{Assignment, AssignmentValue};
+use crate::cnf::assignment::{Assignment};
 use crate::cnf::clause::Clause;
-use crate::cnf::literals::{Literals, Polarity};
-use crate::cnf::variable::{Variable, Variables};
-use std::collections::{HashMap, VecDeque};
+use crate::cnf::variable::{Variables};
+use std::collections::{VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
-use tracing::{instrument, trace};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
@@ -23,10 +21,6 @@ impl CnfFormula {
         }
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(assignment = %assignment),
-    ))]
     pub fn apply_assignment(
         &mut self,
         assignment: &Assignment,
@@ -43,7 +37,6 @@ impl CnfFormula {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
             if matches!(clause.satisfied_by, None) {
                 self.unsat_clauses -= 1;
-                trace!("Clause {}({}) satisfied by {}", clause_id, clause.literals, assignment);
                 clause.satisfied_by = Some(assignment.variable_id);
             }
         }
@@ -57,7 +50,6 @@ impl CnfFormula {
                 continue;
             }
             if clause.unassigned_variables == 1 {
-                trace!("Adding unit clause {} ({}) to unit queue",clause_id, clause);
                 unit_queue.push_back(*clause_id);
             } else if clause.unassigned_variables <= 0 {
                 assignment_error = true;
@@ -71,10 +63,6 @@ impl CnfFormula {
         }
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(assignment = %assignment),
-    ))]
     pub fn reverse_assignment(
         &mut self,
         assignment: &Assignment,
@@ -90,7 +78,6 @@ impl CnfFormula {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
             if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
                 self.unsat_clauses += 1;
-                trace!("Clause {}({}) is no longer satisfied by {}", clause_id, clause.literals, assignment);
                 clause.satisfied_by = None;
             }
         }
@@ -102,7 +89,7 @@ impl CnfFormula {
     }
 
     pub fn is_satisfied(&self) -> bool {
-        self.unsat_clauses <= 0
+        self.unsat_clauses == 0
     }
 
     pub fn generate_unit_queue(&self) -> VecDeque<usize> {

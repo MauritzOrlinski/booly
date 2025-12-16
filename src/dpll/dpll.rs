@@ -4,7 +4,6 @@ use crate::dpll::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVari
 use crate::cnf::cnf_formula::{CnfFormula};
 use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
-use tracing::{info, instrument, trace};
 
 #[derive(Debug, PartialEq)]
 pub enum DpllResult {
@@ -39,14 +38,8 @@ impl Dpll {
         }
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(variables = %self.cnf_formula.variables, unsat_clauses=self.cnf_formula.unsat_clauses
-        ),
-    ))]
     pub fn dpll(&mut self, depth: u32) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
-            info!("Found satisfying assignment: {}", self.cnf_formula.variables);
             return Satisfied;
         }
 
@@ -73,10 +66,6 @@ impl Dpll {
         }
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(assignment = %assignment)
-    ))]
     fn handle_assign_single_branch(&mut self, assignment: Assignment, depth: u32) -> DpllResult {
         let assignment_result = self
             .cnf_formula
@@ -106,10 +95,6 @@ impl Dpll {
         }
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(unit_queue = ?self.unit_queue),
-    ))]
     fn propagate_unit_clauses(&mut self, depth: u32) -> DpllResult {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
@@ -138,22 +123,16 @@ impl Dpll {
             self.assignment_stack.push((depth, satisfying_assignment));
 
             if matches!(assignment_result, Err(_)) {
-                trace!("Could not assign unit clause. Branch is unsatisfiable.");
                 self.undo_assignment_stack(depth);
                 return Unsatisfiable;
             }
             if self.cnf_formula.is_satisfied() {
-                trace!("Branch has been satisfied while doing unit propagation: {}", self.cnf_formula.variables);
                 return Satisfied;
             }
         }
         Unknown
     }
 
-    #[cfg_attr(feature = "trace", instrument(
-        skip_all,
-        fields(depth = depth),
-    ))]
     pub fn undo_assignment_stack(&mut self, depth: u32) {
         while let Some((stack_depth, assignment)) = self.assignment_stack.pop() {
             if stack_depth >= depth {
