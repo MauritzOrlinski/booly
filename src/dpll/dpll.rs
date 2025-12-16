@@ -1,7 +1,7 @@
+use crate::cnf::assignment::Assignment;
 use crate::cnf::assignment::AssignmentReason::Forced;
-use crate::cnf::assignment::{Assignment};
+use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::chose_next_variable::{ChooseNextVariable, TrivialChooseNextVariable};
-use crate::cnf::cnf_formula::{CnfFormula};
 use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
 
@@ -56,13 +56,13 @@ impl Dpll {
         match self.handle_assign_single_branch(branch_a, depth) {
             Satisfied => return Satisfied,
             Unknown => panic!("This should not happen."),
-            Unsatisfiable => ()
+            Unsatisfiable => (),
         }
 
         match self.handle_assign_single_branch(branch_b, depth) {
             Satisfied => Satisfied,
             Unknown => panic!("This should not happen."),
-            Unsatisfiable => Unsatisfiable
+            Unsatisfiable => Unsatisfiable,
         }
     }
 
@@ -112,7 +112,7 @@ impl Dpll {
                             polarity.get_satisfying_assignment(),
                             Forced,
                         )),
-                        Some(_) => None
+                        Some(_) => None,
                     }
                 })
                 .unwrap();
@@ -148,10 +148,8 @@ impl Dpll {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dpll::verify::verify_satisfied;
     use crate::cnf::parser::parse_cnf;
-
-    
+    use crate::dpll::verify::verify_satisfied;
 
     fn test_from_file(cnf_string: &str, sat: DpllResult) {
         let cnf = parse_cnf(cnf_string).unwrap();
@@ -164,25 +162,16 @@ mod tests {
 
     #[test]
     fn test_dpll_xor() {
-        test_from_file(
-            include_str!("../../inputs/test/sat/xor.cnf"),
-            Satisfied,
-        );
+        test_from_file(include_str!("../../inputs/test/sat/xor.cnf"), Satisfied);
     }
 
     #[test]
     fn test_dpll_unit() {
-        test_from_file(
-            include_str!("../../inputs/test/sat/unit.cnf"),
-            Satisfied,
-        );
+        test_from_file(include_str!("../../inputs/test/sat/unit.cnf"), Satisfied);
     }
 
     #[test]
     fn test_dpll_unique() {
-        test_from_file(
-            include_str!("../../inputs/test/sat/unique.cnf"),
-            Satisfied,
-        );
+        test_from_file(include_str!("../../inputs/test/sat/unique.cnf"), Satisfied);
     }
 }

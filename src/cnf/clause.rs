@@ -1,4 +1,4 @@
-use crate::cnf::literals::{Literals};
+use crate::cnf::literals::Literals;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -21,10 +21,6 @@ impl Clause {
 
 impl fmt::Display for Clause {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} 0",
-            self.literals.to_string()
-        )
+        write!(f, "{} 0", self.literals.to_string())
     }
 }

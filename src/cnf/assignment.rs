@@ -17,7 +17,7 @@ impl AssignmentValue {
     pub fn get_inverse(&self) -> AssignmentValue {
         match self {
             AssignmentValue::True => AssignmentValue::False,
-            AssignmentValue::False => AssignmentValue::True
+            AssignmentValue::False => AssignmentValue::True,
         }
     }
 }
@@ -30,11 +30,7 @@ pub struct Assignment {
 }
 
 impl Assignment {
-    pub fn new(
-        variable_id: usize,
-        value: AssignmentValue,
-        reason: AssignmentReason,
-    ) -> Self {
+    pub fn new(variable_id: usize, value: AssignmentValue, reason: AssignmentReason) -> Self {
         Assignment {
             variable_id,
             value,

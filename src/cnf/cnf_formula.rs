@@ -1,7 +1,7 @@
-use crate::cnf::assignment::{Assignment};
+use crate::cnf::assignment::Assignment;
 use crate::cnf::clause::Clause;
-use crate::cnf::variable::{Variables};
-use std::collections::{VecDeque};
+use crate::cnf::variable::Variables;
+use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -63,10 +63,7 @@ impl CnfFormula {
         }
     }
 
-    pub fn reverse_assignment(
-        &mut self,
-        assignment: &Assignment,
-    ) {
+    pub fn reverse_assignment(&mut self, assignment: &Assignment) {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = None;
@@ -93,12 +90,19 @@ impl CnfFormula {
     }
 
     pub fn generate_unit_queue(&self) -> VecDeque<usize> {
-        self.clauses.iter()
+        self.clauses
+            .iter()
             .enumerate()
-            .filter_map(|(clause_id, clause)| if clause.unassigned_variables == 1 { Some(clause_id) } else { None })
+            .filter_map(|(clause_id, clause)| {
+                if clause.unassigned_variables == 1 {
+                    Some(clause_id)
+                } else {
+                    None
+                }
+            })
             .collect()
     }
-    
+
     pub fn get_variable_assignments(&self) -> String {
         self.variables.to_string()
     }
@@ -131,10 +135,13 @@ mod tests {
 
     #[test]
     fn test_formula_assign_is_reversible() {
-        let mut cnf = parse_cnf("\
+        let mut cnf = parse_cnf(
+            "\
 p cnf 6 2
 1 2 3 0
-4 5 6 0").unwrap();
+4 5 6 0",
+        )
+        .unwrap();
 
         let snapshot = cnf.clone();
 
@@ -147,10 +154,13 @@ p cnf 6 2
 
     #[test]
     fn test_unit_queue() {
-        let mut cnf = parse_cnf("\
+        let mut cnf = parse_cnf(
+            "\
 p cnf 5 2
 1 2 0
-3 4 5 0").unwrap();
+3 4 5 0",
+        )
+        .unwrap();
 
         let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
         let mut queue: VecDeque<usize> = VecDeque::new();
@@ -161,10 +171,13 @@ p cnf 5 2
 
     #[test]
     fn test_satisfy_occurance_in_single_clause() {
-        let mut cnf = parse_cnf("\
+        let mut cnf = parse_cnf(
+            "\
 p cnf 4 2
 1 2 0
-3 4 0").unwrap();
+3 4 0",
+        )
+        .unwrap();
 
         assert!(!cnf.is_satisfied());
 
@@ -188,10 +201,13 @@ p cnf 4 2
 
     #[test]
     fn test_satisfy_occurance_in_multiple_clauses() {
-        let mut cnf = parse_cnf("\
+        let mut cnf = parse_cnf(
+            "\
 p cnf 3 2
 1 2 0
-1 3 0").unwrap();
+1 3 0",
+        )
+        .unwrap();
 
         assert!(!cnf.is_satisfied());
 

@@ -1,6 +1,6 @@
 use crate::cnf::assignment::AssignmentValue;
-use std::collections::hash_map::Iter;
 use std::collections::HashMap;
+use std::collections::hash_map::Iter;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -14,7 +14,7 @@ impl Polarity {
     pub fn get_satisfying_assignment(&self) -> AssignmentValue {
         match self {
             Polarity::Positive => AssignmentValue::True,
-            Polarity::Negative => AssignmentValue::False
+            Polarity::Negative => AssignmentValue::False,
         }
     }
 }
@@ -34,11 +34,11 @@ impl Literals {
     pub fn iter(&'_ self) -> Iter<'_, usize, Polarity> {
         self.0.iter()
     }
-    
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
-    
+
     pub fn insert(&mut self, var: usize, polarity: Polarity) {
         self.0.insert(var, polarity);
     }
