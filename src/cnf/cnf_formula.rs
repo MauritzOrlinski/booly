@@ -1,6 +1,7 @@
-use crate::cnf::assignment::Assignment;
+use crate::cnf::assignment::{Assignment, AssignmentValue};
 use crate::cnf::clause::Clause;
 use crate::cnf::literals::Polarity;
+use crate::cnf::variable::Variable;
 use crate::cnf::variables::Variables;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
@@ -60,7 +61,7 @@ impl CnfFormula {
         assignee.value = Some(assignment.value);
 
         let (satisfied_clause_ids, unsatisfied_clause_ids) =
-            assignee.clause_id_slices_for(assignment.value);
+            assignee.associated_clauses(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
@@ -107,7 +108,7 @@ impl CnfFormula {
         assignee.value = None;
 
         let (satisfied_clause_ids, unsatisfied_clause_ids) =
-            assignee.clause_id_slices_for(assignment.value);
+            assignee.associated_clauses(assignment.value);
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(clause_id).unwrap();
