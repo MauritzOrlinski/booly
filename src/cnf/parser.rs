@@ -1,6 +1,15 @@
 use crate::cnf::cnf_formula::CnfFormula;
 
 pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
+    let header_line_string = cnf_string.lines()
+        .find(|line| line.starts_with("p"))
+        .ok_or(ParseError { reason: "Unable to find header line".to_string() })?;
+
+    let variable_count = header_line_string.split_whitespace().nth(2)
+        .ok_or(ParseError { reason: "Unable to parse header".to_string() })?
+        .parse()
+        .map_err(|_| ParseError { reason: "Unable to parse header".to_string() })?;
+
     let cleaned_up_source = cnf_string
         .lines()
         .filter(|line| !line.starts_with("c") && !line.starts_with("p"))
@@ -13,7 +22,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
         .map(parse_clause)
         .collect::<Result<Vec<Vec<i64>>, ParseError>>()?;
 
-    Ok(CnfFormula::new(clauses))
+    Ok(CnfFormula::new(clauses, variable_count))
 }
 
 fn parse_clause(clause_string: &str) -> Result<Vec<i64>, ParseError> {

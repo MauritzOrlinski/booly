@@ -120,7 +120,7 @@ impl Dpll {
                 .literals
                 .iter()
                 .find_map(|(variable_id, polarity)| {
-                    let variable = self.cnf_formula.variables.get(variable_id).unwrap();
+                    let variable = self.cnf_formula.variables.get(*variable_id);
                     match variable.value {
                         None => Some(Assignment::new(
                             *variable_id,

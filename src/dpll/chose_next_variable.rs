@@ -20,7 +20,7 @@ impl ChooseNextVariable for TrivialChooseNextVariable {
 
         let (variable_id, assignment_value) = shortest_clause.literals.iter()
             .find_map(|(variable_id, literal_polarity)| {
-                let variable = cnf_formula.variables.get(variable_id).unwrap();
+                let variable = cnf_formula.variables.get(*variable_id);
                 if matches!(variable.value, None) {
                     return Some((*variable_id, literal_polarity.get_satisfying_assignment()));
                 }

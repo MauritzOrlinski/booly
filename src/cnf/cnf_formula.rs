@@ -15,8 +15,8 @@ pub struct CnfFormula {
 }
 
 impl CnfFormula {
-    pub fn new(crude_clauses: Vec<Vec<i64>>) -> Self {
-        let mut variables: Variables = Variables::new();
+    pub fn new(crude_clauses: Vec<Vec<i64>>, variable_count: usize) -> Self {
+        let mut variables: Variables = Variables::new(variable_count);
         let mut clauses: HashMap<usize, Clause> = HashMap::new();
 
         for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
@@ -29,7 +29,7 @@ impl CnfFormula {
                 } else {
                     Polarity::Negative
                 };
-                let variable = variables.get_or_create(&identifier);
+                let variable = variables.get_mut(identifier);
 
                 match polarity {
                     Polarity::Positive => variable.positive_occurrences.push(clause_id),
@@ -55,7 +55,7 @@ impl CnfFormula {
         assignment: &Assignment,
         unit_queue: &mut VecDeque<usize>,
     ) -> Result<(), AssignException> {
-        let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
+        let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = Some(assignment.value);
 
@@ -102,7 +102,7 @@ impl CnfFormula {
         &mut self,
         assignment: &Assignment,
     ) {
-        let assignee = self.variables.get_mut(&assignment.variable_id).unwrap();
+        let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = None;
 
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_formula_assign_is_reversible() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2, 3], vec![4, 5, 6]]);
+        let mut cnf = CnfFormula::new(vec![vec![1, 2, 3], vec![4, 5, 6]], 6);
 
         let snapshot = cnf.clone();
 
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_unit_queue() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4, 5]]);
+        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4, 5]], 6);
         let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
         let mut queue: VecDeque<usize> = VecDeque::new();
 
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_satisfy_occurance_in_single_clause() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4]]);
+        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4]], 4);
 
         assert!(!cnf.is_satisfied());
 
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn test_satisfy_occurance_in_multiple_clauses() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![1, 3]]);
+        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![1, 3]], 3);
 
         assert!(!cnf.is_satisfied());
 
