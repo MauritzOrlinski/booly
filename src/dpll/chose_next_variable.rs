@@ -13,7 +13,6 @@ impl ChooseNextVariable for TrivialChooseNextVariable {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
-            .map(|(_, clause)| clause)
             .filter(|clause| matches!(clause.satisfied_by, None))
             .min_by(|a, b| (&a.unassigned_variables).cmp(&b.unassigned_variables))
             .unwrap();

@@ -9,7 +9,7 @@ use tracing::{instrument, trace};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: HashMap<usize, Clause>,
+    pub(crate) clauses: Vec<Clause>,
     pub(crate) variables: Variables,
     pub(crate) unsat_clauses: usize,
 }
@@ -17,7 +17,7 @@ pub struct CnfFormula {
 impl CnfFormula {
     pub fn new(crude_clauses: Vec<Vec<i64>>, variable_count: usize) -> Self {
         let mut variables: Variables = Variables::new(variable_count);
-        let mut clauses: HashMap<usize, Clause> = HashMap::new();
+        let mut clauses: Vec<Clause> = Vec::new();
 
         for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
             let mut literals = Literals::new();
@@ -38,7 +38,7 @@ impl CnfFormula {
                 literals.insert(variable_id, polarity);
             }
 
-            clauses.insert(clause_id, Clause::new(literals));
+            clauses.push(Clause::new(literals));
         }
         CnfFormula {
             unsat_clauses: clauses.len(),
@@ -64,7 +64,7 @@ impl CnfFormula {
             assignee.associated_clauses(assignment.value);
 
         for clause_id in satisfied_clause_ids {
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(*clause_id).unwrap();
             if matches!(clause.satisfied_by, None) {
                 self.unsat_clauses -= 1;
                 trace!("Clause {}({}) satisfied by {}", clause_id, clause.literals, assignment);
@@ -75,7 +75,7 @@ impl CnfFormula {
         let mut assignment_error = false;
 
         for clause_id in unsatisfied_clause_ids {
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(*clause_id).unwrap();
             clause.unassigned_variables -= 1;
             if matches!(clause.satisfied_by, Some(_)) {
                 continue;
@@ -111,7 +111,7 @@ impl CnfFormula {
             assignee.associated_clauses(assignment.value);
 
         for clause_id in satisfied_clause_ids {
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(*clause_id).unwrap();
             if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
                 self.unsat_clauses += 1;
                 trace!("Clause {}({}) is no longer satisfied by {}", clause_id, clause.literals, assignment);
@@ -120,7 +120,7 @@ impl CnfFormula {
         }
 
         for clause_id in unsatisfied_clause_ids {
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(*clause_id).unwrap();
             clause.unassigned_variables += 1;
         }
     }
@@ -129,9 +129,10 @@ impl CnfFormula {
         self.unsat_clauses <= 0
     }
 
-    pub fn get_unit_queue(&self) -> VecDeque<usize> {
+    pub fn generate_unit_queue(&self) -> VecDeque<usize> {
         self.clauses.iter()
-            .filter_map(|(clause_id, clause)| if clause.unassigned_variables == 1 { Some(*clause_id) } else { None })
+            .enumerate()
+            .filter_map(|(clause_id, clause)| if clause.unassigned_variables == 1 { Some(clause_id) } else { None })
             .collect()
     }
     
@@ -149,7 +150,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|(_, clause)| clause.to_string())
+                .map(|clause| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )

@@ -112,7 +112,7 @@ impl Dpll {
     ))]
     fn propagate_unit_clauses(&mut self, depth: u32) -> DpllResult {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
-            let unit_clause = self.cnf_formula.clauses.get(&unit_clause_id).unwrap();
+            let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
             if matches!(unit_clause.satisfied_by, Some(_)) {
                 continue;
             }
