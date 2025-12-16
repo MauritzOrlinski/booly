@@ -15,31 +15,7 @@ pub struct CnfFormula {
 }
 
 impl CnfFormula {
-    pub fn new(crude_clauses: Vec<Vec<i64>>, variable_count: usize) -> Self {
-        let mut variables: Variables = Variables::new(variable_count);
-        let mut clauses: Vec<Clause> = Vec::new();
-
-        for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
-            let mut literals = Literals::new();
-
-            for crude_literal in crude_clause {
-                let variable_id = crude_literal.abs() as usize;
-                let polarity = if *crude_literal > 0 {
-                    Polarity::Positive
-                } else {
-                    Polarity::Negative
-                };
-                let variable = variables.get_mut(variable_id);
-
-                match polarity {
-                    Polarity::Positive => variable.positive_occurrences.push(clause_id),
-                    Polarity::Negative => variable.negative_occurrences.push(clause_id),
-                }
-                literals.insert(variable_id, polarity);
-            }
-
-            clauses.push(Clause::new(literals));
-        }
+    pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
         CnfFormula {
             unsat_clauses: clauses.len(),
             clauses,
@@ -164,10 +140,14 @@ mod tests {
     use super::*;
     use crate::cnf::assignment::AssignmentReason::Branching;
     use crate::cnf::assignment::AssignmentValue;
+    use crate::cnf::parser::parse_cnf;
 
     #[test]
     fn test_formula_assign_is_reversible() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2, 3], vec![4, 5, 6]], 6);
+        let mut cnf = parse_cnf("\
+p cnf 6 2
+1 2 3 0
+4 5 6 0").unwrap();
 
         let snapshot = cnf.clone();
 
@@ -180,7 +160,11 @@ mod tests {
 
     #[test]
     fn test_unit_queue() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4, 5]], 6);
+        let mut cnf = parse_cnf("\
+p cnf 5 2
+1 2 0
+3 4 5 0").unwrap();
+
         let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
         let mut queue: VecDeque<usize> = VecDeque::new();
 
@@ -190,7 +174,10 @@ mod tests {
 
     #[test]
     fn test_satisfy_occurance_in_single_clause() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![3, 4]], 4);
+        let mut cnf = parse_cnf("\
+p cnf 4 2
+1 2 0
+3 4 0").unwrap();
 
         assert!(!cnf.is_satisfied());
 
@@ -214,7 +201,10 @@ mod tests {
 
     #[test]
     fn test_satisfy_occurance_in_multiple_clauses() {
-        let mut cnf = CnfFormula::new(vec![vec![1, 2], vec![1, 3]], 3);
+        let mut cnf = parse_cnf("\
+p cnf 3 2
+1 2 0
+1 3 0").unwrap();
 
         assert!(!cnf.is_satisfied());
 

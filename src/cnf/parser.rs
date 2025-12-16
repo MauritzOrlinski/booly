@@ -1,4 +1,7 @@
+use crate::cnf::clause::Clause;
 use crate::cnf::cnf_formula::CnfFormula;
+use crate::cnf::literals::{Literals, Polarity};
+use crate::cnf::variable::Variables;
 
 pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
     let header_line_string = cnf_string.lines()
@@ -16,13 +19,38 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
         .map(|line| line.trim())
         .fold(String::new(), |acc, line| acc + " " + line);
 
-    let clauses = cleaned_up_source
+    let crude_clauses = cleaned_up_source
         .split(" 0")
         .filter(|clause| !clause.is_empty())
         .map(parse_clause)
         .collect::<Result<Vec<Vec<i64>>, ParseError>>()?;
 
-    Ok(CnfFormula::new(clauses, variable_count))
+    let mut variables: Variables = Variables::new(variable_count);
+    let mut clauses: Vec<Clause> = Vec::new();
+
+    for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
+        let mut literals = Literals::new();
+
+        for crude_literal in crude_clause {
+            let variable_id = crude_literal.abs() as usize;
+            let polarity = if *crude_literal > 0 {
+                Polarity::Positive
+            } else {
+                Polarity::Negative
+            };
+            let variable = variables.get_mut(variable_id);
+
+            match polarity {
+                Polarity::Positive => variable.positive_occurrences.push(clause_id),
+                Polarity::Negative => variable.negative_occurrences.push(clause_id),
+            }
+            literals.insert(variable_id, polarity);
+        }
+
+        clauses.push(Clause::new(literals));
+    }
+    
+    Ok(CnfFormula::new(clauses, variables))
 }
 
 fn parse_clause(clause_string: &str) -> Result<Vec<i64>, ParseError> {
