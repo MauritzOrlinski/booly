@@ -72,7 +72,7 @@ impl fmt::Display for Variables {
                         AssignmentValue::True => "",
                         AssignmentValue::False => "-",
                     },
-                    var_id
+                    var_id + 1
                 ))
                 .collect::<Vec<String>>()
                 .join(" ")
