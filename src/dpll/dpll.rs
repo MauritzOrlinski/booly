@@ -28,6 +28,7 @@ pub struct Dpll {
     unit_queue: VecDeque<usize>,
     pub cnf_formula: CnfFormula,
     assignment_stack: Vec<(u32, Assignment)>,
+    current_search_depth: u32
 }
 
 impl Dpll {
@@ -36,51 +37,59 @@ impl Dpll {
             cnf_formula,
             unit_queue: VecDeque::new(),
             assignment_stack: Vec::new(),
+            current_search_depth: 1
         }
     }
 
-    pub fn dpll(&mut self, depth: u32) -> DpllResult {
+    pub fn dpll(&mut self) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
             return Satisfied;
         }
 
-        let unit_propagation_result = self.propagate_unit_clauses(depth);
+        let unit_propagation_result = self.propagate_unit_clauses();
         match unit_propagation_result {
             Satisfied => return Satisfied,
-            Unsatisfiable => return Unsatisfiable,
+            Unsatisfiable => {
+                self.undo_assignment_stack();
+                return Unsatisfiable
+            },
             _ => (),
         }
 
         let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
         let branch_b = branch_a.inverse();
 
-        match self.handle_assign_single_branch(branch_a, depth) {
+        match self.handle_assign_single_branch(branch_a) {
             Satisfied => return Satisfied,
             Unknown => panic!("This should not happen."),
             Unsatisfiable => (),
         }
 
-        match self.handle_assign_single_branch(branch_b, depth) {
-            Satisfied => Satisfied,
+        match self.handle_assign_single_branch(branch_b) {
+            Satisfied => return Satisfied,
             Unknown => panic!("This should not happen."),
-            Unsatisfiable => Unsatisfiable,
+            Unsatisfiable => (),
         }
+
+        self.undo_assignment_stack();
+        Unsatisfiable
+
     }
 
-    fn handle_assign_single_branch(&mut self, assignment: Assignment, depth: u32) -> DpllResult {
+    fn handle_assign_single_branch(&mut self, assignment: Assignment) -> DpllResult {
         let assignment_result = self
             .cnf_formula
             .apply_assignment(&assignment, &mut self.unit_queue);
 
         match assignment_result {
             Success => {
-                self.assignment_stack.push((depth, assignment));
-                let branch_result = self.dpll(depth + 1);
+                self.assignment_stack.push((self.current_search_depth, assignment));
+                self.current_search_depth += 1;
+                let branch_result = self.dpll();
                 match branch_result {
                     Satisfied => Satisfied,
                     Unknown => panic!("This should not happen."),
                     Unsatisfiable => {
-                        self.undo_assignment_stack(depth + 1);
                         let (_, assignment) = self.assignment_stack.pop().unwrap();
                         self.cnf_formula.reverse_assignment(&assignment);
                         self.unit_queue.clear();
@@ -96,7 +105,7 @@ impl Dpll {
         }
     }
 
-    fn propagate_unit_clauses(&mut self, depth: u32) -> DpllResult {
+    fn propagate_unit_clauses(&mut self) -> DpllResult {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
             if matches!(unit_clause.satisfied_by, Some(_)) {
@@ -121,10 +130,9 @@ impl Dpll {
             let assignment_result = self
                 .cnf_formula
                 .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
-            self.assignment_stack.push((depth, satisfying_assignment));
+            self.assignment_stack.push((self.current_search_depth, satisfying_assignment));
 
             if matches!(assignment_result, Conflict) {
-                self.undo_assignment_stack(depth);
                 return Unsatisfiable;
             }
             if self.cnf_formula.is_satisfied() {
@@ -134,14 +142,15 @@ impl Dpll {
         Unknown
     }
 
-    pub fn undo_assignment_stack(&mut self, depth: u32) {
+    pub fn undo_assignment_stack(&mut self) {
         while let Some((stack_depth, assignment)) = self.assignment_stack.pop() {
-            if stack_depth >= depth {
+            if stack_depth >= self.current_search_depth {
                 self.cnf_formula.reverse_assignment(&assignment);
             } else {
                 self.assignment_stack.push((stack_depth, assignment));
                 break;
             }
         }
+        self.current_search_depth -= 1;
     }
 }

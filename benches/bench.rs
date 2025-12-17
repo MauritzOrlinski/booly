@@ -35,7 +35,7 @@ fn benchmark_all_in_directory<P: AsRef<Path>>(path: P, mut group: BenchmarkGroup
 
 fn run_dpll(cnf: CnfFormula) {
     let mut dpll = Dpll::new(cnf);
-    dpll.dpll(0);
+    dpll.dpll();
 }
 
 fn criterion() -> Criterion {
