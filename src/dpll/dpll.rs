@@ -1,5 +1,4 @@
 use crate::dpll::assignment::{Assignment, AssignmentResult::{Success, Conflict}};
-use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::heuristics::heuristic::{Heuristic};
 use std::collections::VecDeque;
@@ -13,10 +12,10 @@ pub enum Result {
 
 #[derive(Debug)]
 pub struct Dpll {
-    unit_queue: VecDeque<usize>,
+    pub(crate) unit_queue: VecDeque<usize>,
     pub cnf_formula: CnfFormula,
-    assignment_stack: Vec<(u32, Assignment)>,
-    current_search_depth: u32
+    pub(crate) assignment_stack: Vec<(u32, Assignment)>,
+    pub(crate) current_search_depth: u32
 }
 
 impl Dpll {
@@ -33,13 +32,13 @@ impl Dpll {
         if self.cnf_formula.is_satisfied() {
             return Result::Satisfied;
         }
-        
+
         if let Some(result) = self.propagate_unit_clauses() {
-            match result {
-                Result::Satisfied => return Result::Satisfied,
+            return match result {
+                Result::Satisfied => Result::Satisfied,
                 Result::Conflict => {
                     self.undo_assignment_stack();
-                    return Result::Conflict
+                    Result::Conflict
                 },
             }
         }
@@ -88,43 +87,6 @@ impl Dpll {
                 Result::Conflict
             }
         }
-    }
-
-    fn propagate_unit_clauses(&mut self) -> Option<Result> {
-        while let Some(unit_clause_id) = self.unit_queue.pop_front() {
-            let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
-            if matches!(unit_clause.satisfied_by, Some(_)) {
-                continue;
-            }
-            let satisfying_assignment = unit_clause
-                .literals
-                .iter()
-                .find_map(|(variable_id, polarity)| {
-                    let variable = self.cnf_formula.variables.get(*variable_id);
-                    match variable.value {
-                        None => Some(Assignment::new(
-                            *variable_id,
-                            polarity.get_satisfying_assignment(),
-                            Forced,
-                        )),
-                        Some(_) => None,
-                    }
-                })
-                .unwrap();
-
-            let assignment_result = self
-                .cnf_formula
-                .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
-            self.assignment_stack.push((self.current_search_depth, satisfying_assignment));
-
-            if matches!(assignment_result, Conflict) {
-                return Some(Result::Conflict);
-            }
-            if self.cnf_formula.is_satisfied() {
-                return Some(Result::Satisfied);
-            }
-        }
-        None
     }
 
     pub fn undo_assignment_stack(&mut self) {
