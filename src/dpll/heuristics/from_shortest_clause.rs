@@ -1,5 +1,5 @@
-use crate::cnf::assignment::Assignment;
-use crate::cnf::assignment::AssignmentReason::Branching;
+use crate::dpll::assignment::Assignment;
+use crate::dpll::assignment::AssignmentReason::Branching;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::heuristics::heuristic::Heuristic;
 

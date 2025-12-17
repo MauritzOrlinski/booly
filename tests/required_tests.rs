@@ -1,8 +1,8 @@
 use std::path::Path;
-use dpml::cnf::parser::parse_cnf;
+use dpml::parser::parse_cnf;
 use dpml::dpll::dpll::Dpll;
 use dpml::dpll::dpll::DpllResult::{Satisfied, Unsatisfiable};
-use dpml::dpll::verify::verify_satisfied;
+use dpml::verify::verify_satisfied;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();

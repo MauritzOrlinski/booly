@@ -4,7 +4,7 @@ use std::time::Duration;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
 use criterion::measurement::WallTime;
 use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::cnf::parser::parse_cnf;
+use dpml::parser::parse_cnf;
 use dpml::dpll::dpll::Dpll;
 
 fn benchmark(c: &mut Criterion) -> io::Result<()> {

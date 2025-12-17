@@ -1,4 +1,4 @@
-use crate::cnf::assignment::Assignment;
+use crate::dpll::assignment::Assignment;
 use crate::cnf::cnf_formula::CnfFormula;
 
 pub trait Heuristic {

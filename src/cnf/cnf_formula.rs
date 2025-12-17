@@ -1,4 +1,4 @@
-use crate::cnf::assignment::Assignment;
+use crate::dpll::assignment::Assignment;
 use crate::cnf::clause::Clause;
 use crate::cnf::variable::Variables;
 use std::collections::VecDeque;
@@ -129,9 +129,9 @@ pub struct AssignException;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cnf::assignment::AssignmentReason::Branching;
-    use crate::cnf::assignment::AssignmentValue;
-    use crate::cnf::parser::parse_cnf;
+    use crate::dpll::assignment::AssignmentReason::Branching;
+    use crate::dpll::assignment::AssignmentValue;
+    use crate::parser::parse_cnf;
 
     #[test]
     fn test_formula_assign_is_reversible() {

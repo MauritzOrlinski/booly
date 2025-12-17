@@ -1,4 +1,4 @@
-use crate::cnf::assignment::AssignmentValue;
+use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 

@@ -84,7 +84,7 @@ pub struct ParseError {
 
 #[cfg(test)]
 mod tests {
-    use crate::cnf::parser::parse_cnf;
+    use crate::parser::parse_cnf;
 
     #[test]
     fn test_parse_cnf() {

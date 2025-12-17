@@ -1,6 +1,4 @@
-pub(crate) mod assignment;
 pub(crate) mod clause;
 pub mod cnf_formula;
-mod literals;
-pub mod parser;
+pub(crate) mod literals;
 pub(crate) mod variable;

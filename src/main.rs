@@ -1,7 +1,7 @@
 use clap::Parser;
 use clap::ValueHint;
 use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::cnf::parser::parse_cnf;
+use dpml::parser::parse_cnf;
 use dpml::dpll::dpll::{Dpll, DpllResult};
 use std::fs;
 use std::path::PathBuf;
