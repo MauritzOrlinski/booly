@@ -1,3 +1,4 @@
+use crate::cnf::clause::Clause;
 use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::dpll::Dpll;
@@ -10,21 +11,7 @@ impl Dpll {
             if matches!(unit_clause.satisfied_by, Some(_)) {
                 continue;
             }
-            let satisfying_assignment = unit_clause
-                .literals
-                .iter()
-                .find_map(|(variable_id, polarity)| {
-                    let variable = self.cnf_formula.variables.get(*variable_id);
-                    match variable.value {
-                        None => Some(Assignment::new(
-                            *variable_id,
-                            polarity.get_satisfying_assignment(),
-                            Forced,
-                        )),
-                        Some(_) => None,
-                    }
-                })
-                .unwrap();
+            let satisfying_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause);
 
             let assignment_result = self
                 .cnf_formula
@@ -40,5 +27,23 @@ impl Dpll {
             }
         }
         None
+    }
+
+    fn find_satisfying_assignment_for_unit_clause(&self, unit_clause: &Clause) -> Assignment {
+        unit_clause
+            .literals
+            .iter()
+            .find_map(|(variable_id, polarity)| {
+                let variable = self.cnf_formula.variables.get(*variable_id);
+                match variable.value {
+                    None => Some(Assignment::new(
+                        *variable_id,
+                        polarity.get_satisfying_assignment(),
+                        Forced,
+                    )),
+                    Some(_) => None,
+                }
+            })
+            .unwrap()
     }
 }
