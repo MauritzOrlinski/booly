@@ -1,7 +1,7 @@
 use std::path::Path;
 use dpml::parser::parse_cnf;
 use dpml::dpll::dpll::Dpll;
-use dpml::dpll::dpll::DpllResult::{Satisfied, Unsatisfiable};
+use dpml::dpll::dpll::Result::{Satisfied, Conflict};
 use dpml::verify::verify_satisfied;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
@@ -19,7 +19,7 @@ fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let mut dpll = Dpll::new(cnf);
 
     let result = dpll.dpll();
-    assert_eq!(result, Unsatisfiable);
+    assert_eq!(result, Conflict);
     Ok(())
 }
 

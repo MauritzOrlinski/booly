@@ -2,25 +2,13 @@ use crate::dpll::assignment::{Assignment, AssignmentResult::{Success, Conflict}}
 use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::heuristics::heuristic::{Heuristic};
-use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
 use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
 
 #[derive(Debug, PartialEq)]
-pub enum DpllResult {
+pub enum Result {
     Satisfied,
-    Unknown,
-    Unsatisfiable,
-}
-
-impl DpllResult {
-    pub fn as_str(&self) -> &str {
-        match self {
-            Satisfied => "SATISFIABLE",
-            Unknown => "UNKNOWN",
-            Unsatisfiable => "UNSATISFIABLE",
-        }
-    }
+    Conflict,
 }
 
 #[derive(Debug)]
@@ -41,42 +29,40 @@ impl Dpll {
         }
     }
 
-    pub fn dpll(&mut self) -> DpllResult {
+    pub fn dpll(&mut self) -> Result {
         if self.cnf_formula.is_satisfied() {
-            return Satisfied;
+            return Result::Satisfied;
         }
-
-        let unit_propagation_result = self.propagate_unit_clauses();
-        match unit_propagation_result {
-            Satisfied => return Satisfied,
-            Unsatisfiable => {
-                self.undo_assignment_stack();
-                return Unsatisfiable
-            },
-            _ => (),
+        
+        if let Some(result) = self.propagate_unit_clauses() {
+            match result {
+                Result::Satisfied => return Result::Satisfied,
+                Result::Conflict => {
+                    self.undo_assignment_stack();
+                    return Result::Conflict
+                },
+            }
         }
 
         let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
         let branch_b = branch_a.inverse();
 
         match self.handle_assign_single_branch(branch_a) {
-            Satisfied => return Satisfied,
-            Unknown => panic!("This should not happen."),
-            Unsatisfiable => (),
+            Result::Satisfied => return Result::Satisfied,
+            Result::Conflict => (),
         }
 
         match self.handle_assign_single_branch(branch_b) {
-            Satisfied => return Satisfied,
-            Unknown => panic!("This should not happen."),
-            Unsatisfiable => (),
+            Result::Satisfied => return Result::Satisfied,
+            Result::Conflict => (),
         }
 
         self.undo_assignment_stack();
-        Unsatisfiable
+        Result::Conflict
 
     }
 
-    fn handle_assign_single_branch(&mut self, assignment: Assignment) -> DpllResult {
+    fn handle_assign_single_branch(&mut self, assignment: Assignment) -> Result {
         let assignment_result = self
             .cnf_formula
             .apply_assignment(&assignment, &mut self.unit_queue);
@@ -87,25 +73,24 @@ impl Dpll {
                 self.current_search_depth += 1;
                 let branch_result = self.dpll();
                 match branch_result {
-                    Satisfied => Satisfied,
-                    Unknown => panic!("This should not happen."),
-                    Unsatisfiable => {
+                    Result::Satisfied => Result::Satisfied,
+                    Result::Conflict => {
                         let (_, assignment) = self.assignment_stack.pop().unwrap();
                         self.cnf_formula.reverse_assignment(&assignment);
                         self.unit_queue.clear();
-                        Unsatisfiable
+                        Result::Conflict
                     }
                 }
             }
             Conflict => {
                 self.cnf_formula.reverse_assignment(&assignment);
                 self.unit_queue.clear();
-                Unsatisfiable
+                Result::Conflict
             }
         }
     }
 
-    fn propagate_unit_clauses(&mut self) -> DpllResult {
+    fn propagate_unit_clauses(&mut self) -> Option<Result> {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
             if matches!(unit_clause.satisfied_by, Some(_)) {
@@ -133,13 +118,13 @@ impl Dpll {
             self.assignment_stack.push((self.current_search_depth, satisfying_assignment));
 
             if matches!(assignment_result, Conflict) {
-                return Unsatisfiable;
+                return Some(Result::Conflict);
             }
             if self.cnf_formula.is_satisfied() {
-                return Satisfied;
+                return Some(Result::Satisfied);
             }
         }
-        Unknown
+        None
     }
 
     pub fn undo_assignment_stack(&mut self) {
