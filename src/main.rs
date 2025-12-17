@@ -1,35 +1,63 @@
 use clap::Parser;
 use clap::ValueHint;
+use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::cnf::parser::parse_cnf;
 use dpml::dpll::dpll::{Dpll, DpllResult};
 use std::fs;
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Parser, Debug)]
 #[command(name = "dpml", version)]
 struct CliArguments {
     #[arg(value_name = "FILE", value_hint = ValueHint::FilePath)]
-    input: PathBuf,
+    input_file: PathBuf,
 }
 
 fn main() {
     let cli = CliArguments::parse();
-    let cnf_formula_str =
-        fs::read_to_string(&cli.input).expect("Should have been able to read the file");
-    let cnf_formula = parse_cnf(cnf_formula_str.as_str()).unwrap();
+
+    let cnf_formula_str: String;
+    match fs::read_to_string(&cli.input_file) {
+        Ok(value) => cnf_formula_str = value,
+        Err(_) => {
+            println!("Failed to read input file.");
+            return;
+        }
+    }
+
+    let cnf_formula: CnfFormula;
+    match parse_cnf(&cnf_formula_str) {
+        Ok(value) => cnf_formula = value,
+        Err(_) => {
+            println!("Failed to parse input file.");
+            return;
+        }
+    }
+
     let mut dpll = Dpll::new(cnf_formula);
+
+    let start = Instant::now();
     let result = dpll.dpll(0);
+    let elapsed = start.elapsed();
+
     match result {
-        DpllResult::Satisfied => println!(
-            "Formula in \"{}\" is {:?}:\n{}",
-            cli.input.to_str().unwrap().to_string(),
-            result,
-            dpll.cnf_formula.get_variable_assignments()
+        DpllResult::Satisfied => println!("\
+s SATISFIABLE
+v {} 0
+t {:.7}",
+            dpll.cnf_formula.get_variable_assignments(),
+            elapsed.as_secs_f64()
         ),
-        DpllResult::Unsatisfiable | DpllResult::Unknown => println!(
-            "Formula in \"{}\" is {:?}",
-            cli.input.to_str().unwrap().to_string(),
-            result
+        DpllResult::Unsatisfiable => println!("\
+s UNSATISFIABLE
+t {:.7}",
+            elapsed.as_secs_f64()
+        ),
+        DpllResult::Unknown => println!("\
+s UNKNOWN
+t {:.7}",
+            elapsed.as_secs_f64()
         ),
     }
 }
