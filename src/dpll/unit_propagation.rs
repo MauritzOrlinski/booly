@@ -1,9 +1,10 @@
-use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment::AssignmentReason::Forced;
+use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::dpll::Dpll;
+use crate::dpll::dpll::Result;
 
 impl Dpll {
-    pub(crate) fn propagate_unit_clauses(&mut self) -> Option<crate::dpll::dpll::Result> {
+    pub(crate) fn propagate_unit_clauses(&mut self) -> Option<Result> {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
             if matches!(unit_clause.satisfied_by, Some(_)) {
@@ -28,13 +29,14 @@ impl Dpll {
             let assignment_result = self
                 .cnf_formula
                 .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
-            self.assignment_stack.push((self.current_search_depth, satisfying_assignment));
+            self.assignment_stack
+                .push((self.current_search_depth, satisfying_assignment));
 
             if matches!(assignment_result, AssignmentResult::Conflict) {
-                return Some(crate::dpll::dpll::Result::Conflict);
+                return Some(Result::Conflict);
             }
             if self.cnf_formula.is_satisfied() {
-                return Some(crate::dpll::dpll::Result::Satisfied);
+                return Some(Result::Satisfied);
             }
         }
         None

@@ -1,8 +1,11 @@
-use crate::dpll::assignment::{Assignment, AssignmentResult::{Success, Conflict}};
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::heuristics::heuristic::{Heuristic};
-use std::collections::VecDeque;
+use crate::dpll::assignment::{
+    Assignment,
+    AssignmentResult::{Conflict, Success},
+};
 use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
+use crate::dpll::heuristics::heuristic::Heuristic;
+use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq)]
 pub enum Result {
@@ -15,7 +18,7 @@ pub struct Dpll {
     pub(crate) unit_queue: VecDeque<usize>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: Vec<(u32, Assignment)>,
-    pub(crate) current_search_depth: u32
+    pub(crate) current_search_depth: u32,
 }
 
 impl Dpll {
@@ -24,7 +27,7 @@ impl Dpll {
             cnf_formula,
             unit_queue: VecDeque::new(),
             assignment_stack: Vec::new(),
-            current_search_depth: 1
+            current_search_depth: 1,
         }
     }
 
@@ -39,26 +42,23 @@ impl Dpll {
                 Result::Conflict => {
                     self.undo_assignment_stack();
                     Result::Conflict
-                },
-            }
+                }
+            };
         }
 
         let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
         let branch_b = branch_a.inverse();
 
-        match self.handle_assign_single_branch(branch_a) {
-            Result::Satisfied => return Result::Satisfied,
-            Result::Conflict => (),
+        if let Result::Satisfied = self.handle_assign_single_branch(branch_a) {
+            return Result::Satisfied;
         }
 
-        match self.handle_assign_single_branch(branch_b) {
-            Result::Satisfied => return Result::Satisfied,
-            Result::Conflict => (),
+        if let Result::Satisfied = self.handle_assign_single_branch(branch_b) {
+            return Result::Satisfied;
         }
 
         self.undo_assignment_stack();
         Result::Conflict
-
     }
 
     fn handle_assign_single_branch(&mut self, assignment: Assignment) -> Result {
@@ -68,7 +68,8 @@ impl Dpll {
 
         match assignment_result {
             Success => {
-                self.assignment_stack.push((self.current_search_depth, assignment));
+                self.assignment_stack
+                    .push((self.current_search_depth, assignment));
                 self.current_search_depth += 1;
                 let branch_result = self.dpll();
                 match branch_result {

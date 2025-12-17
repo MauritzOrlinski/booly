@@ -55,11 +55,15 @@ impl Variables {
     }
 
     pub(crate) fn find_unassigned(&self) -> usize {
-        self.0.iter().enumerate()
+        self.0
+            .iter()
+            .enumerate()
             .find_map(|(id, variable)| match variable.value {
                 Some(_) => None,
                 None => Some(id),
-            }).unwrap() + 1
+            })
+            .unwrap()
+            + 1
     }
 }
 

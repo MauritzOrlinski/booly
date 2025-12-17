@@ -25,7 +25,7 @@ impl AssignmentValue {
 #[derive(Debug, Clone, Copy)]
 pub enum AssignmentResult {
     Success,
-    Conflict
+    Conflict,
 }
 
 #[derive(Clone, Debug)]

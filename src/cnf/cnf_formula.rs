@@ -1,10 +1,10 @@
-use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::Clause;
 use crate::cnf::variable::Variables;
+use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
+use crate::dpll::assignment::{Assignment, AssignmentResult};
 use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {

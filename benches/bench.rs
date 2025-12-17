@@ -1,11 +1,13 @@
-use std::{fs, io};
+use criterion::measurement::WallTime;
+use criterion::{
+    BenchmarkGroup, BenchmarkId, Criterion, black_box, criterion_group, criterion_main,
+};
+use dpml::cnf::cnf_formula::CnfFormula;
+use dpml::dpll::dpll::Dpll;
+use dpml::parser::parse_cnf;
 use std::path::Path;
 use std::time::Duration;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion};
-use criterion::measurement::WallTime;
-use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::parser::parse_cnf;
-use dpml::dpll::dpll::Dpll;
+use std::{fs, io};
 
 fn benchmark(c: &mut Criterion) -> io::Result<()> {
     benchmark_all_in_directory("inputs/test/sat", c.benchmark_group("satisfiable"))?;
@@ -13,7 +15,10 @@ fn benchmark(c: &mut Criterion) -> io::Result<()> {
     Ok(())
 }
 
-fn benchmark_all_in_directory<P: AsRef<Path>>(path: P, mut group: BenchmarkGroup<WallTime>) -> io::Result<()> {
+fn benchmark_all_in_directory<P: AsRef<Path>>(
+    path: P,
+    mut group: BenchmarkGroup<WallTime>,
+) -> io::Result<()> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;
         let path = entry.path();
@@ -21,13 +26,9 @@ fn benchmark_all_in_directory<P: AsRef<Path>>(path: P, mut group: BenchmarkGroup
         let file_name = path.file_stem().unwrap().to_str().unwrap();
         let cnf = parse_cnf(cnf_string.as_str()).unwrap();
 
-        group.bench_with_input(
-            BenchmarkId::from_parameter(file_name),
-            &cnf,
-            |b, cnf| {
-                b.iter(|| run_dpll(black_box(cnf.clone())))
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(file_name), &cnf, |b, cnf| {
+            b.iter(|| run_dpll(black_box(cnf.clone())))
+        });
     }
     group.finish();
     Ok(())
