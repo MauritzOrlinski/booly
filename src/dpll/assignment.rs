@@ -22,6 +22,12 @@ impl AssignmentValue {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum AssignmentResult {
+    Success,
+    Conflict
+}
+
 #[derive(Clone, Debug)]
 pub struct Assignment {
     pub(crate) variable_id: usize,

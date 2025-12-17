@@ -1,9 +1,10 @@
-use crate::dpll::assignment::Assignment;
+use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::Clause;
 use crate::cnf::variable::Variables;
 use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
+use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
@@ -25,7 +26,7 @@ impl CnfFormula {
         &mut self,
         assignment: &Assignment,
         unit_queue: &mut VecDeque<usize>,
-    ) -> Result<(), AssignException> {
+    ) -> AssignmentResult {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = Some(assignment.value);
@@ -41,7 +42,7 @@ impl CnfFormula {
             }
         }
 
-        let mut assignment_error = false;
+        let mut assignment_conflict = false;
 
         for clause_id in unsatisfied_clause_ids {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
@@ -52,14 +53,14 @@ impl CnfFormula {
             if clause.unassigned_variables == 1 {
                 unit_queue.push_back(*clause_id);
             } else if clause.unassigned_variables <= 0 {
-                assignment_error = true;
+                assignment_conflict = true;
             }
         }
 
-        if assignment_error {
-            Err(AssignException)
+        if assignment_conflict {
+            Conflict
         } else {
-            Ok(())
+            Success
         }
     }
 

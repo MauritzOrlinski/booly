@@ -1,4 +1,4 @@
-use crate::dpll::assignment::Assignment;
+use crate::dpll::assignment::{Assignment, AssignmentResult::{Success, Conflict}};
 use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::heuristics::heuristic::{Heuristic};
@@ -73,7 +73,7 @@ impl Dpll {
             .apply_assignment(&assignment, &mut self.unit_queue);
 
         match assignment_result {
-            Ok(_) => {
+            Success => {
                 self.assignment_stack.push((depth, assignment));
                 let branch_result = self.dpll(depth + 1);
                 match branch_result {
@@ -88,7 +88,7 @@ impl Dpll {
                     }
                 }
             }
-            Err(_) => {
+            Conflict => {
                 self.cnf_formula.reverse_assignment(&assignment);
                 self.unit_queue.clear();
                 Unsatisfiable
@@ -123,7 +123,7 @@ impl Dpll {
                 .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
             self.assignment_stack.push((depth, satisfying_assignment));
 
-            if matches!(assignment_result, Err(_)) {
+            if matches!(assignment_result, Conflict) {
                 self.undo_assignment_stack(depth);
                 return Unsatisfiable;
             }
