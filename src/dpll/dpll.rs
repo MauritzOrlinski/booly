@@ -1,9 +1,10 @@
 use crate::cnf::assignment::Assignment;
 use crate::cnf::assignment::AssignmentReason::Forced;
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::chose_next_variable::{ChooseNextVariable, ChooseNextVariableFromShortestClause, TrivialChooseNextVariable};
+use crate::dpll::heuristics::heuristic::{Heuristic};
 use crate::dpll::dpll::DpllResult::{Satisfied, Unknown, Unsatisfiable};
 use std::collections::VecDeque;
+use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
 
 #[derive(Debug, PartialEq)]
 pub enum DpllResult {
@@ -50,7 +51,7 @@ impl Dpll {
             _ => (),
         }
 
-        let branch_a = ChooseNextVariableFromShortestClause::chose(&self.cnf_formula);
+        let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
         let branch_b = branch_a.inverse();
 
         match self.handle_assign_single_branch(branch_a, depth) {

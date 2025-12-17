@@ -1,16 +1,12 @@
 use crate::cnf::assignment::Assignment;
 use crate::cnf::assignment::AssignmentReason::Branching;
-use crate::cnf::assignment::AssignmentValue::True;
 use crate::cnf::cnf_formula::CnfFormula;
+use crate::dpll::heuristics::heuristic::Heuristic;
 
-pub trait ChooseNextVariable {
-    fn chose(cnf_formula: &CnfFormula) -> Assignment;
-}
+pub struct FromShortestClause;
 
-pub struct ChooseNextVariableFromShortestClause;
-
-impl ChooseNextVariable for ChooseNextVariableFromShortestClause {
-    fn chose(cnf_formula: &CnfFormula) -> Assignment {
+impl Heuristic for FromShortestClause {
+    fn chose_next_assignment(cnf_formula: &CnfFormula) -> Assignment {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
@@ -31,13 +27,5 @@ impl ChooseNextVariable for ChooseNextVariableFromShortestClause {
             .unwrap();
 
         Assignment::new(variable_id, assignment_value, Branching)
-    }
-}
-
-pub struct TrivialChooseNextVariable;
-
-impl ChooseNextVariable for TrivialChooseNextVariable {
-    fn chose(cnf_formula: &CnfFormula) -> Assignment {
-        Assignment::new(cnf_formula.variables.find_unassigned(), True, Branching)
     }
 }
