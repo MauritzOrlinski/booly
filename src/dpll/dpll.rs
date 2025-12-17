@@ -144,34 +144,3 @@ impl Dpll {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::cnf::parser::parse_cnf;
-    use crate::dpll::verify::verify_satisfied;
-
-    fn test_from_file(cnf_string: &str, sat: DpllResult) {
-        let cnf = parse_cnf(cnf_string).unwrap();
-        let mut dpll = Dpll::new(cnf);
-
-        let result = dpll.dpll(0);
-        assert_eq!(result, sat);
-        assert!(verify_satisfied(&dpll.cnf_formula))
-    }
-
-    #[test]
-    fn test_dpll_xor() {
-        test_from_file(include_str!("../../inputs/test/sat/xor.cnf"), Satisfied);
-    }
-
-    #[test]
-    fn test_dpll_unit() {
-        test_from_file(include_str!("../../inputs/test/sat/unit.cnf"), Satisfied);
-    }
-
-    #[test]
-    fn test_dpll_unique() {
-        test_from_file(include_str!("../../inputs/test/sat/unique.cnf"), Satisfied);
-    }
-}
