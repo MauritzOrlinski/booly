@@ -53,6 +53,14 @@ impl Variables {
     pub(crate) fn len(&self) -> usize {
         self.0.len()
     }
+
+    pub(crate) fn find_unassigned(&self) -> usize {
+        self.0.iter().enumerate()
+            .find_map(|(id, variable)| match variable.value {
+                Some(_) => None,
+                None => Some(id),
+            }).unwrap() + 1
+    }
 }
 
 impl fmt::Display for Variables {
