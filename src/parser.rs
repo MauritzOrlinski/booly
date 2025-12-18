@@ -3,6 +3,17 @@ use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::{Literals, Polarity};
 use crate::cnf::variable::Variables;
 
+/// Parses a string in DIMACS CNF format to the CNF data structure.
+/// See (https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html) for a specification of the file format.
+///
+/// # Arguments
+/// * `cnf_string` - A string in DIMACS CNF form
+///
+/// # Returns
+/// The parsed [`CnfFormula`](CnfFormula)
+///
+/// # Errors
+/// Returns an error, if unable to parse given string.
 pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
     let header_line_string = cnf_string
         .lines()

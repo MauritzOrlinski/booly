@@ -18,7 +18,7 @@ impl Variable {
         }
     }
 
-    /// Chooses the appropriate clause slices depending on an assignment value
+    /// Chooses the appropriate clause slices depending on an assignment value.
     ///
     /// # Arguments
     /// * `value` - The assignment value
