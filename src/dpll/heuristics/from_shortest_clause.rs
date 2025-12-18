@@ -1,6 +1,5 @@
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
-use crate::dpll::assignment::AssignmentReason::Branching;
 use crate::dpll::heuristics::heuristic::Heuristic;
 
 pub struct FromShortestClause;
@@ -26,6 +25,6 @@ impl Heuristic for FromShortestClause {
             })
             .unwrap();
 
-        Assignment::new(variable_id, assignment_value, Branching)
+        Assignment::new(variable_id, assignment_value)
     }
 }

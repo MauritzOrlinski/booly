@@ -1,12 +1,6 @@
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, Clone, Copy)]
-pub enum AssignmentReason {
-    Forced,
-    Branching,
-}
-
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AssignmentValue {
     True,
@@ -32,15 +26,13 @@ pub enum AssignmentResult {
 pub struct Assignment {
     pub(crate) variable_id: usize,
     pub(crate) value: AssignmentValue,
-    pub(crate) reason: AssignmentReason,
 }
 
 impl Assignment {
-    pub fn new(variable_id: usize, value: AssignmentValue, reason: AssignmentReason) -> Self {
+    pub fn new(variable_id: usize, value: AssignmentValue) -> Self {
         Assignment {
             variable_id,
             value,
-            reason,
         }
     }
 
@@ -48,7 +40,6 @@ impl Assignment {
         Assignment {
             variable_id: self.variable_id,
             value: self.value.get_inverse(),
-            reason: self.reason,
         }
     }
 }

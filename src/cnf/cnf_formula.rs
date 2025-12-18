@@ -128,7 +128,6 @@ impl fmt::Display for CnfFormula {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dpll::assignment::AssignmentReason::Branching;
     use crate::dpll::assignment::AssignmentValue;
     use crate::parser::parse_cnf;
 
@@ -144,7 +143,7 @@ p cnf 6 2
 
         let snapshot = cnf.clone();
 
-        let mut assignment = Assignment::new(1, AssignmentValue::True, Branching);
+        let mut assignment = Assignment::new(1, AssignmentValue::True);
         let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
         let _ = cnf.reverse_assignment(&mut assignment);
 
@@ -161,7 +160,7 @@ p cnf 5 2
         )
         .unwrap();
 
-        let mut assignment = Assignment::new(1, AssignmentValue::False, Branching);
+        let mut assignment = Assignment::new(1, AssignmentValue::False);
         let mut queue: VecDeque<usize> = VecDeque::new();
 
         let _ = cnf.apply_assignment(&mut assignment, &mut queue);
@@ -182,8 +181,8 @@ p cnf 4 2
 
         let unit_queue = &mut VecDeque::new();
 
-        let first_assignment = &Assignment::new(1, AssignmentValue::True, Branching);
-        let second_assignment = &Assignment::new(3, AssignmentValue::True, Branching);
+        let first_assignment = &Assignment::new(1, AssignmentValue::True);
+        let second_assignment = &Assignment::new(3, AssignmentValue::True);
 
         let _ = cnf.apply_assignment(first_assignment, unit_queue);
 
@@ -211,7 +210,7 @@ p cnf 3 2
         assert!(!cnf.is_satisfied());
 
         let unit_queue = &mut VecDeque::new();
-        let assignment = &Assignment::new(1, AssignmentValue::True, Branching);
+        let assignment = &Assignment::new(1, AssignmentValue::True);
 
         let _ = cnf.apply_assignment(assignment, unit_queue);
 

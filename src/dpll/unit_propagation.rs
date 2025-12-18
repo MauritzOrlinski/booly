@@ -1,5 +1,4 @@
 use crate::cnf::clause::Clause;
-use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::dpll::Dpll;
 use crate::dpll::dpll::DpllResult;
@@ -52,7 +51,6 @@ impl Dpll {
                     None => Some(Assignment::new(
                         *variable_id,
                         polarity.get_satisfying_assignment(),
-                        Forced,
                     )),
                     Some(_) => None,
                 }
