@@ -16,8 +16,7 @@ impl Dpll {
             let assignment_result = self
                 .cnf_formula
                 .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
-            self.assignment_stack
-                .push((self.current_search_depth, satisfying_assignment));
+            self.assignment_stack.push_assignment(satisfying_assignment);
 
             if matches!(assignment_result, AssignmentResult::Conflict) {
                 return Some(Result::Conflict);
