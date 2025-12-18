@@ -27,7 +27,7 @@ impl Dpll {
         }
     }
 
-    pub fn dpll(&mut self) -> Result {
+    pub fn solve(&mut self) -> Result {
         if self.cnf_formula.is_satisfied() {
             return Result::Satisfied;
         }
@@ -35,7 +35,7 @@ impl Dpll {
         self.assignment_stack.start_decision_level();
 
         if let Some(result) = self.propagate_unit_clauses() {
-            if let Result::Conflict = result {
+            if result == Result::Conflict {
                 self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
             }
             return result;
@@ -51,14 +51,14 @@ impl Dpll {
                 .cnf_formula
                 .apply_assignment(&branch, &mut self.unit_queue);
 
-            if let AssignmentResult::Conflict = assignment_result {
+            if assignment_result == AssignmentResult::Conflict {
                 self.cnf_formula.reverse_assignment(&branch);
                 self.unit_queue.clear();
                 continue;
             }
 
             self.assignment_stack.push_assignment(branch);
-            let branch_result = self.dpll();
+            let branch_result = self.solve();
 
             match branch_result {
                 Result::Conflict => {

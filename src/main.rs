@@ -38,7 +38,7 @@ fn main() {
     let mut dpll = Dpll::new(cnf_formula);
 
     let start = Instant::now();
-    let result = dpll.dpll();
+    let result = dpll.solve();
     let elapsed = start.elapsed();
 
     match result {

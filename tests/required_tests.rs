@@ -8,7 +8,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let mut dpll = Dpll::new(cnf);
 
-    let result = dpll.dpll();
+    let result = dpll.solve();
     assert_eq!(result, Satisfied);
     assert!(verify_satisfied(&dpll.cnf_formula));
     Ok(())
@@ -18,7 +18,7 @@ fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let mut dpll = Dpll::new(cnf);
 
-    let result = dpll.dpll();
+    let result = dpll.solve();
     assert_eq!(result, Conflict);
     Ok(())
 }
