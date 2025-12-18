@@ -1,5 +1,5 @@
 use dpml::dpll::dpll::Dpll;
-use dpml::dpll::dpll::Result::{Conflict, Satisfied};
+use dpml::dpll::dpll::DpllResult::{Conflict, Satisfied};
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;

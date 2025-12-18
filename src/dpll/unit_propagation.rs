@@ -2,10 +2,10 @@ use crate::cnf::clause::Clause;
 use crate::dpll::assignment::AssignmentReason::Forced;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::dpll::Dpll;
-use crate::dpll::dpll::Result;
+use crate::dpll::dpll::DpllResult;
 
 impl Dpll {
-    pub(crate) fn propagate_unit_clauses(&mut self) -> Option<Result> {
+    pub(crate) fn propagate_unit_clauses(&mut self) -> Option<DpllResult> {
         while let Some(unit_clause_id) = self.unit_queue.pop_front() {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
             if matches!(unit_clause.satisfied_by, Some(_)) {
@@ -19,10 +19,10 @@ impl Dpll {
             self.assignment_stack.push_assignment(satisfying_assignment);
 
             if matches!(assignment_result, AssignmentResult::Conflict) {
-                return Some(Result::Conflict);
+                return Some(DpllResult::Conflict);
             }
             if self.cnf_formula.is_satisfied() {
-                return Some(Result::Satisfied);
+                return Some(DpllResult::Satisfied);
             }
         }
         None

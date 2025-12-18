@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use crate::dpll::assignment_stack::AssignmentStack;
 
 #[derive(Debug, PartialEq)]
-pub enum Result {
+pub enum DpllResult {
     Satisfied,
     Conflict,
 }
@@ -27,15 +27,15 @@ impl Dpll {
         }
     }
 
-    pub fn solve(&mut self) -> Result {
+    pub fn solve(&mut self) -> DpllResult {
         if self.cnf_formula.is_satisfied() {
-            return Result::Satisfied;
+            return DpllResult::Satisfied;
         }
 
         self.assignment_stack.start_decision_level();
 
         if let Some(result) = self.propagate_unit_clauses() {
-            if result == Result::Conflict {
+            if result == DpllResult::Conflict {
                 self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
             }
             return result;
@@ -61,15 +61,15 @@ impl Dpll {
             let branch_result = self.solve();
 
             match branch_result {
-                Result::Conflict => {
+                DpllResult::Conflict => {
                     self.assignment_stack.revert_last_assignment(&mut self.cnf_formula);
                     self.unit_queue.clear();
                 }
-                Result::Satisfied => return Result::Satisfied
+                DpllResult::Satisfied => return DpllResult::Satisfied
             }
         }
 
         self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
-        Result::Conflict
+        DpllResult::Conflict
     }
 }
