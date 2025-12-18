@@ -19,6 +19,7 @@ impl Polarity {
     }
 }
 
+/// A wrapper around `HashMap<usize, Polarity>` to allow pretty string representation in the style of DIMCAS CNF.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Literals(HashMap<usize, Polarity>);
 

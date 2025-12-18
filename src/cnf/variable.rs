@@ -2,6 +2,12 @@ use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 
+/// The variable implementation
+///
+/// # Fields
+/// * `value` - The currently assigned value
+/// * `positive_occurrences` - The IDs of the clauses in which this variable occurs as a positive literal
+/// * `negative_occurrences` - The IDs of the clauses in which this variable occurs as a positive literal
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
     pub(crate) value: Option<AssignmentValue>,
@@ -34,6 +40,7 @@ impl Variable {
     }
 }
 
+/// A wrapper around `Vec<Variable>` to allow pretty string representation in the style of DIMCAS CNF.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Variables(Vec<Variable>);
 
@@ -54,6 +61,13 @@ impl Variables {
         self.0.len()
     }
 
+    /// Find any unassigned variable. Expects there to be at least one.
+    /// 
+    /// # Returns
+    /// The unassigned variable.
+    /// 
+    /// # Panics
+    /// If there is none.
     pub(crate) fn find_unassigned(&self) -> usize {
         self.0
             .iter()
