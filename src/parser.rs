@@ -1,7 +1,7 @@
 use crate::cnf::clause::Clause;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::{Literals, Polarity};
-use crate::cnf::variable::Variables;
+use crate::cnf::variable::{VariableId, Variables};
 
 /// Parses a string in DIMACS CNF format to the CNF data structure.
 /// See (https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html) for a specification of the file format.
@@ -52,7 +52,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
         let mut literals = Literals::new();
 
         for crude_literal in crude_clause {
-            let variable_id = crude_literal.abs() as usize;
+            let variable_id = crude_literal.abs() as VariableId;
             let polarity = if *crude_literal > 0 {
                 Polarity::Positive
             } else {

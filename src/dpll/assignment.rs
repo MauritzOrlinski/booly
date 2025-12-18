@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fmt::Formatter;
+use crate::cnf::variable::VariableId;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AssignmentValue {
@@ -24,12 +25,12 @@ pub enum AssignmentResult {
 
 #[derive(Clone, Debug)]
 pub struct Assignment {
-    pub(crate) variable_id: usize,
+    pub(crate) variable_id: VariableId,
     pub(crate) value: AssignmentValue,
 }
 
 impl Assignment {
-    pub fn new(variable_id: usize, value: AssignmentValue) -> Self {
+    pub fn new(variable_id: VariableId, value: AssignmentValue) -> Self {
         Assignment {
             variable_id,
             value,

@@ -1,10 +1,13 @@
 use crate::cnf::literals::Literals;
 use std::fmt;
 use std::fmt::Formatter;
+use crate::cnf::variable::VariableId;
+
+pub type ClauseID = usize;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
-    pub(crate) satisfied_by: Option<usize>,
+    pub(crate) satisfied_by: Option<VariableId>,
     pub(crate) literals: Literals,
     pub(crate) unassigned_variables: usize,
 }

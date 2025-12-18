@@ -3,6 +3,7 @@ use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
 use crate::dpll::heuristics::heuristic::Heuristic;
 use std::collections::VecDeque;
+use crate::cnf::clause::ClauseID;
 use crate::dpll::assignment_stack::AssignmentStack;
 
 #[derive(Debug, PartialEq)]
@@ -13,7 +14,7 @@ pub enum DpllResult {
 
 #[derive(Debug)]
 pub struct Dpll {
-    pub(crate) unit_queue: VecDeque<usize>,
+    pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
 }

@@ -1,6 +1,9 @@
 use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
+use crate::cnf::clause::ClauseID;
+
+pub type VariableId = usize;
 
 /// The variable implementation
 ///
@@ -11,8 +14,8 @@ use std::fmt::Formatter;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
     pub(crate) value: Option<AssignmentValue>,
-    pub(crate) positive_occurrences: Vec<usize>,
-    pub(crate) negative_occurrences: Vec<usize>,
+    pub(crate) positive_occurrences: Vec<ClauseID>,
+    pub(crate) negative_occurrences: Vec<ClauseID>,
 }
 
 impl Variable {
@@ -32,7 +35,7 @@ impl Variable {
     /// # Returns
     /// A tuple `(satisfied_clause_ids, unsatisfied_clause_ids)`, where `satisfied_clause_ids` is a slice of clauses that will become satisfied by the
     /// given assignment and `unsatisfied_clause_ids` is a slice of clauses that contain this variable, but wont be satisifed by this assignment
-    pub(crate) fn associated_clauses(&self, value: AssignmentValue) -> (&[usize], &[usize]) {
+    pub(crate) fn associated_clauses(&self, value: AssignmentValue) -> (&[ClauseID], &[ClauseID]) {
         match value {
             AssignmentValue::True => (&self.positive_occurrences, &self.negative_occurrences),
             AssignmentValue::False => (&self.negative_occurrences, &self.positive_occurrences),
@@ -49,11 +52,11 @@ impl Variables {
         Variables(vec![Variable::new(); variable_count])
     }
 
-    pub(crate) fn get(&self, variable_id: usize) -> &Variable {
+    pub(crate) fn get(&self, variable_id: VariableId) -> &Variable {
         self.0.get(variable_id - 1).unwrap()
     }
 
-    pub(crate) fn get_mut(&mut self, variable_id: usize) -> &mut Variable {
+    pub(crate) fn get_mut(&mut self, variable_id: VariableId) -> &mut Variable {
         self.0.get_mut(variable_id - 1).unwrap()
     }
 
@@ -64,11 +67,11 @@ impl Variables {
     /// Find any unassigned variable. Expects there to be at least one.
     /// 
     /// # Returns
-    /// The unassigned variable.
+    /// The unassigned variable ID.
     /// 
     /// # Panics
     /// If there is none.
-    pub(crate) fn find_unassigned(&self) -> usize {
+    pub(crate) fn find_unassigned(&self) -> VariableId {
         self.0
             .iter()
             .enumerate()

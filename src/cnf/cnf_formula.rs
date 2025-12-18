@@ -1,4 +1,4 @@
-use crate::cnf::clause::Clause;
+use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::variable::Variables;
 use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
 use crate::dpll::assignment::{Assignment, AssignmentResult};
@@ -25,7 +25,7 @@ impl CnfFormula {
     pub fn apply_assignment(
         &mut self,
         assignment: &Assignment,
-        unit_queue: &mut VecDeque<usize>,
+        unit_queue: &mut VecDeque<ClauseID>,
     ) -> AssignmentResult {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
@@ -90,7 +90,7 @@ impl CnfFormula {
         self.unsat_clauses == 0
     }
 
-    pub fn generate_unit_queue(&self) -> VecDeque<usize> {
+    pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
             .enumerate()
@@ -161,7 +161,7 @@ p cnf 5 2
         .unwrap();
 
         let mut assignment = Assignment::new(1, AssignmentValue::False);
-        let mut queue: VecDeque<usize> = VecDeque::new();
+        let mut queue: VecDeque<ClauseID> = VecDeque::new();
 
         let _ = cnf.apply_assignment(&mut assignment, &mut queue);
         assert!(!queue.is_empty());
