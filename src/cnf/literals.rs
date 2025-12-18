@@ -12,6 +12,8 @@ pub enum Polarity {
 }
 
 impl Polarity {
+    /// Returns the satisfying assignment value for a literals.
+    /// E.g. for a literal `-3`, the variable `3` needs to be assigned `False` to satisfy the literal.
     pub fn get_satisfying_assignment(&self) -> AssignmentValue {
         match self {
             Polarity::Positive => AssignmentValue::True,
@@ -21,6 +23,7 @@ impl Polarity {
 }
 
 /// A wrapper around `HashMap<VariableID, Polarity>` to allow pretty string representation in the style of DIMCAS CNF.
+/// Represents a set of literals. The hashmap's keys are the variable IDs and its values are the corresponding literal polarities.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Literals(HashMap<VariableId, Polarity>);
 

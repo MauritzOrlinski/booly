@@ -5,6 +5,12 @@ use crate::cnf::variable::VariableId;
 
 pub type ClauseID = usize;
 
+/// The clause implementation
+///
+/// # Fields
+/// * `satisfied_by` - The variable this clause has first been satisfied by. None, if the clause is not yet satisfied.
+/// * `literals` - The set of literals in this clause
+/// * `unassigned_variables` - The count of how many variables occur in this clause that have not yet been assigned a value.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
     pub(crate) satisfied_by: Option<VariableId>,

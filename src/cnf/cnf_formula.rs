@@ -9,7 +9,7 @@ use std::fmt::Formatter;
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
     pub(crate) clauses: Vec<Clause>,
-    pub(crate) variables: Variables,
+    pub variables: Variables,
     pub(crate) unsat_clauses: usize,
 }
 
@@ -22,6 +22,15 @@ impl CnfFormula {
         }
     }
 
+    /// Applies an assignment to this formula.
+    ///
+    /// # Arguments
+    /// * `assignment` - The assignment to apply
+    /// * `unit_queue` - If the assignment results in any unit clauses, add them to this queue
+    ///
+    /// # Returns
+    /// `AssignmentResult::Success`, if the assignment was successful
+    /// `AssignmentResult::Conflict`, if the assignment resulted in an unsatisfiable clause
     pub fn apply_assignment(
         &mut self,
         assignment: &Assignment,
@@ -64,6 +73,10 @@ impl CnfFormula {
         }
     }
 
+    /// Reverses an assignment.
+    ///
+    /// # Arguments
+    /// * `assignment` - The assignment
     pub fn reverse_assignment(&mut self, assignment: &Assignment) {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
@@ -86,10 +99,13 @@ impl CnfFormula {
         }
     }
 
+    /// Checks if the formula is satisfied
     pub fn is_satisfied(&self) -> bool {
         self.unsat_clauses == 0
     }
 
+    /// Generates a unit queue for this formula. Since this call is expensive, it must only be executed once in the beginning. Inside the search tree
+    /// rely on the automatic expansion of the unit queue through assignments instead.
     pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
@@ -102,10 +118,6 @@ impl CnfFormula {
                 }
             })
             .collect()
-    }
-
-    pub fn get_variable_assignments(&self) -> String {
-        self.variables.to_string()
     }
 }
 

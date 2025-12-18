@@ -47,7 +47,7 @@ fn main() {
 s SATISFIABLE
 v {} 0
 t {:.7}",
-            dpll.cnf_formula.get_variable_assignments(),
+            dpll.cnf_formula.variables.to_string(),
             elapsed.as_secs_f64()
         ),
         DpllResult::Conflict => println!(
