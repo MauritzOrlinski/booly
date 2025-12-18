@@ -1,8 +1,5 @@
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::assignment::{
-    Assignment,
-    AssignmentResult::{Conflict, Success},
-};
+use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
 use crate::dpll::heuristics::heuristic::Heuristic;
 use std::collections::VecDeque;
@@ -38,13 +35,10 @@ impl Dpll {
         self.assignment_stack.start_decision_level();
 
         if let Some(result) = self.propagate_unit_clauses() {
-            return match result {
-                Result::Satisfied => Result::Satisfied,
-                Result::Conflict => {
-                    self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
-                    Result::Conflict
-                }
-            };
+            if let Result::Conflict = result {
+                self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
+            }
+            return result;
         }
 
         let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
@@ -67,24 +61,20 @@ impl Dpll {
             .cnf_formula
             .apply_assignment(&assignment, &mut self.unit_queue);
 
-        match assignment_result {
-            Success => {
-                self.assignment_stack.push_assignment(assignment);
-                let branch_result = self.dpll();
-                match branch_result {
-                    Result::Satisfied => Result::Satisfied,
-                    Result::Conflict => {
-                        self.assignment_stack.revert_last_assignment(&mut self.cnf_formula);
-                        self.unit_queue.clear();
-                        Result::Conflict
-                    }
-                }
-            }
-            Conflict => {
-                self.cnf_formula.reverse_assignment(&assignment);
-                self.unit_queue.clear();
-                Result::Conflict
-            }
+        if let AssignmentResult::Conflict = assignment_result {
+            self.cnf_formula.reverse_assignment(&assignment);
+            self.unit_queue.clear();
+            return Result::Conflict
         }
+
+        self.assignment_stack.push_assignment(assignment);
+        let branch_result = self.dpll();
+
+        if let Result::Conflict = branch_result {
+            self.assignment_stack.revert_last_assignment(&mut self.cnf_formula);
+            self.unit_queue.clear();
+        }
+
+        branch_result
     }
 }
