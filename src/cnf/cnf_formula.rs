@@ -47,12 +47,12 @@ impl CnfFormula {
         for clause_id in unsatisfied_clause_ids {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
             clause.unassigned_variables -= 1;
-            if matches!(clause.satisfied_by, Some(_)) {
+            if clause.satisfied_by.is_some() {
                 continue;
             }
             if clause.unassigned_variables == 1 {
                 unit_queue.push_back(*clause_id);
-            } else if clause.unassigned_variables <= 0 {
+            } else if clause.unassigned_variables == 0 {
                 assignment_conflict = true;
             }
         }
@@ -124,8 +124,6 @@ impl fmt::Display for CnfFormula {
         )
     }
 }
-
-pub struct AssignException;
 
 #[cfg(test)]
 mod tests {

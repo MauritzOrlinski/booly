@@ -11,7 +11,7 @@ impl Heuristic for FromShortestClause {
             .clauses
             .iter()
             .filter(|clause| matches!(clause.satisfied_by, None))
-            .min_by(|a, b| (&a.unassigned_variables).cmp(&b.unassigned_variables))
+            .min_by_key(|clause|clause.unassigned_variables)
             .unwrap();
 
         let (variable_id, assignment_value) = shortest_clause
