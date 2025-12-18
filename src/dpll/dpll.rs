@@ -28,10 +28,6 @@ impl Dpll {
     }
 
     pub fn solve(&mut self) -> DpllResult {
-        if self.cnf_formula.is_satisfied() {
-            return DpllResult::Satisfied;
-        }
-
         self.assignment_stack.start_decision_level();
 
         if let Some(result) = self.propagate_unit_clauses() {
@@ -58,6 +54,11 @@ impl Dpll {
             }
 
             self.assignment_stack.push_assignment(branch);
+
+            if self.cnf_formula.is_satisfied() {
+                return DpllResult::Satisfied;
+            }
+
             let branch_result = self.solve();
 
             match branch_result {
