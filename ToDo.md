@@ -1,8 +1,10 @@
-- [] Pure literal elimination
-- [] Watched literals
-- [] Heuristiken
-- [] Cactus plots
-- [] Hashmap ersetzen
-- [] Profiling und schauen was man verbessern kann
-- [] Benchmark: Wie viele Probleme kann der Solver in 1 Minute CPU Zeit lösen
-
+- [] Pure literal elimination (Konsti)
+- [] Watched literals (Mauritz)
+- [] Heuristiken (Konsti)
+- [] Cactus plots (Konsti)
+- [] Hashmap ersetzen (Mauritz)
+- [] Profiling und schauen was man verbessern kann (Mauritz)
+- [] Benchmark: Wie viele Probleme kann der Solver in 1 Minute CPU Zeit lösen (Max)
+- [] CLI verbessern (Max)
+- [] Stats einbauen (Max)
+- [] Parallelisieren (Machen wir am Ende)
