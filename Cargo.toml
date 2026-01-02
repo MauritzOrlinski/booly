@@ -8,7 +8,7 @@ name = "main"
 path = "src/bin/main.rs"
 
 [profile.release]
-debug = true 
+debug = true
 
 [dependencies]
 clap = {version = "4.5.50", features = ["derive"]}
@@ -21,6 +21,9 @@ criterion = "0.5"
 name = "required_tests"
 harness = false
 
+[[test]]
+name = "all_provided_inputs"
+harness = false
 
 [[bench]]
 name = "bench"
