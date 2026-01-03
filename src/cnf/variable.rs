@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::slice::Iter;
 
-pub type VariableId = usize;
+pub type VariableId = u32;
 
 /// The variable implementation
 ///
@@ -38,8 +38,8 @@ impl Variable {
     /// given assignment and `unsatisfied_clause_ids` is a slice of clauses that contain this variable, but wont be satisifed by this assignment
     pub(crate) fn associated_clauses(&self, value: AssignmentValue) -> (&[ClauseID], &[ClauseID]) {
         match value {
-            AssignmentValue::True => (&self.positive_occurrences, &self.negative_occurrences),
-            AssignmentValue::False => (&self.negative_occurrences, &self.positive_occurrences),
+            true => (&self.positive_occurrences, &self.negative_occurrences),
+            false => (&self.negative_occurrences, &self.positive_occurrences),
         }
     }
 }
@@ -54,11 +54,11 @@ impl Variables {
     }
 
     pub(crate) fn get(&self, variable_id: VariableId) -> &Variable {
-        self.0.get(variable_id - 1).unwrap()
+        self.0.get((variable_id - 1) as usize).unwrap()
     }
 
     pub(crate) fn get_mut(&mut self, variable_id: VariableId) -> &mut Variable {
-        self.0.get_mut(variable_id - 1).unwrap()
+        self.0.get_mut((variable_id - 1) as usize).unwrap()
     }
 
     pub(crate) fn len(&self) -> usize {
@@ -76,13 +76,14 @@ impl Variables {
     ///
     /// # Panics
     /// If there is none.
+    #[allow(dead_code)]
     pub(crate) fn find_unassigned(&self) -> VariableId {
         self.0
             .iter()
             .enumerate()
             .find_map(|(id, variable)| match variable.value {
                 Some(_) => None,
-                None => Some(id),
+                None => Some(id as u32),
             })
             .unwrap()
             + 1
@@ -94,7 +95,7 @@ impl Variables {
             .enumerate()
             .filter_map(|(id, variable)| match variable.value {
                 Some(_) => None,
-                None => Some(id + 1),
+                None => Some(id as u32 + 1),
             })
             .collect::<Vec<VariableId>>()
     }
@@ -114,8 +115,8 @@ impl fmt::Display for Variables {
                 .map(|(var_id, variable_value)| format!(
                     "{}{}",
                     match variable_value {
-                        AssignmentValue::True => "",
-                        AssignmentValue::False => "-",
+                        true => "",
+                        false => "-",
                     },
                     var_id + 1
                 ))

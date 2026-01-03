@@ -2,6 +2,7 @@ use clap::Parser;
 use clap::ValueHint;
 use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::dpll::dpll::{Dpll, DpllResult};
+use dpml::dpll::heuristics;
 use dpml::parser::parse_cnf;
 use std::fs;
 use std::path::PathBuf;
@@ -34,8 +35,8 @@ fn main() {
             return;
         }
     }
-
-    let mut dpll = Dpll::new(cnf_formula);
+    let heuristic = heuristics::from_shortest_clause::FromShortestClause;
+    let mut dpll = Dpll::new(cnf_formula, heuristic);
 
     let start = Instant::now();
     let result = dpll.solve();

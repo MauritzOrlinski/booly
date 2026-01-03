@@ -2,11 +2,7 @@ use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment_stack::AssignmentStack;
-use crate::dpll::heuristics::dlcs::DLCS;
-use crate::dpll::heuristics::dlis::DLIS;
-use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
-use crate::dpll::heuristics::heuristic::Heuristic;
-use crate::dpll::heuristics::mom::MOM;
+use crate::dpll::heuristics::Heuristic;
 use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq)]
@@ -23,7 +19,8 @@ pub enum DpllStatus {
 }
 
 #[derive(Debug)]
-pub struct Dpll {
+pub struct Dpll<T: Heuristic> {
+    heuristic: T,
     pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
@@ -31,9 +28,10 @@ pub struct Dpll {
     pub(crate) status: DpllStatus,
 }
 
-impl Dpll {
-    pub fn new(cnf_formula: CnfFormula) -> Dpll {
+impl<T: Heuristic> Dpll<T> {
+    pub fn new(cnf_formula: CnfFormula, heuristic: T) -> Dpll<T> {
         Dpll {
+            heuristic,
             cnf_formula,
             unit_queue: VecDeque::new(),
             assignment_stack: AssignmentStack::new(),
@@ -46,7 +44,7 @@ impl Dpll {
         self.preprocess();
 
         while self.status == DpllStatus::Incomplete {
-            let assigment = FromShortestClause::chose_next_assignment(&self.cnf_formula);
+            let assigment = self.heuristic.chose_next_assignment(&self.cnf_formula);
 
             self.assignment_stack.start_decision_level();
             self.assign(assigment);
