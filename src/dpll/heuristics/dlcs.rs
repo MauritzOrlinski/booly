@@ -29,12 +29,13 @@ impl Heuristic for DLCS {
             })
             .unwrap();
 
-        let assignment_value =
-            if variable.positive_occurrences.len() >= variable.negative_occurrences.len() {
-                AssignmentValue::True
-            } else {
-                AssignmentValue::False
-            };
+        let assignment_value = if count_unsat(&variable.positive_occurrences)
+            >= count_unsat(&variable.negative_occurrences)
+        {
+            AssignmentValue::True
+        } else {
+            AssignmentValue::False
+        };
 
         Assignment::new(variable_id + 1, assignment_value)
     }
