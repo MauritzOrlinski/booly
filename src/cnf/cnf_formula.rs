@@ -1,7 +1,7 @@
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::variable::Variables;
 use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
-use crate::dpll::assignment::{Assignment, AssignmentResult};
+use crate::dpll::assignment::{Assignment, AssignmentResult, AssignmentValue};
 use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
@@ -73,11 +73,11 @@ impl CnfFormula {
         }
     }
 
-    /// Reverses an assignment.
+    /// Undos an assignment.
     ///
     /// # Arguments
     /// * `assignment` - The assignment
-    pub fn reverse_assignment(&mut self, assignment: &Assignment) {
+    pub fn undo_assignment(&mut self, assignment: &Assignment) {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = None;
@@ -113,6 +113,29 @@ impl CnfFormula {
             .filter_map(|(clause_id, clause)| {
                 if clause.unassigned_variables == 1 {
                     Some(clause_id)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    pub fn pure_literals(&self) -> Vec<Assignment> {
+        self.variables
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| v.value.is_none())
+            .filter_map(|(i, v)| {
+                if !v.positive_occurrences.is_empty() && v.positive_occurrences.is_empty() {
+                    Some(Assignment {
+                        variable_id: i + 1,
+                        value: AssignmentValue::True,
+                    })
+                } else if v.positive_occurrences.is_empty() && !v.negative_occurrences.is_empty() {
+                    Some(Assignment {
+                        variable_id: i + 1,
+                        value: AssignmentValue::False,
+                    })
                 } else {
                     None
                 }
@@ -157,7 +180,7 @@ p cnf 6 2
 
         let mut assignment = Assignment::new(1, AssignmentValue::True);
         let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
-        let _ = cnf.reverse_assignment(&mut assignment);
+        let _ = cnf.undo_assignment(&mut assignment);
 
         assert_eq!(snapshot, cnf);
     }
@@ -204,7 +227,7 @@ p cnf 4 2
 
         assert!(cnf.is_satisfied());
 
-        let _ = cnf.reverse_assignment(second_assignment);
+        let _ = cnf.undo_assignment(second_assignment);
 
         assert!(!cnf.is_satisfied());
     }
@@ -228,7 +251,7 @@ p cnf 3 2
 
         assert!(cnf.is_satisfied());
 
-        let _ = cnf.reverse_assignment(assignment);
+        let _ = cnf.undo_assignment(assignment);
 
         assert!(!cnf.is_satisfied());
     }
