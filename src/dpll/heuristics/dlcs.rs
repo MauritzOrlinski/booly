@@ -1,11 +1,11 @@
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::assignment::{Assignment, AssignmentValue};
-use crate::dpll::heuristics::heuristic::Heuristic;
+use crate::dpll::assignment::Assignment;
+use crate::dpll::heuristics::Heuristic;
 
 pub struct DLCS;
 
 impl Heuristic for DLCS {
-    fn chose_next_assignment(cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
         let count_unsat = |occ: &Vec<usize>| {
             occ.iter()
                 .filter(|&&clause_id| {
@@ -29,14 +29,9 @@ impl Heuristic for DLCS {
             })
             .unwrap();
 
-        let assignment_value = if count_unsat(&variable.positive_occurrences)
-            >= count_unsat(&variable.negative_occurrences)
-        {
-            AssignmentValue::True
-        } else {
-            AssignmentValue::False
-        };
+        let assignment_value = count_unsat(&variable.positive_occurrences)
+            >= count_unsat(&variable.negative_occurrences);
 
-        Assignment::new(variable_id + 1, assignment_value)
+        Assignment::new(variable_id as u32 + 1, assignment_value)
     }
 }

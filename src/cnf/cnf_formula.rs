@@ -1,7 +1,7 @@
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::variable::Variables;
 use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
-use crate::dpll::assignment::{Assignment, AssignmentResult, AssignmentValue};
+use crate::dpll::assignment::{Assignment, AssignmentResult};
 use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
@@ -128,13 +128,13 @@ impl CnfFormula {
             .filter_map(|(i, v)| {
                 if !v.positive_occurrences.is_empty() && v.positive_occurrences.is_empty() {
                     Some(Assignment {
-                        variable_id: i + 1,
-                        value: AssignmentValue::True,
+                        variable_id: i as u32 + 1,
+                        value: true,
                     })
                 } else if v.positive_occurrences.is_empty() && !v.negative_occurrences.is_empty() {
                     Some(Assignment {
-                        variable_id: i + 1,
-                        value: AssignmentValue::False,
+                        variable_id: i as u32 + 1,
+                        value: false,
                     })
                 } else {
                     None
@@ -163,7 +163,6 @@ impl fmt::Display for CnfFormula {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dpll::assignment::AssignmentValue;
     use crate::parser::parse_cnf;
 
     #[test]

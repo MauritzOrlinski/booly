@@ -2,7 +2,6 @@ use crate::cnf::variable::VariableId;
 use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
-use std::slice::Iter;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Polarity {
