@@ -1,7 +1,7 @@
 use crate::cnf::literals::Literals;
+use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::cnf::variable::VariableId;
 
 pub type ClauseID = usize;
 

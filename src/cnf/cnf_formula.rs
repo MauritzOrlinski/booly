@@ -155,7 +155,7 @@ p cnf 6 2
 
         let snapshot = cnf.clone();
 
-        let mut assignment = Assignment::new(1, AssignmentValue::True);
+        let mut assignment = Assignment::new(1, true);
         let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
         let _ = cnf.reverse_assignment(&mut assignment);
 
@@ -172,7 +172,7 @@ p cnf 5 2
         )
         .unwrap();
 
-        let mut assignment = Assignment::new(1, AssignmentValue::False);
+        let mut assignment = Assignment::new(1, false);
         let mut queue: VecDeque<ClauseID> = VecDeque::new();
 
         let _ = cnf.apply_assignment(&mut assignment, &mut queue);
@@ -193,8 +193,8 @@ p cnf 4 2
 
         let unit_queue = &mut VecDeque::new();
 
-        let first_assignment = &Assignment::new(1, AssignmentValue::True);
-        let second_assignment = &Assignment::new(3, AssignmentValue::True);
+        let first_assignment = &Assignment::new(1, true);
+        let second_assignment = &Assignment::new(3, true);
 
         let _ = cnf.apply_assignment(first_assignment, unit_queue);
 
@@ -222,7 +222,7 @@ p cnf 3 2
         assert!(!cnf.is_satisfied());
 
         let unit_queue = &mut VecDeque::new();
-        let assignment = &Assignment::new(1, AssignmentValue::True);
+        let assignment = &Assignment::new(1, true);
 
         let _ = cnf.apply_assignment(assignment, unit_queue);
 

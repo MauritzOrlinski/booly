@@ -1,21 +1,24 @@
+use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::cnf::variable::VariableId;
+use std::ops::Not;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum AssignmentValue {
-    True,
-    False,
-}
+pub type AssignmentValue = bool;
 
-impl AssignmentValue {
-    pub fn get_inverse(&self) -> AssignmentValue {
-        match self {
-            AssignmentValue::True => AssignmentValue::False,
-            AssignmentValue::False => AssignmentValue::True,
-        }
-    }
-}
+// #[derive(Debug, PartialEq, Clone, Copy)]
+// pub enum AssignmentValue {
+//     True,
+//     False,
+// }
+//
+// impl AssignmentValue {
+//     pub fn get_inverse(&self) -> AssignmentValue {
+//         match self {
+//             AssignmentValue::True => AssignmentValue::False,
+//             AssignmentValue::False => AssignmentValue::True,
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AssignmentResult {
@@ -31,16 +34,13 @@ pub struct Assignment {
 
 impl Assignment {
     pub fn new(variable_id: VariableId, value: AssignmentValue) -> Self {
-        Assignment {
-            variable_id,
-            value,
-        }
+        Assignment { variable_id, value }
     }
 
     pub fn inverse(&self) -> Assignment {
         Assignment {
             variable_id: self.variable_id,
-            value: self.value.get_inverse(),
+            value: self.value.not(),
         }
     }
 }
@@ -51,8 +51,8 @@ impl fmt::Display for Assignment {
             f,
             "{}{}",
             match self.value {
-                AssignmentValue::True => "",
-                AssignmentValue::False => "-",
+                true => "",
+                false => "-",
             },
             self.variable_id
         )

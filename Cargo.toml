@@ -5,14 +5,20 @@ edition = "2024"
 
 [[bin]]
 name = "main"
-path = "src/main.rs"
+path = "src/bin/main.rs"
+
+[profile.release]
+debug = true 
 
 [dependencies]
 clap = {version = "4.5.50", features = ["derive"]}
+roaring = "0.11.3"
 
 [dev-dependencies]
 datatest-stable = "0.3"
 criterion = "0.5"
+criterion-perf-events = "0.4.0"
+perfcnt = "0.8.0"
 
 [[test]]
 name = "required_tests"

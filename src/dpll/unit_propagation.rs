@@ -2,9 +2,9 @@ use crate::cnf::clause::Clause;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::dpll::Dpll;
 use crate::dpll::dpll::DpllResult;
+use crate::dpll::heuristics::Heuristic;
 
-impl Dpll {
-
+impl<T: Heuristic> Dpll<T> {
     /// Execute unit propagation. As long as there are unit clauses present in the unit queue,
     /// satisfy them. If this creates any new unit clauses, add them to the queue.
     ///
@@ -17,7 +17,8 @@ impl Dpll {
             if matches!(unit_clause.satisfied_by, Some(_)) {
                 continue;
             }
-            let satisfying_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause);
+            let satisfying_assignment =
+                self.find_satisfying_assignment_for_unit_clause(unit_clause);
 
             let assignment_result = self
                 .cnf_formula
@@ -46,10 +47,10 @@ impl Dpll {
             .literals
             .iter()
             .find_map(|(variable_id, polarity)| {
-                let variable = self.cnf_formula.variables.get(*variable_id);
+                let variable = self.cnf_formula.variables.get(variable_id);
                 match variable.value {
                     None => Some(Assignment::new(
-                        *variable_id,
+                        variable_id,
                         polarity.get_satisfying_assignment(),
                     )),
                     Some(_) => None,
