@@ -1,10 +1,9 @@
-use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::assignment::{Assignment, AssignmentResult};
-use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
-use crate::dpll::heuristics::heuristic::Heuristic;
-use std::collections::VecDeque;
 use crate::cnf::clause::ClauseID;
+use crate::cnf::cnf_formula::CnfFormula;
+use crate::dpll::assignment::AssignmentResult;
 use crate::dpll::assignment_stack::AssignmentStack;
+use crate::dpll::heuristics::Heuristic;
+use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq)]
 pub enum DpllResult {
@@ -13,15 +12,17 @@ pub enum DpllResult {
 }
 
 #[derive(Debug)]
-pub struct Dpll {
+pub struct Dpll<T: Heuristic> {
+    heuristic: T,
     pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
 }
 
-impl Dpll {
-    pub fn new(cnf_formula: CnfFormula) -> Dpll {
+impl<T: Heuristic> Dpll<T> {
+    pub fn new(cnf_formula: CnfFormula, heuristic: T) -> Dpll<T> {
         Dpll {
+            heuristic,
             cnf_formula,
             unit_queue: VecDeque::new(),
             assignment_stack: AssignmentStack::new(),
@@ -33,17 +34,16 @@ impl Dpll {
 
         if let Some(result) = self.propagate_unit_clauses() {
             if result == DpllResult::Conflict {
-                self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
+                self.assignment_stack
+                    .revert_assignment_current_decision_level(&mut self.cnf_formula);
             }
             return result;
         }
 
-        let branch_a = FromShortestClause::chose_next_assignment(&self.cnf_formula);
+        let branch_a = self.heuristic.chose_next_assignment(&self.cnf_formula);
         let branch_b = branch_a.inverse();
 
-
         for branch in [branch_a, branch_b] {
-
             let assignment_result = self
                 .cnf_formula
                 .apply_assignment(&branch, &mut self.unit_queue);
@@ -64,14 +64,16 @@ impl Dpll {
 
             match branch_result {
                 DpllResult::Conflict => {
-                    self.assignment_stack.revert_last_assignment(&mut self.cnf_formula);
+                    self.assignment_stack
+                        .revert_last_assignment(&mut self.cnf_formula);
                     self.unit_queue.clear();
                 }
-                DpllResult::Satisfied => return DpllResult::Satisfied
+                DpllResult::Satisfied => return DpllResult::Satisfied,
             }
         }
 
-        self.assignment_stack.revert_assignment_current_decision_level(&mut self.cnf_formula);
+        self.assignment_stack
+            .revert_assignment_current_decision_level(&mut self.cnf_formula);
         DpllResult::Conflict
     }
 }

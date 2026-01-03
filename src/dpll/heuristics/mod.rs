@@ -1,3 +1,8 @@
-pub(crate) mod from_shortest_clause;
-pub(crate) mod heuristic;
-pub(crate) mod trivial;
+pub mod from_shortest_clause;
+pub mod trivial;
+use crate::cnf::cnf_formula::CnfFormula;
+use crate::dpll::assignment::Assignment;
+
+pub trait Heuristic {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment;
+}

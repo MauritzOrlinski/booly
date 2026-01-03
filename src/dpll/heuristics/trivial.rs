@@ -1,12 +1,11 @@
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
-use crate::dpll::assignment::AssignmentValue::True;
-use crate::dpll::heuristics::heuristic::Heuristic;
+use crate::dpll::heuristics::Heuristic;
 
 pub struct Trivial;
 
 impl Heuristic for Trivial {
-    fn chose_next_assignment(cnf_formula: &CnfFormula) -> Assignment {
-        Assignment::new(cnf_formula.variables.find_unassigned(), True)
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+        Assignment::new(cnf_formula.variables.find_unassigned(), true)
     }
 }
