@@ -53,7 +53,7 @@ fn pvariable(i: &str) -> IResult<&str, i32> {
 
 fn pheader(i: &str) -> IResult<&str, (usize, usize)> {
     let (i, (n, m)) = preceded(
-        tag("p cnf "),
+        (tag("p cnf"), multispace1),
         separated_pair(
             map_res(ppos_number, usize::try_from),
             multispace1,
