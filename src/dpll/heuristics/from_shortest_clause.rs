@@ -9,7 +9,7 @@ impl Heuristic for FromShortestClause {
         let shortest_clause = cnf_formula
             .clauses
             .iter()
-            .filter(|clause| matches!(clause.satisfied_by, None))
+            .filter(|clause| clause.satisfied_by.is_none())
             .min_by_key(|clause| clause.unassigned_variables)
             .unwrap();
 
@@ -18,7 +18,7 @@ impl Heuristic for FromShortestClause {
             .iter()
             .find_map(|(variable_id, literal_polarity)| {
                 let variable = cnf_formula.variables.get(variable_id);
-                if matches!(variable.value, None) {
+                if variable.value.is_none() {
                     return Some((variable_id, literal_polarity.get_satisfying_assignment()));
                 }
                 None

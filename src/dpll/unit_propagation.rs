@@ -1,5 +1,5 @@
 use crate::cnf::clause::Clause;
-use crate::dpll::assignment::{Assignment, AssignmentResult};
+use crate::dpll::assignment::Assignment;
 use crate::dpll::dpll::Dpll;
 use crate::dpll::dpll::DpllStatus;
 use crate::dpll::heuristics::Heuristic;
@@ -14,27 +14,15 @@ impl<T: Heuristic> Dpll<T> {
     pub(crate) fn propagate_unit_clauses(&mut self) {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && !self.conflict
+        // TODO: Does this save perfomance?
+        // && self.status != DpllStatus::Sat
         {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
-            if matches!(unit_clause.satisfied_by, Some(_)) {
+            if unit_clause.satisfied_by.is_some() {
                 continue;
             }
-            let satisfying_assignment =
-                self.find_satisfying_assignment_for_unit_clause(unit_clause);
 
-            let assignment_result = self
-                .cnf_formula
-                .apply_assignment(&satisfying_assignment, &mut self.unit_queue);
-            self.assignment_stack.push_assignment(satisfying_assignment);
-
-            if matches!(assignment_result, AssignmentResult::Conflict) {
-                self.conflict = true;
-                break;
-            }
-            if self.cnf_formula.is_satisfied() {
-                self.status = DpllStatus::Sat;
-                break;
-            }
+            self.assign(self.find_satisfying_assignment_for_unit_clause(unit_clause));
         }
     }
 
@@ -50,8 +38,7 @@ impl<T: Heuristic> Dpll<T> {
             .literals
             .iter()
             .find_map(|(variable_id, polarity)| {
-                let variable = self.cnf_formula.variables.get(variable_id);
-                match variable.value {
+                match self.cnf_formula.variables.get(variable_id).value {
                     None => Some(Assignment::new(
                         variable_id,
                         polarity.get_satisfying_assignment(),

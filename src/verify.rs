@@ -14,7 +14,7 @@ pub fn verify_satisfied(cnf_formula: &CnfFormula) -> bool {
             .iter()
             .any(|(variable_id, var_literal_polarity)| {
                 let var = cnf_formula.variables.get(variable_id);
-                return var.value.unwrap() == var_literal_polarity.get_satisfying_assignment();
+                return var.value == Some(var_literal_polarity.get_satisfying_assignment());
             })
     })
 }

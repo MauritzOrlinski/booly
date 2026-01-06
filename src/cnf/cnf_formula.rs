@@ -86,11 +86,9 @@ impl CnfFormula {
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
-            if let Some(x) = clause.satisfied_by {
-                if x == assignment.variable_id {
-                    self.unsat_clauses += 1;
-                    clause.satisfied_by = None;
-                }
+            if clause.satisfied_by == Some(assignment.variable_id) {
+                self.unsat_clauses += 1;
+                clause.satisfied_by = None;
             }
         }
 
@@ -144,6 +142,10 @@ impl CnfFormula {
                 }
             })
             .collect()
+    }
+
+    pub fn delete_tautologies(&mut self) {
+        //TODO:
     }
 }
 
