@@ -1,11 +1,8 @@
-use dpml::dpll::{
-    dpll::Dpll,
-    heuristics::mom::MOM,
-};
+use dpml::dpll::dpll::DpllStatus;
+use dpml::dpll::{dpll::Dpll, heuristics::mom::MOM};
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;
-use dpml::dpll::dpll::DpllStatus;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();

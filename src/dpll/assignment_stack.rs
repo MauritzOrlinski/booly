@@ -30,11 +30,6 @@ impl AssignmentStack {
         self.trail.push(assignment);
     }
 
-    // (1, t), (4, f)
-    // -> 2
-    // (1, t), (4, f), (2, t), (6, f)
-    //
-
     /// Undos all assignments at the current decision level excluding the last one
     pub fn undo_assignment_current_decision_level(&mut self, cnf_formula: &mut CnfFormula) {
         let current_decision_level_start = self.decision_level_start.pop().unwrap();

@@ -32,9 +32,9 @@ impl Heuristic for MOM {
             l.iter().for_each(|(variable_id, polarity)| {
                 if unassigned_variables.contains(&variable_id) {
                     if polarity == Polarity::Positive {
-                        *(&mut vars[variable_id as usize - 1].0) += 1;
+                        vars[variable_id as usize - 1].0 += 1;
                     } else {
-                        *(&mut vars[variable_id as usize - 1].1) += 1;
+                        vars[variable_id as usize - 1].1 += 1;
                     }
                 }
             });

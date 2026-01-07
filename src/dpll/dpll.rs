@@ -1,17 +1,17 @@
-use crate::cnf::clause::{ClauseID};
+use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment_stack::AssignmentStack;
+use crate::dpll::dpll::DpllStatus::{Conflict, Incomplete, Sat, Unsat};
 use crate::dpll::heuristics::Heuristic;
 use std::collections::VecDeque;
-use crate::dpll::dpll::DpllStatus::{Conflict, Sat, Unsat, Incomplete};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DpllStatus {
     Sat,
     Unsat,
     Incomplete,
-    Conflict
+    Conflict,
 }
 
 #[derive(Debug)]
@@ -102,7 +102,7 @@ impl<T: Heuristic> Dpll<T> {
             .iter()
             .for_each(|assignment| {
                 self.cnf_formula
-                    .apply_assignment(&assignment, &mut self.unit_queue);
+                    .apply_assignment(assignment, &mut self.unit_queue);
             });
     }
 }

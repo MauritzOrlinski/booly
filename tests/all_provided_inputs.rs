@@ -1,9 +1,9 @@
 use dpml::dpll::dpll::Dpll;
 
-use dpml::parser::parse_cnf;
-use std::path::Path;
 use dpml::dpll::dpll::DpllStatus::{Sat, Unsat};
 use dpml::dpll::heuristics::from_shortest_clause::FromShortestClause;
+use dpml::parser::parse_cnf;
+use std::path::Path;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();

@@ -18,23 +18,23 @@ struct CliArguments {
 fn main() {
     let cli = CliArguments::parse();
 
-    let cnf_formula_str: String;
-    match fs::read_to_string(&cli.input_file) {
-        Ok(value) => cnf_formula_str = value,
+    
+    let cnf_formula_str: String = match fs::read_to_string(&cli.input_file) {
+        Ok(value) => value,
         Err(_) => {
             println!("Failed to read input file.");
             return;
         }
-    }
+    };
 
-    let cnf_formula: CnfFormula;
-    match parse_cnf(&cnf_formula_str) {
-        Ok(value) => cnf_formula = value,
+    
+    let cnf_formula: CnfFormula = match parse_cnf(&cnf_formula_str) {
+        Ok(value) => value,
         Err(_) => {
             println!("Failed to parse input file.");
             return;
         }
-    }
+    };
     let heuristic = heuristics::from_shortest_clause::FromShortestClause;
     let mut dpll = Dpll::new(cnf_formula, heuristic);
 
@@ -48,7 +48,7 @@ fn main() {
 s SATISFIABLE
 v {} 0
 t {:.7}",
-            dpll.cnf_formula.variables.to_string(),
+            dpll.cnf_formula.variables,
             elapsed.as_secs_f64()
         ),
         DpllStatus::Unsat => println!(

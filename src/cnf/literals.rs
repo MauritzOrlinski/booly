@@ -31,22 +31,6 @@ impl Literals {
         Literals(Vec::new())
     }
 
-    // TODO: This is potentially wrong, if a clause has a variable with positive and negative
-    // polarity
-    // pub fn get_polarity_for_var(&self, var: &VariableId) -> Option<&Polarity> {
-    //     self.0.iter().find_map(|&x| {
-    //         if x.unsigned_abs() == *var {
-    //             Some(if x > 0 {
-    //                 &Polarity::Positive
-    //             } else {
-    //                 &Polarity::Negative
-    //             })
-    //         } else {
-    //             None
-    //         }
-    //     })
-    // }
-
     pub fn iter(&'_ self) -> impl Iterator<Item = (VariableId, Polarity)> + '_ {
         self.0.iter().map(|&x| {
             if x > 0 {

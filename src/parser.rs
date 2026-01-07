@@ -14,17 +14,17 @@ use crate::cnf::{
     clause::Clause,
     cnf_formula::CnfFormula,
     literals::{Literals, Polarity},
-    variable::{VariableId, Variables},
+    variable::{Variables},
 };
 
-fn peol_comment<'a>(i: &'a str) -> IResult<&'a str, ()> {
+fn peol_comment(i: &str) -> IResult<&str, ()> {
     value((), (char('c'), not_line_ending, line_ending)).parse(i)
 }
 
 fn ppos_number(i: &str) -> IResult<&str, u16> {
     map_res(
-        verify(digit1, |s: &str| s.chars().nth(0) != Some('0')),
-        |d| u16::from_str(d),
+        verify(digit1, |s: &str| s.chars().next() != Some('0')),
+        u16::from_str,
     )
     .parse(i)
 }
@@ -91,7 +91,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
         let mut literals = Literals::new();
 
         for &crude_literal in crude_clause {
-            let variable_id = crude_literal.abs() as VariableId;
+            let variable_id = crude_literal.unsigned_abs();
             let polarity = if crude_literal > 0 {
                 Polarity::Positive
             } else {
