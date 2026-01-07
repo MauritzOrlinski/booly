@@ -1,7 +1,7 @@
 use clap::Parser;
 use clap::ValueHint;
 use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::dpll::dpll::{Dpll, DpllResult};
+use dpml::dpll::dpll::{Dpll, DpllStatus};
 use dpml::dpll::heuristics;
 use dpml::parser::parse_cnf;
 use std::fs;
@@ -43,7 +43,7 @@ fn main() {
     let elapsed = start.elapsed();
 
     match result {
-        DpllResult::Satisfied => println!(
+        DpllStatus::Sat => println!(
             "\
 s SATISFIABLE
 v {} 0
@@ -51,11 +51,12 @@ t {:.7}",
             dpll.cnf_formula.variables.to_string(),
             elapsed.as_secs_f64()
         ),
-        DpllResult::Conflict => println!(
+        DpllStatus::Unsat => println!(
             "\
 s UNSATISFIABLE
 t {:.7}",
             elapsed.as_secs_f64()
         ),
+        DpllStatus::Incomplete | DpllStatus::Conflict => unreachable!(),
     }
 }

@@ -4,18 +4,14 @@ use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment_stack::AssignmentStack;
 use crate::dpll::heuristics::Heuristic;
 use std::collections::VecDeque;
+use crate::dpll::dpll::DpllStatus::{Conflict, Sat, Unsat, Incomplete};
 
-#[derive(Debug, PartialEq)]
-pub enum DpllResult {
-    Satisfied,
-    Conflict,
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DpllStatus {
     Sat,
     Unsat,
     Incomplete,
+    Conflict
 }
 
 #[derive(Debug)]
@@ -24,7 +20,6 @@ pub struct Dpll<T: Heuristic> {
     pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
-    pub(crate) conflict: bool,
     pub(crate) status: DpllStatus,
 }
 
@@ -35,15 +30,14 @@ impl<T: Heuristic> Dpll<T> {
             cnf_formula,
             unit_queue: VecDeque::new(),
             assignment_stack: AssignmentStack::new(),
-            conflict: false,
-            status: DpllStatus::Incomplete,
+            status: Incomplete,
         }
     }
 
-    pub fn solve(&mut self) -> DpllResult {
+    pub fn solve(&mut self) -> DpllStatus {
         self.preprocess();
 
-        while self.status == DpllStatus::Incomplete {
+        while self.status == Incomplete {
             let assigment = self.heuristic.chose_next_assignment(&self.cnf_formula);
 
             self.assignment_stack.start_decision_level();
@@ -51,25 +45,21 @@ impl<T: Heuristic> Dpll<T> {
 
             self.propagate_unit_clauses();
 
-            while self.conflict {
+            while self.status == Conflict {
                 self.backtrack();
             }
         }
 
-        match self.status {
-            DpllStatus::Sat => DpllResult::Satisfied,
-            DpllStatus::Unsat => DpllResult::Conflict,
-            DpllStatus::Incomplete => unreachable!(),
-        }
+        self.status
     }
 
     fn backtrack(&mut self) {
-        self.conflict = false;
+        self.status = Incomplete;
         self.assignment_stack
             .undo_assignment_current_decision_level(&mut self.cnf_formula);
 
         if self.assignment_stack.is_empty() {
-            self.status = DpllStatus::Unsat;
+            self.status = Unsat;
         } else {
             let branching = self
                 .assignment_stack
@@ -87,9 +77,9 @@ impl<T: Heuristic> Dpll<T> {
         self.assignment_stack.push_assignment(assignment);
 
         if assignment_result == AssignmentResult::Conflict {
-            self.conflict = true;
+            self.status = Conflict;
         } else if self.cnf_formula.is_satisfied() {
-            self.status = DpllStatus::Sat;
+            self.status = Sat;
         }
     }
 
@@ -101,8 +91,8 @@ impl<T: Heuristic> Dpll<T> {
         self.unit_queue = self.cnf_formula.generate_unit_queue();
         self.propagate_unit_clauses();
 
-        if self.conflict {
-            self.status = DpllStatus::Unsat;
+        if self.status == Conflict {
+            self.status = Unsat;
         }
     }
 

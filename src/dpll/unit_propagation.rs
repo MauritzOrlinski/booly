@@ -2,6 +2,7 @@ use crate::cnf::clause::Clause;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::dpll::Dpll;
 use crate::dpll::dpll::DpllStatus;
+use crate::dpll::dpll::DpllStatus::Conflict;
 use crate::dpll::heuristics::Heuristic;
 
 impl<T: Heuristic> Dpll<T> {
@@ -13,7 +14,7 @@ impl<T: Heuristic> Dpll<T> {
     /// `Conflict`, if there has been a conflict during unit propagation. `None` otherwise.
     pub(crate) fn propagate_unit_clauses(&mut self) {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
-            && !self.conflict
+            && self.status != Conflict
         // TODO: Does this save perfomance?
         // && self.status != DpllStatus::Sat
         {
