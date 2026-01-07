@@ -1,10 +1,10 @@
 use crate::cnf::cnf_formula::CnfFormula;
 
 /// Verifies that a cnf formula is indeed satisfied.
-/// 
+///
 /// # Arguments
 /// * `cnf_formula` - The CNF formula
-/// 
+///
 /// # Returns
 /// A boolean depending on whether the given CNF formula is satisfied.
 pub fn verify_satisfied(cnf_formula: &CnfFormula) -> bool {

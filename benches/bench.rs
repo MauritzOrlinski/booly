@@ -2,12 +2,9 @@ use criterion::measurement::WallTime;
 use criterion::{
     BenchmarkGroup, BenchmarkId, Criterion, black_box, criterion_group, criterion_main,
 };
-// use criterion_perf_events::Perf;
 use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::dpll::{dpll::Dpll, heuristics::from_shortest_clause::FromShortestClause};
 use dpml::parser::parse_cnf;
-// use perfcnt::linux::HardwareEventType as Hardware;
-// use perfcnt::linux::PerfCounterBuilderLinux as Builder;
 use std::path::Path;
 use std::time::Duration;
 use std::{fs, io};
@@ -48,9 +45,6 @@ fn criterion() -> Criterion<WallTime> {
         .measurement_time(Duration::from_millis(5000))
         .sample_size(200)
         .noise_threshold(0.1)
-    // .with_measurement(Perf::new(Builder::from_hardware_event(
-    //     Hardware::CacheMisses,
-    // )))
 }
 
 criterion_group! {
