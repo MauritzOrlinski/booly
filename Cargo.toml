@@ -18,11 +18,13 @@ roaring = "0.11.3"
 [dev-dependencies]
 datatest-stable = "0.3"
 criterion = "0.5"
-criterion-perf-events = "0.4.0"
-perfcnt = "0.8.0"
 
 [[test]]
 name = "required_tests"
+harness = false
+
+[[test]]
+name = "all_provided_inputs"
 harness = false
 
 [[bench]]

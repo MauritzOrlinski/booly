@@ -1,4 +1,4 @@
-use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::clause::{ClauseID};
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment_stack::AssignmentStack;

@@ -5,21 +5,6 @@ use std::ops::Not;
 
 pub type AssignmentValue = bool;
 
-// #[derive(Debug, PartialEq, Clone, Copy)]
-// pub enum AssignmentValue {
-//     True,
-//     False,
-// }
-//
-// impl AssignmentValue {
-//     pub fn get_inverse(&self) -> AssignmentValue {
-//         match self {
-//             AssignmentValue::True => AssignmentValue::False,
-//             AssignmentValue::False => AssignmentValue::True,
-//         }
-//     }
-// }
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AssignmentResult {
     Success,

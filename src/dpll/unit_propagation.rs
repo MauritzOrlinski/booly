@@ -1,7 +1,6 @@
 use crate::cnf::clause::Clause;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::dpll::Dpll;
-use crate::dpll::dpll::DpllStatus;
 use crate::dpll::dpll::DpllStatus::Conflict;
 use crate::dpll::heuristics::Heuristic;
 
