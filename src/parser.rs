@@ -1,59 +1,98 @@
-use crate::cnf::clause::Clause;
-use crate::cnf::cnf_formula::CnfFormula;
-use crate::cnf::literals::{Literals, Polarity};
-use crate::cnf::variable::{VariableId, Variables};
+use nom::{
+    Finish, IResult, Parser,
+    branch::alt,
+    bytes::tag,
+    character::complete::{char, digit1, line_ending, multispace1, not_line_ending},
+    combinator::{map, map_res, opt, value, verify},
+    error::Error,
+    multi::{count, many_m_n, many0, many1},
+    sequence::{preceded, separated_pair, terminated},
+};
+use std::str::FromStr;
 
-/// Parses a string in DIMACS CNF format to the CNF data structure.
-/// See (https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html) for a specification of the file format.
-///
-/// # Arguments
-/// * `cnf_string` - A string in DIMACS CNF form
-///
-/// # Returns
-/// The parsed [`CnfFormula`](CnfFormula)
-///
-/// # Errors
-/// Returns an error, if unable to parse given string.
-pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
-    let header_line_string = cnf_string
-        .lines()
-        .find(|line| line.starts_with("p"))
-        .ok_or(ParseError {
-            reason: "Unable to find header line".to_string(),
-        })?;
+use crate::cnf::{
+    clause::Clause,
+    cnf_formula::CnfFormula,
+    literals::{Literals, Polarity},
+    variable::{Variables},
+};
 
-    let variable_count = header_line_string
-        .split_whitespace()
-        .nth(2)
-        .ok_or(ParseError {
-            reason: "Unable to parse header".to_string(),
-        })?
-        .parse()
-        .map_err(|_| ParseError {
-            reason: "Unable to parse header".to_string(),
-        })?;
+fn peol_comment(i: &str) -> IResult<&str, ()> {
+    value((), (char('c'), not_line_ending, line_ending)).parse(i)
+}
 
-    let cleaned_up_source = cnf_string
-        .lines()
-        .filter(|line| !line.starts_with("c") && !line.starts_with("p"))
-        .map(|line| line.trim())
-        .fold(String::new(), |acc, line| acc + " " + line);
+fn ppos_number(i: &str) -> IResult<&str, u16> {
+    map_res(
+        verify(digit1, |s: &str| s.chars().next() != Some('0')),
+        u16::from_str,
+    )
+    .parse(i)
+}
 
-    let crude_clauses = cleaned_up_source
-        .split(" 0")
-        .filter(|clause| !clause.is_empty())
-        .map(parse_clause)
-        .collect::<Result<Vec<Vec<i64>>, ParseError>>()?;
+fn pnumber(i: &str) -> IResult<&str, i32> {
+    map((opt(char('-')), ppos_number), |(sign, digits)| {
+        if sign.is_some() {
+            -i32::from(digits)
+        } else {
+            i32::from(digits)
+        }
+    })
+    .parse(i)
+}
 
-    let mut variables: Variables = Variables::new(variable_count);
+fn pvariable(i: &str) -> IResult<&str, i32> {
+    let (i, (_, v, _)) = (
+        many0(alt((tag(" "), line_ending))),
+        pnumber,
+        many1(alt((tag(" "), line_ending))),
+    )
+        .parse(i)?;
+
+    Ok((i, v))
+}
+
+fn pheader(i: &str) -> IResult<&str, (usize, usize)> {
+    let (i, (n, m)) = preceded(
+        (tag("p cnf"), multispace1),
+        separated_pair(
+            map_res(ppos_number, usize::try_from),
+            multispace1,
+            map_res(ppos_number, usize::try_from),
+        ),
+    )
+    .parse(i)?;
+
+    Ok((i, (n, m)))
+}
+
+fn pclauses(n: usize, i: &str) -> IResult<&str, Vec<i32>> {
+    terminated(many_m_n(1, n, pvariable), char('0')).parse(i)
+}
+
+fn pdimacs(i: &str) -> IResult<&str, (Vec<Vec<i32>>, u16, u16)> {
+    let (i, _) = many0(peol_comment).parse(i)?;
+    let (i, (n, m)) = pheader.parse(i)?;
+    let (i, cs) = count(|i| pclauses(n, i), m).parse(i)?;
+
+    Ok((i, (cs, n as u16, m as u16)))
+}
+
+fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
+    pdimacs(i).finish().map(|t| t.1)
+}
+
+pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
+    let (crude_clauses, variable_count, _) = parse(cnf_string)?;
+
     let mut clauses: Vec<Clause> = Vec::new();
+    let mut variables = Variables::new(variable_count as usize);
 
     for (clause_id, crude_clause) in crude_clauses.iter().enumerate() {
         let mut literals = Literals::new();
 
-        for crude_literal in crude_clause {
-            let variable_id = crude_literal.abs() as VariableId;
-            let polarity = if *crude_literal > 0 {
+        for &crude_literal in crude_clause {
+            let variable_id = crude_literal.unsigned_abs();
+            let polarity = if crude_literal > 0 {
                 Polarity::Positive
             } else {
                 Polarity::Negative
@@ -66,43 +105,8 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, ParseError> {
             }
             literals.insert(variable_id, polarity);
         }
-
-        clauses.push(Clause::new(literals));
+        clauses.push(Clause::new(literals))
     }
 
     Ok(CnfFormula::new(clauses, variables))
-}
-
-fn parse_clause(clause_string: &str) -> Result<Vec<i64>, ParseError> {
-    clause_string
-        .split(' ')
-        .filter(|clause| !clause.is_empty())
-        .map(parse_literal)
-        .collect::<Result<Vec<i64>, ParseError>>()
-}
-
-fn parse_literal(literal_string: &str) -> Result<i64, ParseError> {
-    let literal_integer = literal_string.parse::<i64>().map_err(|_| ParseError {
-        reason: format!("Unable to parse supposed literal: \"{literal_string}\""),
-    })?;
-    Ok(literal_integer)
-}
-
-#[derive(Debug)]
-pub struct ParseError {
-    pub reason: String,
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::parser::parse_cnf;
-
-    #[test]
-    fn test_parse_cnf() {
-        let parse_input = "\
-p cnf 4 2
-1 2 0
-3 4 0";
-        let _ = parse_cnf(parse_input).unwrap();
-    }
 }

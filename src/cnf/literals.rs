@@ -2,7 +2,6 @@ use crate::cnf::variable::VariableId;
 use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
-use std::slice::Iter;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Polarity {
@@ -30,20 +29,6 @@ pub struct Literals(Vec<i32>);
 impl Literals {
     pub fn new() -> Literals {
         Literals(Vec::new())
-    }
-
-    pub fn get_polarity_for_var(&self, var: &VariableId) -> Option<&Polarity> {
-        self.0.iter().find_map(|&x| {
-            if x.unsigned_abs() == *var {
-                Some(if x > 0 {
-                    &Polarity::Positive
-                } else {
-                    &Polarity::Negative
-                })
-            } else {
-                None
-            }
-        })
     }
 
     pub fn iter(&'_ self) -> impl Iterator<Item = (VariableId, Polarity)> + '_ {

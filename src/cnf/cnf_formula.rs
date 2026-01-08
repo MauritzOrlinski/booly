@@ -43,28 +43,27 @@ impl CnfFormula {
         let (satisfied_clause_ids, unsatisfied_clause_ids) =
             assignee.associated_clauses(assignment.value);
 
-        for clause_id in satisfied_clause_ids {
-            let clause = self.clauses.get_mut(*clause_id).unwrap();
-            if matches!(clause.satisfied_by, None) {
+        satisfied_clause_ids.iter().for_each(|&clause_id| {
+            let clause = self.clauses.get_mut(clause_id).unwrap();
+            if clause.satisfied_by.is_none() {
                 self.unsat_clauses -= 1;
                 clause.satisfied_by = Some(assignment.variable_id);
             }
-        }
+        });
 
         let mut assignment_conflict = false;
 
-        for clause_id in unsatisfied_clause_ids {
-            let clause = self.clauses.get_mut(*clause_id).unwrap();
-            clause.unassigned_variables -= 1;
-            if clause.satisfied_by.is_some() {
-                continue;
+        unsatisfied_clause_ids.iter().for_each(|&clause_id| {
+            let clause = self.clauses.get_mut(clause_id).unwrap();
+            if clause.satisfied_by.is_none() {
+                clause.unassigned_variables -= 1;
+                if clause.unassigned_variables == 1 {
+                    unit_queue.push_back(clause_id);
+                } else if clause.unassigned_variables == 0 {
+                    assignment_conflict = true;
+                }
             }
-            if clause.unassigned_variables == 1 {
-                unit_queue.push_back(*clause_id);
-            } else if clause.unassigned_variables == 0 {
-                assignment_conflict = true;
-            }
-        }
+        });
 
         if assignment_conflict {
             Conflict
@@ -73,11 +72,11 @@ impl CnfFormula {
         }
     }
 
-    /// Reverses an assignment.
+    /// Undos an assignment.
     ///
     /// # Arguments
     /// * `assignment` - The assignment
-    pub fn reverse_assignment(&mut self, assignment: &Assignment) {
+    pub fn undo_assignment(&mut self, assignment: &Assignment) {
         let assignee = self.variables.get_mut(assignment.variable_id);
 
         assignee.value = None;
@@ -87,16 +86,18 @@ impl CnfFormula {
 
         for clause_id in satisfied_clause_ids {
             let clause = self.clauses.get_mut(*clause_id).unwrap();
-            if matches!(clause.satisfied_by, Some(x) if x == assignment.variable_id) {
+            if clause.satisfied_by == Some(assignment.variable_id) {
                 self.unsat_clauses += 1;
                 clause.satisfied_by = None;
             }
         }
 
-        for clause_id in unsatisfied_clause_ids {
-            let clause = self.clauses.get_mut(*clause_id).unwrap();
-            clause.unassigned_variables += 1;
-        }
+        unsatisfied_clause_ids.iter().for_each(|&clause_id| {
+            let clause = self.clauses.get_mut(clause_id).unwrap();
+            if clause.satisfied_by.is_none() {
+                clause.unassigned_variables += 1;
+            }
+        })
     }
 
     /// Checks if the formula is satisfied
@@ -119,6 +120,33 @@ impl CnfFormula {
             })
             .collect()
     }
+
+    pub fn pure_literals(&self) -> Vec<Assignment> {
+        self.variables
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| v.value.is_none())
+            .filter_map(|(i, v)| {
+                if !v.positive_occurrences.is_empty() && v.positive_occurrences.is_empty() {
+                    Some(Assignment {
+                        variable_id: i as u32 + 1,
+                        value: true,
+                    })
+                } else if v.positive_occurrences.is_empty() && !v.negative_occurrences.is_empty() {
+                    Some(Assignment {
+                        variable_id: i as u32 + 1,
+                        value: false,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    pub fn delete_tautologies(&mut self) {
+        //TODO:
+    }
 }
 
 impl fmt::Display for CnfFormula {
@@ -140,7 +168,6 @@ impl fmt::Display for CnfFormula {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dpll::assignment::AssignmentValue;
     use crate::parser::parse_cnf;
 
     #[test]
@@ -157,7 +184,7 @@ p cnf 6 2
 
         let mut assignment = Assignment::new(1, true);
         let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
-        let _ = cnf.reverse_assignment(&mut assignment);
+        let _ = cnf.undo_assignment(&mut assignment);
 
         assert_eq!(snapshot, cnf);
     }
@@ -204,7 +231,7 @@ p cnf 4 2
 
         assert!(cnf.is_satisfied());
 
-        let _ = cnf.reverse_assignment(second_assignment);
+        let _ = cnf.undo_assignment(second_assignment);
 
         assert!(!cnf.is_satisfied());
     }
@@ -228,7 +255,7 @@ p cnf 3 2
 
         assert!(cnf.is_satisfied());
 
-        let _ = cnf.reverse_assignment(assignment);
+        let _ = cnf.undo_assignment(assignment);
 
         assert!(!cnf.is_satisfied());
     }

@@ -30,6 +30,6 @@ impl Clause {
 
 impl fmt::Display for Clause {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} 0", self.literals.to_string())
+        write!(f, "{} 0", self.literals)
     }
 }

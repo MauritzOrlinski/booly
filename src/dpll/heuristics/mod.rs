@@ -1,4 +1,9 @@
+pub mod dlcs;
+pub mod dlcs1;
+pub mod dlis;
+pub mod dlis1;
 pub mod from_shortest_clause;
+pub mod mom;
 pub mod trivial;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;

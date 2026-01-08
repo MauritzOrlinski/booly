@@ -12,6 +12,8 @@ debug = true
 
 [dependencies]
 clap = {version = "4.5.50", features = ["derive"]}
+nom = "8.0.0"
+roaring = "0.11.3"
 
 [dev-dependencies]
 datatest-stable = "0.3"

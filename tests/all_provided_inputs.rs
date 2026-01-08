@@ -1,9 +1,9 @@
 use dpml::dpll::dpll::Dpll;
-use dpml::dpll::dpll::DpllResult::{Conflict, Satisfied};
-use dpml::parser::parse_cnf;
-use dpml::verify::verify_satisfied;
-use std::path::Path;
+
+use dpml::dpll::dpll::DpllStatus::{Sat, Unsat};
 use dpml::dpll::heuristics::from_shortest_clause::FromShortestClause;
+use dpml::parser::parse_cnf;
+use std::path::Path;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
@@ -11,7 +11,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let mut dpll = Dpll::new(cnf, heuristic);
 
     let result = dpll.solve();
-    assert_eq!(result, Satisfied);
+    assert_eq!(result, Sat);
     Ok(())
 }
 
@@ -21,7 +21,7 @@ fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let mut dpll = Dpll::new(cnf, heuristic);
 
     let result = dpll.solve();
-    assert_eq!(result, Conflict);
+    assert_eq!(result, Unsat);
     Ok(())
 }
 
