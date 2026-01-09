@@ -7,13 +7,21 @@ edition = "2024"
 name = "main"
 path = "src/bin/main.rs"
 
+[[bin]]
+name = "plot"
+path = "src/bin/plot.rs"
+
 [profile.release]
-debug = true
+debug = false
 
 [dependencies]
 clap = {version = "4.5.50", features = ["derive"]}
 nom = "8.0.0"
 roaring = "0.11.3"
+rayon = "1.11.0"
+cpu-time = "1.0.0"
+walkdir = "2.5"
+gnuplot = "0.0.46"
 
 [dev-dependencies]
 datatest-stable = "0.3"
