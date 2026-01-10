@@ -14,5 +14,5 @@
 - [ ] Wann pure Literal (Max)
 - [ ] ML-Gedöns (Wenn noch Zeit am Ende über ist, Mauritz)
 - [ ] Random CNF (Wenn noch Zeit am Ende über ist, Mauritz)
-- [ ] README erstellen (Max)
+- [X] README erstellen (Max)
 - [ ] Bei den Heuristiken mal schauen dass nicht alles tausend Mal berechnet wird. (Wer Zeit hat)
