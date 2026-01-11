@@ -1,6 +1,7 @@
 /target
 /data
 flamegraph.svg
-perf.data 
+perf.data
 perf.data.old
 .idea
+plot.png
