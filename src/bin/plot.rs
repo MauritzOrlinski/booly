@@ -34,10 +34,14 @@ macro_rules! plot_for_labels {
         let mut axes = $axes;
         $(
             axes = axes.lines_points(
-                0..$results.iter().filter(|(_, l)| *l == $label).count(),
-                $results.iter().filter_map(|(f, l)| {
-                    if *l == $label { Some(f) } else { None }
-                }),
+                1..$results
+                    .iter()
+                    .filter(|(_, l)| *l == $label)
+                    .count()+1,
+                $results
+                    .iter()
+                    .filter_map(|(f, l)| { if *l == $label { Some(f) } else { None } })
+                    .scan(0.0, |state, x| { *state += x; Some(*state)}),
                 &[Caption(&format!("{}", $label))],
             );
         )+
