@@ -1,3 +1,5 @@
+use std::cmp::max_by;
+
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::heuristics::Heuristic;
@@ -18,31 +20,28 @@ impl Heuristic for JeroslawWang {
                 .sum::<f64>()
         };
 
-        let (variable_id_pos, value_pos) = cnf_formula
+        let (variable_id, variable, _) = cnf_formula
             .variables
             .iter()
             .enumerate()
             .filter(|(_, v)| v.value.is_none())
-            .map(|(vid, v)| (vid, j(&v.positive_occurrences)))
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(vid, v)| {
+                (
+                    vid,
+                    v,
+                    max_by(
+                        j(&v.positive_occurrences),
+                        j(&v.negative_occurrences),
+                        |a, b| a.partial_cmp(b).unwrap(),
+                    ),
+                )
+            })
+            .max_by(|(_, _, a), (_, _, b)| a.partial_cmp(b).unwrap())
             .unwrap();
 
-        let (variable_id_neg, value_neg) = cnf_formula
-            .variables
-            .iter()
-            .enumerate()
-            .filter(|(_, v)| v.value.is_none())
-            .map(|(vid, v)| (vid, j(&v.negative_occurrences)))
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap();
-
-        let assignment_value = value_pos >= value_neg;
-        let variable_id = if assignment_value {
-            variable_id_pos
-        } else {
-            variable_id_neg
-        };
-
-        Assignment::new(variable_id as u32 + 1, assignment_value)
+        Assignment::new(
+            variable_id as u32 + 1,
+            j(&variable.positive_occurrences) >= j(&variable.negative_occurrences),
+        )
     }
 }
