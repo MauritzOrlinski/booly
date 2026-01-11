@@ -13,9 +13,9 @@ use rayon::prelude::*;
 use std::fmt::Display;
 use std::fs;
 use std::io;
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use walkdir::WalkDir;
@@ -106,7 +106,16 @@ fn main() -> io::Result<()> {
         .into_iter()
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file())
-        .map(|entry| fs::read_to_string(&entry.path().to_path_buf()).unwrap())
+        .filter_map(|entry| {
+            let bytes = fs::read(entry.path()).ok()?;
+            match String::from_utf8(bytes) {
+                Ok(string) => Some(string),
+                Err(_) => {
+                    println!("{:?}", entry);
+                    None
+                }
+            }
+        })
         .collect();
 
     let mut results: Vec<(f64, Label)> = cnf_strings
