@@ -2,6 +2,7 @@ use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::heuristics::Heuristic;
 
+#[derive(Clone)]
 pub struct DLCS1;
 
 impl Heuristic for DLCS1 {

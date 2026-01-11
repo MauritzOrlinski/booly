@@ -5,6 +5,7 @@ use crate::dpll::assignment_stack::AssignmentStack;
 use crate::dpll::dpll::DpllStatus::{Conflict, Incomplete, Sat, Unsat};
 use crate::dpll::heuristics::Heuristic;
 use std::collections::VecDeque;
+use std::sync::atomic::AtomicBool;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DpllStatus {
@@ -34,10 +35,10 @@ impl<T: Heuristic> Dpll<T> {
         }
     }
 
-    pub fn solve(&mut self) -> DpllStatus {
+    pub fn solve_interruptable(&mut self, cancel_flag: &AtomicBool) -> DpllStatus {
         self.preprocess();
 
-        while self.status == Incomplete {
+        while self.status == Incomplete && !cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
             let assigment = self.heuristic.chose_next_assignment(&self.cnf_formula);
 
             self.assignment_stack.start_decision_level();
@@ -51,6 +52,12 @@ impl<T: Heuristic> Dpll<T> {
         }
 
         self.status
+    }
+
+    pub fn solve(&mut self) -> DpllStatus {
+        let cancel_flag = AtomicBool::new(false);
+
+        self.solve_interruptable(&cancel_flag)
     }
 
     fn backtrack(&mut self) {
