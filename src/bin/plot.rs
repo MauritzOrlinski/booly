@@ -148,7 +148,7 @@ fn main() -> io::Result<()> {
         Label::MOM,
     );
 
-    let _ = fg.save_to_png("plots/plot.png", 1920, 1080);
+    let _ = fg.save_to_png("plot.png", 1920, 1080);
 
     Ok(())
 }
