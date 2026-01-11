@@ -16,16 +16,16 @@ pub enum DpllStatus {
 }
 
 #[derive(Debug)]
-pub struct Dpll<T: Heuristic> {
-    heuristic: T,
+pub struct Dpll {
+    heuristic: Box<dyn Heuristic>,
     pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
     pub(crate) status: DpllStatus,
 }
 
-impl<T: Heuristic> Dpll<T> {
-    pub fn new(cnf_formula: CnfFormula, heuristic: T) -> Dpll<T> {
+impl Dpll {
+    pub fn new(cnf_formula: CnfFormula, heuristic: Box<dyn Heuristic>) -> Dpll {
         Dpll {
             heuristic,
             cnf_formula,

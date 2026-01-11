@@ -7,7 +7,7 @@ use std::path::Path;
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = MOM;
-    let mut dpll = Dpll::new(cnf, heuristic);
+    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
     assert_eq!(result, DpllStatus::Sat);
@@ -18,7 +18,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = MOM;
-    let mut dpll = Dpll::new(cnf, heuristic);
+    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
     assert_eq!(result, DpllStatus::Unsat);

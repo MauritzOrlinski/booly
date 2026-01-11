@@ -3,6 +3,7 @@ use crate::cnf::literals::Polarity;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::heuristics::Heuristic;
 
+#[derive(Debug)]
 pub struct MOM;
 
 impl Heuristic for MOM {

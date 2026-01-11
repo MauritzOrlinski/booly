@@ -35,7 +35,7 @@ fn benchmark_all_in_directory<P: AsRef<Path>>(
 
 fn run_dpll(cnf: CnfFormula) {
     let heuristic = FromShortestClause;
-    let mut dpll = Dpll::new(cnf, heuristic);
+    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
     dpll.solve();
 }
 

@@ -63,7 +63,7 @@ impl Display for Label {
     }
 }
 
-fn measure_dpll(cnf_string: &String, heuristic: impl Heuristic) -> Option<f64> {
+fn measure_dpll(cnf_string: &String, heuristic: Box<dyn Heuristic>) -> Option<f64> {
     let mut dpll = Dpll::new(parse_cnf(cnf_string).unwrap(), heuristic);
 
     let cancel_flag = Arc::new(AtomicBool::new(false));
@@ -92,14 +92,14 @@ fn main() -> io::Result<()> {
 
     let measures: Vec<fn(&String) -> Option<(f64, Label)>> = vec![
         // HERE
-        |cnf| measure_dpll(cnf, heuristics::trivial::Trivial).map(|f| (f, Label::Trivial)),
+        |cnf| measure_dpll(cnf, Box::new(heuristics::trivial::Trivial)).map(|f| (f, Label::Trivial)),
         |cnf| {
-            measure_dpll(cnf, heuristics::from_shortest_clause::FromShortestClause)
+            measure_dpll(cnf, Box::new(heuristics::from_shortest_clause::FromShortestClause))
                 .map(|f| (f, Label::FSC))
         },
-        |cnf| measure_dpll(cnf, heuristics::dlcs::DLCS).map(|f| (f, Label::DLCS)),
-        |cnf| measure_dpll(cnf, heuristics::dlis::DLIS).map(|f| (f, Label::DLIS)),
-        |cnf| measure_dpll(cnf, heuristics::mom::MOM).map(|f| (f, Label::MOM)),
+        |cnf| measure_dpll(cnf, Box::new(heuristics::dlcs::DLCS)).map(|f| (f, Label::DLCS)),
+        |cnf| measure_dpll(cnf, Box::new(heuristics::dlis::DLIS)).map(|f| (f, Label::DLIS)),
+        |cnf| measure_dpll(cnf, Box::new(heuristics::mom::MOM)).map(|f| (f, Label::MOM)),
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")

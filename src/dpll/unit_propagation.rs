@@ -2,9 +2,8 @@ use crate::cnf::clause::Clause;
 use crate::dpll::assignment::Assignment;
 use crate::dpll::dpll::Dpll;
 use crate::dpll::dpll::DpllStatus::Conflict;
-use crate::dpll::heuristics::Heuristic;
 
-impl<T: Heuristic> Dpll<T> {
+impl Dpll {
     /// Execute unit propagation. As long as there are unit clauses present in the unit queue,
     /// satisfy them. If this creates any new unit clauses, add them to the queue.
     ///
