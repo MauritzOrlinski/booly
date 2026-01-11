@@ -40,9 +40,9 @@ macro_rules! plot_for_labels {
     }};
 }
 
-// HERE
 #[derive(Debug, PartialEq, PartialOrd)]
 enum Label {
+    // HERE
     FCS,
     DLCS,
     DLIS,
@@ -52,10 +52,10 @@ enum Label {
     MOM,
 }
 
-// HERE
 impl Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
+            // HERE
             Label::FCS => write!(f, "fcs"),
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),
@@ -91,11 +91,11 @@ fn measure_dpll(cnf_string: &String, heuristic: impl Heuristic) -> Option<f64> {
     }
 }
 
-// HERE
 fn main() -> io::Result<()> {
     let mut fg = Figure::new();
 
     let measures: Vec<fn(&String) -> Option<(f64, Label)>> = vec![
+        // HERE
         |cnf| {
             measure_dpll(cnf, heuristics::from_shortest_clause::FromShortestClause)
                 .map(|f| (f, Label::FCS))
