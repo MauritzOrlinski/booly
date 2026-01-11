@@ -18,7 +18,6 @@ struct CliArguments {
 fn main() {
     let cli = CliArguments::parse();
 
-    
     let cnf_formula_str: String = match fs::read_to_string(&cli.input_file) {
         Ok(value) => value,
         Err(_) => {
@@ -27,7 +26,6 @@ fn main() {
         }
     };
 
-    
     let cnf_formula: CnfFormula = match parse_cnf(&cnf_formula_str) {
         Ok(value) => value,
         Err(_) => {

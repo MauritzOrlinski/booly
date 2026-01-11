@@ -7,8 +7,7 @@ pub struct MOM;
 
 impl Heuristic for MOM {
     fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
-        let alpha: u32 = 4;
-        let assignment_value = true;
+        let alpha: u32 = 10;
 
         let min_width = cnf_formula
             .clauses
@@ -40,12 +39,12 @@ impl Heuristic for MOM {
             });
         }
 
-        let (variable_id, _) = vars
+        let (variable_id, (h_pos, h_neg)) = vars
             .iter()
             .enumerate()
             .max_by_key(|(_, (h_pos, h_neg))| (h_pos + h_neg) * (2 << alpha) + h_pos * h_neg)
             .unwrap();
 
-        Assignment::new(variable_id as u32 + 1, assignment_value)
+        Assignment::new(variable_id as u32 + 1, *h_pos >= *h_neg)
     }
 }

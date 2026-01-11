@@ -51,6 +51,8 @@ impl<T: Heuristic> Dpll<T> {
             }
         }
 
+        self.postprocess();
+
         self.status
     }
 
@@ -111,5 +113,18 @@ impl<T: Heuristic> Dpll<T> {
                 self.cnf_formula
                     .apply_assignment(assignment, &mut self.unit_queue);
             });
+    }
+
+    /// Assigns values to all unset variables if formula is satisfiable
+    fn postprocess(&mut self) {
+        if self.status == DpllStatus::Sat {
+            self.cnf_formula
+                .variables
+                .find_all_unassigned()
+                .iter()
+                .for_each(|&variable_id| {
+                    self.cnf_formula.variables.get_mut(variable_id).value = Some(false);
+                });
+        }
     }
 }

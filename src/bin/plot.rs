@@ -1,3 +1,4 @@
+use clap::Parser;
 use cpu_time::ProcessTime;
 use dpml::dpll::dpll::Dpll;
 use dpml::dpll::heuristics;
@@ -20,9 +21,13 @@ use std::thread;
 use std::time::Duration;
 use walkdir::WalkDir;
 
-static TIMOUT_IN_S: u64 = 1;
-
 // INFO: In order to add a heuristic, extend the code marked with "HERE"
+
+#[derive(Parser)]
+struct Args {
+    /// timeout per instance in seconds
+    timeout: u64,
+}
 
 macro_rules! plot_for_labels {
     ($axes:expr, $results:expr, $( $label:path ),+ $(,)?) => {{
@@ -48,6 +53,7 @@ enum Label {
     DLCS,
     DLIS,
     MOM,
+    JW,
 }
 
 impl Display for Label {
@@ -59,19 +65,21 @@ impl Display for Label {
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),
             Label::MOM => write!(f, "mom"),
+            Label::JW => write!(f, "jw"),
         }
     }
 }
 
 fn measure_dpll(cnf_string: &String, heuristic: impl Heuristic) -> Option<f64> {
     let mut dpll = Dpll::new(parse_cnf(cnf_string).unwrap(), heuristic);
+    let timeout = Args::parse().timeout;
 
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
     {
         let cancel_flag = Arc::clone(&cancel_flag);
         thread::spawn(move || {
-            thread::sleep(Duration::from_secs(TIMOUT_IN_S));
+            thread::sleep(Duration::from_secs(timeout));
             cancel_flag.store(true, Ordering::Relaxed);
         });
     }
@@ -88,6 +96,7 @@ fn measure_dpll(cnf_string: &String, heuristic: impl Heuristic) -> Option<f64> {
 }
 
 fn main() -> io::Result<()> {
+    let _ = Args::parse();
     let mut fg = Figure::new();
 
     let measures: Vec<fn(&String) -> Option<(f64, Label)>> = vec![
@@ -100,6 +109,7 @@ fn main() -> io::Result<()> {
         |cnf| measure_dpll(cnf, heuristics::dlcs::DLCS).map(|f| (f, Label::DLCS)),
         |cnf| measure_dpll(cnf, heuristics::dlis::DLIS).map(|f| (f, Label::DLIS)),
         |cnf| measure_dpll(cnf, heuristics::mom::MOM).map(|f| (f, Label::MOM)),
+        |cnf| measure_dpll(cnf, heuristics::jeroslaw_wang::JeroslawWang).map(|f| (f, Label::JW)),
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -138,6 +148,7 @@ fn main() -> io::Result<()> {
         Label::DLCS,
         Label::DLIS,
         Label::MOM,
+        Label::JW,
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);

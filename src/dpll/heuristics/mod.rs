@@ -3,6 +3,7 @@ pub mod dlcs1;
 pub mod dlis;
 pub mod dlis1;
 pub mod from_shortest_clause;
+pub mod jeroslaw_wang;
 pub mod mom;
 pub mod trivial;
 use crate::cnf::cnf_formula::CnfFormula;
