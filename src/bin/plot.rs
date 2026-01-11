@@ -43,12 +43,10 @@ macro_rules! plot_for_labels {
 #[derive(Debug, PartialEq, PartialOrd)]
 enum Label {
     // HERE
-    FCS,
+    Trivial,
+    FSC,
     DLCS,
     DLIS,
-    DLCS1,
-    DLIS1,
-    Trivial,
     MOM,
 }
 
@@ -56,12 +54,10 @@ impl Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             // HERE
-            Label::FCS => write!(f, "fcs"),
+            Label::Trivial => write!(f, "trivial"),
+            Label::FSC => write!(f, "fsc"),
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),
-            Label::DLCS1 => write!(f, "dlcs1"),
-            Label::DLIS1 => write!(f, "dlis1"),
-            Label::Trivial => write!(f, "trivial"),
             Label::MOM => write!(f, "mom"),
         }
     }
@@ -96,16 +92,14 @@ fn main() -> io::Result<()> {
 
     let measures: Vec<fn(&String) -> Option<(f64, Label)>> = vec![
         // HERE
+        |cnf| measure_dpll(cnf, heuristics::trivial::Trivial).map(|f| (f, Label::Trivial)),
         |cnf| {
             measure_dpll(cnf, heuristics::from_shortest_clause::FromShortestClause)
-                .map(|f| (f, Label::FCS))
+                .map(|f| (f, Label::FSC))
         },
         |cnf| measure_dpll(cnf, heuristics::dlcs::DLCS).map(|f| (f, Label::DLCS)),
-        |cnf| measure_dpll(cnf, heuristics::dlcs1::DLCS1).map(|f| (f, Label::DLCS1)),
         |cnf| measure_dpll(cnf, heuristics::dlis::DLIS).map(|f| (f, Label::DLIS)),
-        |cnf| measure_dpll(cnf, heuristics::dlis1::DLIS1).map(|f| (f, Label::DLIS1)),
         |cnf| measure_dpll(cnf, heuristics::mom::MOM).map(|f| (f, Label::MOM)),
-        |cnf| measure_dpll(cnf, heuristics::trivial::Trivial).map(|f| (f, Label::Trivial)),
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -139,12 +133,10 @@ fn main() -> io::Result<()> {
             .set_y_label("CPU Times(s)", &[]),
         results,
         // HERE
-        Label::FCS,
-        Label::DLCS,
-        Label::DLCS1,
-        Label::DLIS,
-        Label::DLIS1,
         Label::Trivial,
+        Label::FSC,
+        Label::DLCS,
+        Label::DLIS,
         Label::MOM,
     );
 
