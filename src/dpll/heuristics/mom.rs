@@ -7,7 +7,7 @@ use crate::dpll::heuristics::Heuristic;
 pub struct MOM;
 
 impl Heuristic for MOM {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
         let alpha: u32 = 4;
         let assignment_value = true;
 

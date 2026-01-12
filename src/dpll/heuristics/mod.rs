@@ -11,5 +11,5 @@ use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
 
 pub trait Heuristic: Debug {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment;
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, decision_level: i32) -> Assignment;
 }

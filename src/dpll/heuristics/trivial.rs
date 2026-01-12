@@ -6,7 +6,7 @@ use crate::dpll::heuristics::Heuristic;
 pub struct Trivial;
 
 impl Heuristic for Trivial {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
         Assignment::new(cnf_formula.variables.find_unassigned(), true)
     }
 }

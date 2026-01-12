@@ -6,7 +6,7 @@ use crate::dpll::heuristics::Heuristic;
 pub struct FromShortestClause;
 
 impl Heuristic for FromShortestClause {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
         let shortest_clause = cnf_formula
             .clauses
             .iter()

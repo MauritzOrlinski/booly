@@ -8,7 +8,7 @@ use crate::dpll::heuristics::Heuristic;
 pub struct DLIS1;
 
 impl Heuristic for DLIS1 {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
         let (variable_id, variable) = cnf_formula
             .variables
             .iter()

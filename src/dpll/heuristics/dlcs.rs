@@ -7,7 +7,7 @@ use crate::dpll::heuristics::Heuristic;
 pub struct DLCS;
 
 impl Heuristic for DLCS {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
         let count_unsat = |occ: &Vec<usize>| {
             occ.iter()
                 .filter(|&&clause_id| {

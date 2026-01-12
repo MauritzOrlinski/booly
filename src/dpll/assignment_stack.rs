@@ -48,4 +48,8 @@ impl AssignmentStack {
     pub fn is_empty(&self) -> bool {
         self.trail.is_empty()
     }
+
+    pub fn get_decision_level(&self) -> i32 {
+        self.trail.len() as i32
+    }
 }
