@@ -1,15 +1,14 @@
-use clap::{Parser};
+use clap::Parser;
+use dpml::cli::CliArguments;
 use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::dpll::dpll::{Dpll, DpllStatus};
 use dpml::parser::parse_cnf;
 use std::fs;
 use std::time::Instant;
-use dpml::cli::CliArguments;
 
 fn main() {
     let cli = CliArguments::parse();
 
-    
     let cnf_formula_str: String = match fs::read_to_string(&cli.get_input_file()) {
         Ok(value) => value,
         Err(_) => {
@@ -18,7 +17,6 @@ fn main() {
         }
     };
 
-    
     let cnf_formula: CnfFormula = match parse_cnf(&cnf_formula_str) {
         Ok(value) => value,
         Err(_) => {

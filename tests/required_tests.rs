@@ -1,12 +1,12 @@
 use dpml::dpll::dpll::DpllStatus;
-use dpml::dpll::{dpll::Dpll, heuristics::mom::MOM};
+use dpml::dpll::{dpll::Dpll, heuristics::dlcs::DLCS};
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = MOM;
+    let heuristic = DLCS;
     let mut dpll = Dpll::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
@@ -17,7 +17,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = MOM;
+    let heuristic = DLCS;
     let mut dpll = Dpll::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
