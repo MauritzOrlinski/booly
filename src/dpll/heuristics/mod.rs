@@ -5,6 +5,7 @@ pub mod dlis1;
 pub mod from_shortest_clause;
 pub mod mom;
 pub mod trivial;
+pub mod combined_heuristic;
 
 use std::fmt::Debug;
 use crate::cnf::cnf_formula::CnfFormula;
