@@ -1,3 +1,4 @@
+use clap::Parser;
 use cpu_time::ProcessTime;
 use dpml::dpll::dpll::Dpll;
 use dpml::dpll::heuristics;
@@ -13,26 +14,34 @@ use rayon::prelude::*;
 use std::fmt::Display;
 use std::fs;
 use std::io;
+use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use walkdir::WalkDir;
 
-static TIMOUT_IN_S: u64 = 1;
-
 // INFO: In order to add a heuristic, extend the code marked with "HERE"
+
+#[derive(Parser)]
+struct Args {
+    /// timeout per instance in seconds
+    timeout: u64,
+}
 
 macro_rules! plot_for_labels {
     ($axes:expr, $results:expr, $( $label:path ),+ $(,)?) => {{
         let mut axes = $axes;
         $(
             axes = axes.lines_points(
-                0..$results.iter().filter(|(_, l)| *l == $label).count(),
-                $results.iter().filter_map(|(f, l)| {
-                    if *l == $label { Some(f) } else { None }
-                }),
+                1..$results
+                    .iter()
+                    .filter(|(_, l)| *l == $label)
+                    .count()+1,
+                $results
+                    .iter()
+                    .filter_map(|(f, l)| { if *l == $label { Some(f) } else { None } })
+                    .scan(0.0, |state, x| { *state += x; Some(*state)}),
                 &[Caption(&format!("{}", $label))],
             );
         )+
@@ -48,6 +57,7 @@ enum Label {
     DLCS,
     DLIS,
     MOM,
+    JW,
 }
 
 impl Display for Label {
@@ -59,19 +69,21 @@ impl Display for Label {
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),
             Label::MOM => write!(f, "mom"),
+            Label::JW => write!(f, "jw"),
         }
     }
 }
 
 fn measure_dpll(cnf_string: &String, heuristic: Box<dyn Heuristic>) -> Option<f64> {
     let mut dpll = Dpll::new(parse_cnf(cnf_string).unwrap(), heuristic);
+    let timeout = Args::parse().timeout;
 
     let cancel_flag = Arc::new(AtomicBool::new(false));
 
     {
         let cancel_flag = Arc::clone(&cancel_flag);
         thread::spawn(move || {
-            thread::sleep(Duration::from_secs(TIMOUT_IN_S));
+            thread::sleep(Duration::from_secs(timeout));
             cancel_flag.store(true, Ordering::Relaxed);
         });
     }
@@ -88,18 +100,28 @@ fn measure_dpll(cnf_string: &String, heuristic: Box<dyn Heuristic>) -> Option<f6
 }
 
 fn main() -> io::Result<()> {
+    let _ = Args::parse();
     let mut fg = Figure::new();
 
     let measures: Vec<fn(&String) -> Option<(f64, Label)>> = vec![
         // HERE
-        |cnf| measure_dpll(cnf, Box::new(heuristics::trivial::Trivial)).map(|f| (f, Label::Trivial)),
         |cnf| {
-            measure_dpll(cnf, Box::new(heuristics::from_shortest_clause::FromShortestClause))
-                .map(|f| (f, Label::FSC))
+            measure_dpll(cnf, Box::new(heuristics::trivial::Trivial)).map(|f| (f, Label::Trivial))
+        },
+        |cnf| {
+            measure_dpll(
+                cnf,
+                Box::new(heuristics::from_shortest_clause::FromShortestClause),
+            )
+            .map(|f| (f, Label::FSC))
         },
         |cnf| measure_dpll(cnf, Box::new(heuristics::dlcs::DLCS)).map(|f| (f, Label::DLCS)),
         |cnf| measure_dpll(cnf, Box::new(heuristics::dlis::DLIS)).map(|f| (f, Label::DLIS)),
         |cnf| measure_dpll(cnf, Box::new(heuristics::mom::MOM)).map(|f| (f, Label::MOM)),
+        |cnf| {
+            measure_dpll(cnf, Box::new(heuristics::jeroslaw_wang::JeroslawWang))
+                .map(|f| (f, Label::JW))
+        },
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -147,6 +169,7 @@ fn main() -> io::Result<()> {
         Label::DLCS,
         Label::DLIS,
         Label::MOM,
+        Label::JW,
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);
