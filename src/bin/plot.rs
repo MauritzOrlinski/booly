@@ -58,18 +58,20 @@ enum Label {
     DLIS,
     MOM,
     JW,
+    MOMDLCS,
 }
 
 impl Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             // HERE
-            Label::Trivial => write!(f, "trivial"),
-            Label::FSC => write!(f, "fsc"),
+            Label::Trivial => write!(f, "first true"),
+            Label::FSC => write!(f, "from shortest clause"),
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),
             Label::MOM => write!(f, "mom"),
-            Label::JW => write!(f, "jw"),
+            Label::JW => write!(f, "jeroslaw wang"),
+            Label::MOMDLCS => write!(f, "mom+dlcs"),
         }
     }
 }
@@ -122,6 +124,17 @@ fn main() -> io::Result<()> {
             measure_dpll(cnf, Box::new(heuristics::jeroslaw_wang::JeroslawWang))
                 .map(|f| (f, Label::JW))
         },
+        |cnf| {
+            measure_dpll(
+                cnf,
+                Box::new(heuristics::combined_heuristic::CombinedHeuristic::new(
+                    Box::new(heuristics::mom::MOM),
+                    Box::new(heuristics::dlcs::DLCS),
+                    50,
+                )),
+            )
+            .map(|f| (f, Label::MOMDLCS))
+        },
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -170,6 +183,7 @@ fn main() -> io::Result<()> {
         Label::DLIS,
         Label::MOM,
         Label::JW,
+        Label::MOMDLCS,
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);

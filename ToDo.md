@@ -10,10 +10,9 @@
 - [ ] Preprocess (Irgendwer machts, der Zeit dafür hat)
   - [ ] Delete clasues with positive and negative variables
 - [x] What if all clauses are satisfied, but some variables are unassigned? (Irgendwer machts, der Zeit dafür hat)
-- [ ] Wann welche Heuristik (Max)
+- [x] Wann welche Heuristik (Max)
 - [ ] Wann pure Literal (Max)
 - [ ] ML-Gedöns (Wenn noch Zeit am Ende über ist, Mauritz)
 - [ ] Random CNF (Wenn noch Zeit am Ende über ist, Mauritz)
 - [x] README erstellen (Max)
 - [ ] Bei den Heuristiken mal schauen dass nicht alles tausend Mal berechnet wird. (Wer Zeit hat)
-
