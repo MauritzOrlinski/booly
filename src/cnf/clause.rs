@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
 use std::fmt;
@@ -25,6 +27,14 @@ impl Clause {
             unassigned_variables: literals.len(),
             literals,
         }
+    }
+
+    pub fn is_tautology(&self) -> bool {
+        self.literals.iter().any(|(variable_id, polarity)| {
+            self.literals
+                .iter()
+                .contains(&(variable_id, polarity.reverse()))
+        })
     }
 }
 
