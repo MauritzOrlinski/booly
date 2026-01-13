@@ -5,6 +5,7 @@
 ## Requirements
 - Rust
 - gnuplot (For the cactus plots)
+- Nextest (For the 60s benchmarks with timeouts)
 
 ## Usage
 ### Via Cargo
@@ -13,9 +14,9 @@
 - Compile with timing measurements: `cargo run --features metadata -- path/to/inputfile`
 - Speed benchmarks: `cargo bench` (will execute all example inputs from the test directory 
   millions of times to get an exact measurement on performance)
-- One minute benchmarks: `cargo nextest run --no-fail-fast` (will execute the example inputs 
-  from the sat and unsat directories with a 60s timeout to determine how many of problems 
-  can be solved in reasonable time)
+- One minute benchmarks: First install nextest (`cargo install cargo-nextest --locked`), then 
+  execute `cargonextest run --no-fail-fast` (will execute the example inputs from the sat and unsat
+- directories with a 60s timeout to determine how many of problems can be solved in reasonable time)
 - Cactus plots: TODO!
 
 ### As a compiled binary
