@@ -39,7 +39,10 @@ impl Dpll {
         self.preprocess();
 
         while self.status == Incomplete && !cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
-            let assigment = self.heuristic.chose_next_assignment(&self.cnf_formula, self.assignment_stack.get_decision_level());
+            let assigment = self.heuristic.chose_next_assignment(
+                &self.cnf_formula,
+                self.assignment_stack.get_decision_level(),
+            );
 
             self.assignment_stack.start_decision_level();
             self.assign(assigment);
@@ -93,8 +96,6 @@ impl Dpll {
     }
 
     fn preprocess(&mut self) {
-        self.cnf_formula.delete_tautologies();
-
         self.pure_literals();
 
         self.unit_queue = self.cnf_formula.generate_unit_queue();

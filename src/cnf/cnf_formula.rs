@@ -143,22 +143,6 @@ impl CnfFormula {
             })
             .collect()
     }
-
-    pub fn delete_tautologies(&mut self) {
-        let mut clauses_to_remove = vec![];
-        for (clause_id, clause) in self.clauses.iter().enumerate() {
-            if clause.is_tautology() {
-                clauses_to_remove.push(clause_id);
-            }
-        }
-
-        clauses_to_remove.sort_by(|a, b| b.cmp(a));
-
-        for clause_id in clauses_to_remove {
-            self.clauses.remove(clause_id);
-            self.unsat_clauses -= 1;
-        }
-    }
 }
 
 impl fmt::Display for CnfFormula {

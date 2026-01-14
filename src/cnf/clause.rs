@@ -28,14 +28,6 @@ impl Clause {
             literals,
         }
     }
-
-    pub fn is_tautology(&self) -> bool {
-        self.literals.iter().any(|(variable_id, polarity)| {
-            self.literals
-                .iter()
-                .contains(&(variable_id, polarity.reverse()))
-        })
-    }
 }
 
 impl fmt::Display for Clause {
