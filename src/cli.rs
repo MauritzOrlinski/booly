@@ -9,6 +9,7 @@ use crate::dpll::heuristics::trivial::Trivial;
 use clap::ValueHint;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
+use crate::dpll::heuristics::combined_heuristic_reverse::CombinedHeuristicReverse;
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 enum SimpleHeuristicCliArgument {
@@ -42,6 +43,7 @@ enum CompositeHeuristicCliArgument {
     Trivial,
     JW,
     Combined,
+    CombinedReverse,
 }
 
 #[derive(Parser, Debug)]
@@ -55,19 +57,19 @@ pub struct CliArguments {
     #[arg(long, value_enum, default_value = "from-shortest-clause")]
     heuristic: CompositeHeuristicCliArgument,
 
-    #[arg(long, required_if_eq("heuristic", "combined"))]
+    #[arg(long, required_if_eq("heuristic", "combined"), required_if_eq("heuristic", "combined_reverse"))]
     /// The primary heuristic to use when `--heuristic` is set to `combined`. Must not be `combined`.
     ///
     /// Required only if `--heuristic combined` is chosen.
     primary: Option<SimpleHeuristicCliArgument>,
 
-    #[arg(long, required_if_eq("heuristic", "combined"))]
+    #[arg(long, required_if_eq("heuristic", "combined"), required_if_eq("heuristic", "combined_reverse"))]
     /// The secondary heuristic to use when `--heuristic` is set to `combined`. Must not be `combined`.
     ///
     /// Required only if `--heuristic combined` is chosen.
     secondary: Option<SimpleHeuristicCliArgument>,
 
-    #[arg(long, required_if_eq("heuristic", "combined"))]
+    #[arg(long, required_if_eq("heuristic", "combined"), required_if_eq("heuristic", "combined_reverse"))]
     /// The decision level threshold at which to switch from the primary to the secondary heuristic
     ///
     /// Required only if `--heuristic combined` is chosen.
@@ -88,6 +90,16 @@ impl CliArguments {
                 let secondary = self.secondary.unwrap().get();
                 let decision_level_threshold = self.decision_level_threshold.unwrap();
                 Box::new(CombinedHeuristic::new(
+                    primary,
+                    secondary,
+                    decision_level_threshold,
+                ))
+            }
+            CompositeHeuristicCliArgument::CombinedReverse => {
+                let primary = self.primary.unwrap().get();
+                let secondary = self.secondary.unwrap().get();
+                let decision_level_threshold = self.decision_level_threshold.unwrap();
+                Box::new(CombinedHeuristicReverse::new(
                     primary,
                     secondary,
                     decision_level_threshold,

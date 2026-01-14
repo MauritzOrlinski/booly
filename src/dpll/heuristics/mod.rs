@@ -5,6 +5,7 @@ pub mod jeroslaw_wang;
 pub mod mom;
 pub mod trivial;
 pub mod combined_heuristic;
+pub mod combined_heuristic_reverse;
 
 use std::fmt::Debug;
 use crate::cnf::cnf_formula::CnfFormula;
