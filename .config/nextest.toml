@@ -1,5 +1,5 @@
 [profile.default]
-slow-timeout = "60s"
+fail-fast = false
 
 [[profile.default.overrides]]
 filter = "binary(all_provided_inputs)"
