@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
 use std::fmt;
