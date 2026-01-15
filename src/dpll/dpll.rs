@@ -65,7 +65,6 @@ impl Dpll {
             let units = self.propagate_unit_clauses();
             self.heuristic.feedback(Stats {
                 unit_clauses: units,
-                unsat_clauses: self.cnf_formula.unsat_clauses,
             });
 
             while self.status == Conflict {

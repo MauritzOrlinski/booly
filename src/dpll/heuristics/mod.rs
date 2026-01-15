@@ -14,7 +14,6 @@ use std::fmt::Debug;
 
 pub struct Stats {
     pub(crate) unit_clauses: usize,
-    pub(crate) unsat_clauses: usize,
 }
 
 pub trait Heuristic: Debug {
