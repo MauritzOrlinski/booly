@@ -37,23 +37,23 @@ impl Heuristic for StaticJW {
             }
             if self.assignments.is_empty() {
                 self.assignments.push((0, decision_level));
-                let &v = self.order.first().unwrap();
+                let &lit = self.order.first().unwrap();
                 return Assignment {
-                    variable_id: v.unsigned_abs(),
-                    value: v > 0,
+                    variable_id: lit.unsigned_abs(),
+                    value: lit > 0,
                 };
             }
-            let mut i = self.assignments.last().unwrap().0;
+            let mut index = self.assignments.last().unwrap().0;
             loop {
-                let v = self.order[i as usize];
+                let v = self.order[index as usize];
                 if cnf_formula.variables.get(v.unsigned_abs()).value.is_none() {
-                    self.assignments.push((i, decision_level));
+                    self.assignments.push((index, decision_level));
                     return Assignment {
                         variable_id: v.unsigned_abs(),
                         value: v > 0,
                     };
                 }
-                i += 1;
+                index += 1;
             }
         } else {
             let mut jw_weights: Vec<(i32, f64)> = cnf_formula
