@@ -6,6 +6,9 @@ use dpml::parser::parse_cnf;
 use std::fs;
 use std::time::Instant;
 
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 fn main() {
     let cli = CliArguments::parse();
 

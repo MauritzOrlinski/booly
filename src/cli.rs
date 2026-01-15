@@ -7,6 +7,7 @@ use crate::dpll::heuristics::from_shortest_clause::FromShortestClause;
 use crate::dpll::heuristics::jeroslaw_wang::JeroslawWang;
 use crate::dpll::heuristics::mom::MOM;
 use crate::dpll::heuristics::multi_bandits_learning::ContextualBandits;
+use crate::dpll::heuristics::static_jw::StaticJW;
 use crate::dpll::heuristics::trivial::Trivial;
 use clap::ValueHint;
 use clap::{Parser, ValueEnum};
@@ -20,6 +21,7 @@ enum SimpleHeuristicCliArgument {
     Mom,
     Trivial,
     JW,
+    StaticJW,
     MultiBandit,
 }
 
@@ -33,6 +35,7 @@ impl SimpleHeuristicCliArgument {
             SimpleHeuristicCliArgument::Trivial => Box::new(Trivial),
             SimpleHeuristicCliArgument::JW => Box::new(JeroslawWang),
             SimpleHeuristicCliArgument::MultiBandit => Box::new(ContextualBandits::new()),
+            SimpleHeuristicCliArgument::StaticJW => Box::new(StaticJW::new()),
         }
     }
 }
@@ -51,6 +54,7 @@ enum CompositeHeuristicCliArgument {
     Trivial,
     JW,
     MultiBandit,
+    StaticJW,
     Combined,
     CombinedReverse,
 }
@@ -132,6 +136,7 @@ impl CliArguments {
                 ))
             }
             CompositeHeuristicCliArgument::MultiBandit => Box::new(ContextualBandits::new()),
+            CompositeHeuristicCliArgument::StaticJW => Box::new(StaticJW::new()),
         }
     }
     pub fn load_heuristic(&self) -> Box<dyn Heuristic> {
