@@ -59,7 +59,7 @@ enum Label {
     MOM,
     JW,
     MOMDLCS,
-    MB,
+    MBL,
 }
 
 impl Display for Label {
@@ -73,7 +73,7 @@ impl Display for Label {
             Label::MOM => write!(f, "mom"),
             Label::JW => write!(f, "jeroslaw wang"),
             Label::MOMDLCS => write!(f, "mom+dlcs"),
-            Label::MB => write!(f, "multi bandit"),
+            Label::MBL => write!(f, "multi bandits leaning"),
         }
     }
 }
@@ -142,7 +142,7 @@ fn main() -> io::Result<()> {
                 cnf,
                 Box::new(heuristics::multi_bandits_learning::ContextualBandits::new()),
             )
-            .map(|f| (f, Label::MB))
+            .map(|f| (f, Label::MBL))
         },
     ];
 
@@ -193,7 +193,7 @@ fn main() -> io::Result<()> {
         Label::MOM,
         Label::JW,
         Label::MOMDLCS,
-        Label::MB,
+        Label::MBL,
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);
