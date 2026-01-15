@@ -1,6 +1,6 @@
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
-use crate::dpll::heuristics::Heuristic;
+use crate::dpll::heuristics::{Heuristic, Stats};
 
 #[derive(Debug)]
 pub struct Trivial;
@@ -31,5 +31,16 @@ impl Heuristic for Trivial {
             .unwrap();
 
         Assignment::new(variable_id, assignment_value)
+    }
+
+    fn is_learning(&self) -> bool {
+        false
+    }
+    #[allow(unused_variables)]
+    fn feedback(&mut self, feedback: Stats) {}
+
+    #[allow(unused_variables)]
+    fn save(&self, path: &str) -> std::io::Result<()> {
+        Result::Ok(())
     }
 }

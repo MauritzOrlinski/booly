@@ -3,7 +3,7 @@ use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::{Assignment, AssignmentResult};
 use crate::dpll::assignment_stack::AssignmentStack;
 use crate::dpll::dpll::DpllStatus::{Conflict, Incomplete, Sat, Unsat};
-use crate::dpll::heuristics::Heuristic;
+use crate::dpll::heuristics::{Heuristic, Stats};
 use std::collections::VecDeque;
 use std::sync::atomic::AtomicBool;
 
@@ -17,7 +17,7 @@ pub enum DpllStatus {
 
 #[derive(Debug)]
 pub struct Dpll {
-    heuristic: Box<dyn Heuristic>,
+    pub(crate) heuristic: Box<dyn Heuristic>,
     pub(crate) unit_queue: VecDeque<ClauseID>,
     pub cnf_formula: CnfFormula,
     pub(crate) assignment_stack: AssignmentStack,
@@ -35,9 +35,7 @@ impl Dpll {
         }
     }
 
-    pub fn solve_interruptable(&mut self, cancel_flag: &AtomicBool) -> DpllStatus {
-        self.preprocess();
-
+    pub fn dpll(&mut self, cancel_flag: &AtomicBool) {
         while self.status == Incomplete && !cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
             let assigment = self.heuristic.chose_next_assignment(
                 &self.cnf_formula,
@@ -52,6 +50,35 @@ impl Dpll {
             while self.status == Conflict {
                 self.backtrack();
             }
+        }
+    }
+
+    pub fn learning_dpll(&mut self, cancel_flag: &AtomicBool) {
+        while self.status == Incomplete && !cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
+            let assigment = self.heuristic.chose_next_assignment(
+                &self.cnf_formula,
+                self.assignment_stack.get_decision_level(),
+            );
+
+            self.assignment_stack.start_decision_level();
+            self.assign(assigment);
+            let units = self.propagate_unit_clauses();
+            self.heuristic.feedback(Stats {
+                unit_clauses: units,
+            });
+
+            while self.status == Conflict {
+                self.backtrack();
+            }
+        }
+    }
+
+    pub fn solve_interruptable(&mut self, cancel_flag: &AtomicBool) -> DpllStatus {
+        self.preprocess();
+        if self.heuristic.is_learning() {
+            self.learning_dpll(cancel_flag);
+        } else {
+            self.dpll(cancel_flag);
         }
 
         self.postprocess();
@@ -126,6 +153,13 @@ impl Dpll {
                 .for_each(|&variable_id| {
                     self.cnf_formula.variables.get_mut(variable_id).value = Some(false);
                 });
+        }
+    }
+
+    pub fn save_heuristic(&self, path: &str) {
+        match self.heuristic.save(path) {
+            Ok(_) => (),
+            Err(_) => panic!("Failed to save heuristic state"),
         }
     }
 }
