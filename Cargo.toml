@@ -24,6 +24,9 @@ cpu-time = "1.0.0"
 walkdir = "2.5"
 gnuplot = "0.0.46"
 itertools = "0.14.0"
+rand = "0.9.2"
+serde = {version = "1.0.228", features = ["derive"]}
+serde_json = "1.0.149"
 
 [dev-dependencies]
 datatest-stable = "0.3"

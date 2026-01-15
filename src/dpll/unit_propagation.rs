@@ -10,7 +10,8 @@ impl Dpll {
     /// # Returns
     /// An optional DPLL result. `Satisfied`, if the cnf has been satisfied during unit propagation.
     /// `Conflict`, if there has been a conflict during unit propagation. `None` otherwise.
-    pub(crate) fn propagate_unit_clauses(&mut self) {
+    pub(crate) fn propagate_unit_clauses(&mut self) -> usize {
+        let mut units = 0;
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && self.status != Conflict
         // TODO: Does this save perfomance?
@@ -20,9 +21,10 @@ impl Dpll {
             if unit_clause.satisfied_by.is_some() {
                 continue;
             }
-
+            units += 1;
             self.assign(self.find_satisfying_assignment_for_unit_clause(unit_clause));
         }
+        units
     }
 
     /// Finds the satisfying assignment for a unit clause.

@@ -2,7 +2,7 @@ use std::cmp::max_by;
 
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
-use crate::dpll::heuristics::Heuristic;
+use crate::dpll::heuristics::{Heuristic, Stats};
 
 #[derive(Debug)]
 pub struct JeroslawWang;
@@ -41,5 +41,15 @@ impl Heuristic for JeroslawWang {
             .unwrap();
 
         Assignment::new(variable_id as u32 + 1, assignment_value)
+    }
+    #[allow(unused_variables)]
+    fn feedback(&mut self, feedback: Stats) {}
+
+    fn is_learning(&self) -> bool {
+        false
+    }
+    #[allow(unused_variables)]
+    fn save(&self, path: &str) -> std::io::Result<()> {
+        Result::Ok(())
     }
 }

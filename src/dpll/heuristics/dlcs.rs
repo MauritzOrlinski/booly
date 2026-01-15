@@ -1,13 +1,13 @@
-use std::fmt::{Debug};
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::dpll::assignment::Assignment;
-use crate::dpll::heuristics::Heuristic;
+use crate::dpll::heuristics::{Heuristic, Stats};
+use std::fmt::Debug;
 
 #[derive(Debug)]
 pub struct DLCS;
 
 impl Heuristic for DLCS {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _ : i32) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _: i32) -> Assignment {
         let count_unsat = |occ: &Vec<usize>| {
             occ.iter()
                 .filter(|&&clause_id| {
@@ -35,5 +35,15 @@ impl Heuristic for DLCS {
             >= count_unsat(&variable.negative_occurrences);
 
         Assignment::new(variable_id as u32 + 1, assignment_value)
+    }
+    #[allow(unused_variables)]
+    fn feedback(&mut self, feedback: Stats) {}
+
+    fn is_learning(&self) -> bool {
+        false
+    }
+    #[allow(unused_variables)]
+    fn save(&self, path: &str) -> std::io::Result<()> {
+        Result::Ok(())
     }
 }

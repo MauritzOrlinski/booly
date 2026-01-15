@@ -25,7 +25,7 @@ fn main() {
         }
     };
 
-    let heuristic = cli.get_heuristic();
+    let mut heuristic = cli.get_heuristic();
 
     let mut dpll = Dpll::new(cnf_formula, heuristic);
 
@@ -49,5 +49,9 @@ t {:.7}",
             elapsed.as_secs_f64()
         ),
         DpllStatus::Incomplete | DpllStatus::Conflict => unreachable!(),
+    }
+
+    if let Some(path) = cli.safe_learned_model {
+        dpll.save_heuristic(path.as_str());
     }
 }
