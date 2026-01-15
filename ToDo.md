@@ -7,8 +7,8 @@
 - [x] Benchmark: Wie viele Probleme kann der Solver in 1 Minute CPU Zeit lösen (Max)
 - [ ] CLI verbessern (Max)
 - [x] Stats einbauen (Max)
-- [ ] Preprocess (Irgendwer machts, der Zeit dafür hat)
-  - [ ] Delete clasues with positive and negative variables
+- [x] Preprocess (Irgendwer machts, der Zeit dafür hat)
+  - [x] Delete clasues with positive and negative variables
 - [x] What if all clauses are satisfied, but some variables are unassigned? (Irgendwer machts, der Zeit dafür hat)
 - [x] Wann welche Heuristik (Max)
 - [ ] Wann pure Literal (Max)

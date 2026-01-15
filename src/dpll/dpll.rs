@@ -65,7 +65,6 @@ impl Dpll {
             let units = self.propagate_unit_clauses();
             self.heuristic.feedback(Stats {
                 unit_clauses: units,
-                unsat_clauses: self.cnf_formula.unsat_clauses,
             });
 
             while self.status == Conflict {
@@ -124,8 +123,6 @@ impl Dpll {
     }
 
     fn preprocess(&mut self) {
-        self.cnf_formula.delete_tautologies();
-
         self.pure_literals();
 
         self.unit_queue = self.cnf_formula.generate_unit_queue();

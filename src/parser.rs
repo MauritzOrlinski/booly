@@ -14,7 +14,7 @@ use crate::cnf::{
     clause::Clause,
     cnf_formula::CnfFormula,
     literals::{Literals, Polarity},
-    variable::{Variables},
+    variable::Variables,
 };
 
 fn peol_comment(i: &str) -> IResult<&str, ()> {
@@ -82,7 +82,30 @@ fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
 }
 
 pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
-    let (crude_clauses, variable_count, _) = parse(cnf_string)?;
+    let (mut crude_clauses, variable_count, _) = parse(cnf_string)?;
+
+    // remove clauses which are tautologies
+    {
+        let mut tautological_crude_clause_ids = Vec::new();
+
+        crude_clauses
+            .iter()
+            .enumerate()
+            .filter(|(_, crude_clause)| {
+                crude_clause
+                    .iter()
+                    .any(|&crude_literal| crude_clause.contains(&-crude_literal))
+            })
+            .for_each(|(crude_clause_id, _)| tautological_crude_clause_ids.push(crude_clause_id));
+
+        tautological_crude_clause_ids.sort_by(|a, b| b.cmp(a));
+
+        tautological_crude_clause_ids
+            .iter()
+            .for_each(|&crude_clause_id| {
+                crude_clauses.remove(crude_clause_id);
+            });
+    }
 
     let mut clauses: Vec<Clause> = Vec::new();
     let mut variables = Variables::new(variable_count as usize);
