@@ -103,7 +103,7 @@ impl Heuristic for ContextualBandits {
         decision_level: i32,
     ) -> crate::dpll::assignment::Assignment {
         let r = rand::rng().random_bool(self.epsilon);
-        // eqsilon greedy explore/exploit
+        // epsilon greedy explore/exploit
         if r {
             let (choice, v) = cnf_formula
                 .variables
@@ -149,7 +149,7 @@ impl Heuristic for ContextualBandits {
 
     /// A Recursive Least Square implementation to update the regression continuously, compare to: https://www.geeksforgeeks.org/machine-learning/recursive-least-square-algorithm/
     fn feedback(&mut self, feedback: Stats) {
-        let y = feedback.unit_clauses as f32;
+        let reward = feedback.unit_clauses as f32;
 
         let feature = [
             1.0,
@@ -164,7 +164,7 @@ impl Heuristic for ContextualBandits {
             prediction += self.weights[i] * feature[i];
         }
 
-        let error = y - prediction;
+        let error = reward - prediction;
 
         let mut px = [0.0; 5];
         for i in 0..5 {
