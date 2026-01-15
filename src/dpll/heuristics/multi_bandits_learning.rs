@@ -1,5 +1,5 @@
 use crate::{
-    cnf::{cnf_formula, variable::Variable},
+    cnf::variable::Variable,
     dpll::{
         assignment::Assignment,
         heuristics::{Heuristic, Stats},
@@ -20,34 +20,35 @@ struct LastContext {
 
 const EPSILON_INITIAL: f64 = 0.5;
 const EPSILON_MIN: f64 = 0.001;
+const COV_DIAG: f32 = 1000.0;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContextualBandits {
-    weight_pos_len: f32,
-    weight_neg_len: f32,
-    weight_unsat_clauses: f32,
-    weight_dec_level: f32,
+    weights: [f32; 5],
+    p: [[f32; 5]; 5],
     epsilon: f64,
     epsilon_decay: f64,
-    learning_rate: f32,
+    learn: bool,
     last_branch: LastContext,
 }
 
 impl ContextualBandits {
     pub fn new() -> Self {
+        let mut p = [[0.0; 5]; 5];
+        for i in 0..5 {
+            p[i][i] = COV_DIAG;
+        }
         Self {
-            weight_pos_len: 1.0,
-            weight_neg_len: 1.0,
-            weight_unsat_clauses: 1.0,
-            weight_dec_level: 0.0,
+            weights: [0.0; 5],
+            p,
             epsilon: EPSILON_INITIAL,
             epsilon_decay: 0.001,
-            learning_rate: 0.1,
+            learn: true,
             last_branch: LastContext {
-                pos_len: 0.0,
-                neg_len: 0.0,
-                unsat_clauses: 0.0,
-                dec_level: 0.0,
+                pos_len: 1.0,
+                neg_len: 1.0,
+                unsat_clauses: 1.0,
+                dec_level: 1.0,
             },
         }
     }
@@ -78,10 +79,11 @@ impl ContextualBandits {
         cnf_formula: &crate::cnf::cnf_formula::CnfFormula,
         decision_level: i32,
     ) -> f32 {
-        self.weight_pos_len * (v.positive_occurrences.len() as f32)
-            + self.weight_neg_len * (v.negative_occurrences.len() as f32)
-            + self.weight_unsat_clauses * (cnf_formula.unsat_clauses as f32)
-            + self.weight_dec_level * (decision_level as f32)
+        self.weights[0]
+            + self.weights[1] * (v.positive_occurrences.len() as f32)
+            + self.weights[2] * (v.negative_occurrences.len() as f32)
+            + self.weights[3] * (cnf_formula.unsat_clauses as f32)
+            + self.weights[4] * (decision_level as f32)
     }
     fn update_epsilon(&mut self) {
         self.epsilon = EPSILON_MIN + (self.epsilon - EPSILON_MIN) * (-self.epsilon_decay).exp();
@@ -145,23 +147,59 @@ impl Heuristic for ContextualBandits {
         }
     }
 
+    /// A Recursive Least Square implementation to update the regression continuously, compare to: https://www.geeksforgeeks.org/machine-learning/recursive-least-square-algorithm/
     fn feedback(&mut self, feedback: Stats) {
-        let reward = (feedback.unit_clauses as f32).ln_1p();
-        let predicted = self.weight_pos_len * self.last_branch.pos_len
-            + self.weight_neg_len * self.last_branch.neg_len
-            + self.weight_unsat_clauses * self.last_branch.unsat_clauses
-            + self.weight_dec_level * self.last_branch.dec_level;
-        let error = reward - predicted;
-        let improvement = self.learning_rate * error;
-        self.weight_pos_len += improvement * self.last_branch.pos_len;
-        self.weight_neg_len += improvement * self.last_branch.neg_len;
-        self.weight_unsat_clauses += improvement * self.last_branch.unsat_clauses;
-        self.weight_dec_level += improvement * self.last_branch.dec_level;
+        let y = feedback.unit_clauses as f32;
+
+        let feature = [
+            1.0,
+            self.last_branch.pos_len,
+            self.last_branch.neg_len,
+            self.last_branch.unsat_clauses,
+            self.last_branch.dec_level,
+        ];
+
+        let mut prediction = 0.0;
+        for i in 0..5 {
+            prediction += self.weights[i] * feature[i];
+        }
+
+        let error = y - prediction;
+
+        let mut px = [0.0; 5];
+        for i in 0..5 {
+            for j in 0..5 {
+                px[i] += self.p[i][j] * feature[j];
+            }
+        }
+
+        let mut denom = 1.0;
+        for i in 0..5 {
+            denom += feature[i] * px[i];
+        }
+
+        let mut k = [0.0; 5];
+        for i in 0..5 {
+            k[i] = px[i] / denom;
+        }
+
+        for i in 0..5 {
+            self.weights[i] += k[i] * error;
+        }
+
+        let mut new_p = self.p;
+        for i in 0..5 {
+            for j in 0..5 {
+                new_p[i][j] -= k[i] * px[j];
+            }
+        }
+        self.p = new_p;
+
         self.update_epsilon();
     }
 
     fn is_learning(&self) -> bool {
-        true
+        self.learn
     }
 
     fn save(&self, path: &str) -> std::io::Result<()> {

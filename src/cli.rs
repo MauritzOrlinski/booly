@@ -97,7 +97,7 @@ pub struct CliArguments {
     decision_level_threshold: Option<i32>,
 
     #[arg(long)]
-    pub safe_learned_model: Option<String>,
+    pub save_learned_model: Option<String>,
     #[arg(long)]
     pub load_learned_model: Option<String>,
 }
