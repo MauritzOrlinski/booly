@@ -65,7 +65,7 @@ impl Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             // HERE
-            Label::Trivial => write!(f, "first true"),
+            Label::Trivial => write!(f, "first unassigned literal"),
             Label::FSC => write!(f, "from shortest clause"),
             Label::DLCS => write!(f, "dlcs"),
             Label::DLIS => write!(f, "dlis"),

@@ -16,7 +16,7 @@ impl AssignmentStack {
     pub fn new() -> Self {
         Self {
             trail: Vec::new(),
-            decision_level_start: vec![-1, 0],
+            decision_level_start: vec![-1],
         }
     }
 
