@@ -18,6 +18,13 @@ impl Polarity {
             Polarity::Negative => false,
         }
     }
+
+    pub fn reverse(&self) -> Polarity {
+        match self {
+            Polarity::Positive => Polarity::Negative,
+            Polarity::Negative => Polarity::Positive,
+        }
+    }
 }
 
 /// A wrapper around `Vec<(VariableID, Polarity)>` to allow pretty string representation in the style of DIMCAS CNF.

@@ -123,8 +123,6 @@ impl Dpll {
     }
 
     fn preprocess(&mut self) {
-        self.cnf_formula.delete_tautologies();
-
         self.pure_literals();
 
         self.unit_queue = self.cnf_formula.generate_unit_queue();

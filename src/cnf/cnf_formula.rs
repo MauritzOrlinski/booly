@@ -143,10 +143,6 @@ impl CnfFormula {
             })
             .collect()
     }
-
-    pub fn delete_tautologies(&mut self) {
-        //TODO:
-    }
 }
 
 impl fmt::Display for CnfFormula {
