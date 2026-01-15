@@ -59,6 +59,7 @@ enum Label {
     MOM,
     JW,
     MOMDLCS,
+    MBL,
 }
 
 impl Display for Label {
@@ -72,6 +73,7 @@ impl Display for Label {
             Label::MOM => write!(f, "mom"),
             Label::JW => write!(f, "jeroslaw wang"),
             Label::MOMDLCS => write!(f, "mom+dlcs"),
+            Label::MBL => write!(f, "multi bandits leaning"),
         }
     }
 }
@@ -135,6 +137,13 @@ fn main() -> io::Result<()> {
             )
             .map(|f| (f, Label::MOMDLCS))
         },
+        |cnf| {
+            measure_dpll(
+                cnf,
+                Box::new(heuristics::multi_bandits_learning::ContextualBandits::new()),
+            )
+            .map(|f| (f, Label::MBL))
+        },
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -184,6 +193,7 @@ fn main() -> io::Result<()> {
         Label::MOM,
         Label::JW,
         Label::MOMDLCS,
+        Label::MBL,
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);
