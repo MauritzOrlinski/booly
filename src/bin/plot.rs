@@ -75,7 +75,7 @@ impl Display for Label {
             Label::JW => write!(f, "jeroslaw wang"),
             Label::MOMDLCS => write!(f, "mom+dlcs"),
             Label::MBL => write!(f, "multi bandits leaning"),
-            Label::STATIC_JW => write!(f, "Static jeroslaw wang"),
+            Label::STATIC_JW => write!(f, "static jeroslaw wang"),
         }
     }
 }
@@ -142,7 +142,11 @@ fn main() -> io::Result<()> {
         |cnf| {
             measure_dpll(
                 cnf,
-                Box::new(heuristics::multi_bandits_learning::ContextualBandits::new()),
+                Box::new(
+                    heuristics::multi_bandits_learning::ContextualBandits::load_or_new(
+                        "./model.json",
+                    ),
+                ),
             )
             .map(|f| (f, Label::MBL))
         },

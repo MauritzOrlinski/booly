@@ -57,7 +57,7 @@ impl ContextualBandits {
             match fs::read_to_string(path) {
                 Ok(contents) => match serde_json::from_str::<ContextualBandits>(&contents) {
                     Ok(model) => {
-                        println!("Loaded model from {}", path);
+                        // println!("Loaded model from {}", path);
                         return model;
                     }
                     Err(_) => {
