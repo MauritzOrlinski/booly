@@ -7,7 +7,7 @@
 
 - rust
 - gnuplot (For the cactus plots)
-- nextest (For the 60s benchmarks with timeouts)
+- nextest (For the 60s benchmarks with timeouts). See below for installation instructions
 
 ## Usage
 
@@ -21,12 +21,11 @@
   execute
 
   ```bash
-  cargo nextest run -r --show-progress=counter 2>&1 --color=always | awk '{ c=$0; gsub(/\x1b\[[0-9;]*m/,"",c); print; if (c ~ /^ *Summary /) exit }'
+  cargo nextest run -r --color=always 2>&1 | awk '{ c=$0; gsub(/\x1b\[[0-9;]*m/,"",c); print; if (c ~ /^ *Summary /) exit }'
   ```
 
   (will execute the example inputs from the sat and unsat
-  directories with a 60s timeout to determine how many of problems can be solved in reasonable time).
-  You might need to scroll above the timeout messages to see the summary report (line starts with Summary).
+  directories with a 60s timeout to determine how many of the problems can be solved in reasonable time).
 
 - Cactus plots: `cargo run -r --bin plot -- TIMEOUT_IN_SECONDS`
 
