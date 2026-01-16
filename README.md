@@ -11,6 +11,12 @@
 
 ## Usage
 
+To get more help on Usage run the command:
+
+```bash
+  cargo run --release -- --help
+```
+
 ### Via Cargo
 
 - Solve a SAT problem in DIMACS CNF format: `cargo run -r -- path/to/inputfile`
@@ -27,6 +33,15 @@
   directories with a 60s timeout to determine how many of the problems can be solved in reasonable time).
 
 - Cactus plots: `cargo run -r --bin plot -- TIMEOUT_IN_SECONDS`
+
+### How to use heuristics
+
+To use heuristics use the `--heuristic` flag. We also support combining two heuristics using the `--heuristics combined`, you can specify the `--primary` and `--secondary` heuristic and a `--decision-level-threshold` to decide when which heuristic should be used.
+
+Another special heuristic is the `--heuristic multi-bandit` which implements a simple reinforcement learning scheme (epsilon greedy contextual bandits) and therefore has a state.
+You can use the flag `--load-learned-model <FILE>` to load a .json file with a pre-trained model or save a model using the `--save-learned-model <FILE>`.
+
+As an example there is the file `example-model.json` containing a basic model that is pre-trained on some files. We did not spend much time on parameter tuning and training so do not expect an overly precise model.
 
 ### As a compiled binary
 
