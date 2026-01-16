@@ -146,7 +146,7 @@ fn main() -> io::Result<()> {
                 cnf,
                 Box::new(
                     heuristics::multi_bandits_learning::ContextualBandits::load_or_new(
-                        "./model.json",
+                        "./example-model.json",
                     ),
                 ),
             )
