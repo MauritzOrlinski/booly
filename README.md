@@ -18,12 +18,23 @@
 - Speed benchmarks: `cargo bench` (will execute all example inputs from the test directory
   millions of times to get an exact measurement on performance)
 - One minute benchmarks: First install nextest (`cargo install cargo-nextest --locked`), then
-  execute `cargo nextest run -r'` (will execute the example inputs from the sat and unsat
+  execute
+
+  ```bash
+  cargo nextest run -r --show-progress=counter 2>&1 --color=always | awk '{ c=$0; gsub(/\x1b\[[0-9;]*m/,"",c); print; if (c ~ /^ *Summary /) exit }'
+  ```
+
+  (will execute the example inputs from the sat and unsat
   directories with a 60s timeout to determine how many of problems can be solved in reasonable time).
   You might need to scroll above the timeout messages to see the summary report (line starts with Summary).
+
 - Cactus plots: `cargo run -r --bin plot -- TIMEOUT_IN_SECONDS`
 
 ### As a compiled binary
 
 1. Compile via `cargo build --release`. Binary is being compiled to `./target/release/main`.
 2. Execute via `main path/to/inputfile`
+
+```
+
+```

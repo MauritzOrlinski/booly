@@ -56,10 +56,11 @@ enum Label {
     FSC,
     DLCS,
     DLIS,
-    MOM,
     JW,
-    STATIC_JW,
+    MOM,
+    STATICJW,
     MOMDLCS,
+    MOMDLCSTrivial,
     MBL,
 }
 
@@ -75,7 +76,8 @@ impl Display for Label {
             Label::JW => write!(f, "jeroslaw wang"),
             Label::MOMDLCS => write!(f, "mom+dlcs"),
             Label::MBL => write!(f, "multi bandits leaning"),
-            Label::STATIC_JW => write!(f, "static jeroslaw wang"),
+            Label::STATICJW => write!(f, "static jeroslaw wang"),
+            Label::MOMDLCSTrivial => write!(f, "mom+dlcs+trivial"),
         }
     }
 }
@@ -123,11 +125,11 @@ fn main() -> io::Result<()> {
         },
         |cnf| measure_dpll(cnf, Box::new(heuristics::dlcs::DLCS)).map(|f| (f, Label::DLCS)),
         |cnf| measure_dpll(cnf, Box::new(heuristics::dlis::DLIS)).map(|f| (f, Label::DLIS)),
-        |cnf| measure_dpll(cnf, Box::new(heuristics::mom::MOM)).map(|f| (f, Label::MOM)),
         |cnf| {
             measure_dpll(cnf, Box::new(heuristics::jeroslaw_wang::JeroslawWang))
                 .map(|f| (f, Label::JW))
         },
+        |cnf| measure_dpll(cnf, Box::new(heuristics::mom::MOM)).map(|f| (f, Label::MOM)),
         |cnf| {
             measure_dpll(
                 cnf,
@@ -152,7 +154,24 @@ fn main() -> io::Result<()> {
         },
         |cnf| {
             measure_dpll(cnf, Box::new(heuristics::static_jw::StaticJW::new()))
-                .map(|f| (f, Label::STATIC_JW))
+                .map(|f| (f, Label::STATICJW))
+        },
+        |cnf| {
+            measure_dpll(
+                cnf,
+                Box::new(heuristics::combined_heuristic::CombinedHeuristic::new(
+                    Box::new(heuristics::mom::MOM),
+                    Box::new(
+                        heuristics::combined_heuristic_reverse::CombinedHeuristicReverse::new(
+                            Box::new(heuristics::dlcs::DLCS),
+                            Box::new(heuristics::trivial::Trivial),
+                            20,
+                        ),
+                    ),
+                    50,
+                )),
+            )
+            .map(|f| (f, Label::MOMDLCSTrivial))
         },
     ];
 
@@ -203,8 +222,9 @@ fn main() -> io::Result<()> {
         Label::MOM,
         Label::JW,
         Label::MOMDLCS,
+        Label::MOMDLCSTrivial,
         Label::MBL,
-        Label::STATIC_JW
+        Label::STATICJW
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);
