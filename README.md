@@ -14,7 +14,6 @@
 ### Via Cargo
 
 - Solve a SAT problem in DIMACS CNF format: `cargo run -r -- path/to/inputfile`
-- Compile with timing measurements: `cargo run -r --features metadata -- path/to/inputfile`
 - Speed benchmarks: `cargo bench` (will execute all example inputs from the test directory
   millions of times to get an exact measurement on performance)
 - One minute benchmarks: First install nextest (`cargo install cargo-nextest --locked`), then
