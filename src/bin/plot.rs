@@ -58,6 +58,7 @@ enum Label {
     DLIS,
     MOM,
     JW,
+    STATIC_JW,
     MOMDLCS,
     MBL,
 }
@@ -74,6 +75,7 @@ impl Display for Label {
             Label::JW => write!(f, "jeroslaw wang"),
             Label::MOMDLCS => write!(f, "mom+dlcs"),
             Label::MBL => write!(f, "multi bandits leaning"),
+            Label::STATIC_JW => write!(f, "Static jeroslaw wang"),
         }
     }
 }
@@ -144,6 +146,10 @@ fn main() -> io::Result<()> {
             )
             .map(|f| (f, Label::MBL))
         },
+        |cnf| {
+            measure_dpll(cnf, Box::new(heuristics::static_jw::StaticJW::new()))
+                .map(|f| (f, Label::STATIC_JW))
+        },
     ];
 
     let cnf_strings: Vec<String> = WalkDir::new("inputs")
@@ -194,6 +200,7 @@ fn main() -> io::Result<()> {
         Label::JW,
         Label::MOMDLCS,
         Label::MBL,
+        Label::STATIC_JW
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);

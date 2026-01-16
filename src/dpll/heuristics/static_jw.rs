@@ -6,14 +6,14 @@ use crate::dpll::heuristics::{Heuristic, Stats};
 pub struct StaticJW {
     order: Vec<i32>,
     computed: bool,
-    assignments: Vec<(u32, i32)>,
+    last_assignment: (usize, i32),
 }
 impl StaticJW {
     pub fn new() -> Self {
         Self {
             order: Vec::new(),
             computed: false,
-            assignments: Vec::new(),
+            last_assignment: (0, 0),
         }
     }
 }
@@ -30,30 +30,16 @@ impl Heuristic for StaticJW {
         decision_level: i32,
     ) -> Assignment {
         if self.computed {
-            while !self.assignments.is_empty()
-                && self.assignments.last().unwrap().1 > decision_level
-            {
-                self.assignments.pop();
-            }
-            if self.assignments.is_empty() {
-                self.assignments.push((0, decision_level));
-                let &lit = self.order.first().unwrap();
-                return Assignment {
-                    variable_id: lit.unsigned_abs(),
-                    value: lit > 0,
-                };
-            }
-            let mut index = self.assignments.last().unwrap().0;
-            loop {
-                let v = self.order[index as usize];
-                if cnf_formula.variables.get(v.unsigned_abs()).value.is_none() {
-                    self.assignments.push((index, decision_level));
-                    return Assignment {
-                        variable_id: v.unsigned_abs(),
-                        value: v > 0,
-                    };
-                }
-                index += 1;
+            let (i, &lit) = self
+                .order
+                .iter()
+                .enumerate()
+                .find(|&(_, x)| cnf_formula.variables.get(x.unsigned_abs()).value.is_none())
+                .unwrap();
+            self.last_assignment = (i, decision_level);
+            Assignment {
+                variable_id: lit.unsigned_abs(),
+                value: lit > 0,
             }
         } else {
             let mut jw_weights: Vec<(i32, f64)> = cnf_formula
