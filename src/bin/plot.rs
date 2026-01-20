@@ -53,15 +53,6 @@ macro_rules! plot_for_labels {
 enum Label {
     // HERE
     Trivial,
-    FSC,
-    DLCS,
-    DLIS,
-    JW,
-    MOM,
-    STATICJW,
-    MOMDLCS,
-    MOMDLCSTrivial,
-    MBL,
 }
 
 impl Display for Label {
@@ -69,15 +60,6 @@ impl Display for Label {
         match *self {
             // HERE
             Label::Trivial => write!(f, "first unassigned literal"),
-            Label::FSC => write!(f, "from shortest clause"),
-            Label::DLCS => write!(f, "dlcs"),
-            Label::DLIS => write!(f, "dlis"),
-            Label::MOM => write!(f, "mom"),
-            Label::JW => write!(f, "jeroslaw wang"),
-            Label::MOMDLCS => write!(f, "mom+dlcs"),
-            Label::MBL => write!(f, "multi bandits leaning"),
-            Label::STATICJW => write!(f, "static jeroslaw wang"),
-            Label::MOMDLCSTrivial => write!(f, "mom+dlcs+trivial"),
         }
     }
 }
@@ -115,63 +97,6 @@ fn main() -> io::Result<()> {
         // HERE
         |cnf| {
             measure_dpll(cnf, Box::new(heuristics::trivial::Trivial)).map(|f| (f, Label::Trivial))
-        },
-        |cnf| {
-            measure_dpll(
-                cnf,
-                Box::new(heuristics::from_shortest_clause::FromShortestClause),
-            )
-            .map(|f| (f, Label::FSC))
-        },
-        |cnf| measure_dpll(cnf, Box::new(heuristics::dlcs::DLCS)).map(|f| (f, Label::DLCS)),
-        |cnf| measure_dpll(cnf, Box::new(heuristics::dlis::DLIS)).map(|f| (f, Label::DLIS)),
-        |cnf| {
-            measure_dpll(cnf, Box::new(heuristics::jeroslaw_wang::JeroslawWang))
-                .map(|f| (f, Label::JW))
-        },
-        |cnf| measure_dpll(cnf, Box::new(heuristics::mom::MOM)).map(|f| (f, Label::MOM)),
-        |cnf| {
-            measure_dpll(
-                cnf,
-                Box::new(heuristics::combined_heuristic::CombinedHeuristic::new(
-                    Box::new(heuristics::mom::MOM),
-                    Box::new(heuristics::dlcs::DLCS),
-                    50,
-                )),
-            )
-            .map(|f| (f, Label::MOMDLCS))
-        },
-        |cnf| {
-            measure_dpll(
-                cnf,
-                Box::new(
-                    heuristics::multi_bandits_learning::ContextualBandits::load_or_new(
-                        "./example-model.json",
-                    ),
-                ),
-            )
-            .map(|f| (f, Label::MBL))
-        },
-        |cnf| {
-            measure_dpll(cnf, Box::new(heuristics::static_jw::StaticJW::new()))
-                .map(|f| (f, Label::STATICJW))
-        },
-        |cnf| {
-            measure_dpll(
-                cnf,
-                Box::new(heuristics::combined_heuristic::CombinedHeuristic::new(
-                    Box::new(heuristics::mom::MOM),
-                    Box::new(
-                        heuristics::combined_heuristic_reverse::CombinedHeuristicReverse::new(
-                            Box::new(heuristics::dlcs::DLCS),
-                            Box::new(heuristics::trivial::Trivial),
-                            20,
-                        ),
-                    ),
-                    50,
-                )),
-            )
-            .map(|f| (f, Label::MOMDLCSTrivial))
         },
     ];
 
@@ -216,15 +141,6 @@ fn main() -> io::Result<()> {
         results,
         // HERE
         Label::Trivial,
-        Label::FSC,
-        Label::DLCS,
-        Label::DLIS,
-        Label::MOM,
-        Label::JW,
-        Label::MOMDLCS,
-        Label::MOMDLCSTrivial,
-        Label::MBL,
-        Label::STATICJW
     );
 
     let _ = fg.save_to_png("plot.png", 1920, 1080);

@@ -53,8 +53,4 @@ t {:.7}",
         ),
         DpllStatus::Incomplete | DpllStatus::Conflict => unreachable!(),
     }
-
-    if let Some(path) = cli.save_learned_model {
-        dpll.save_heuristic(path.as_str());
-    }
 }
