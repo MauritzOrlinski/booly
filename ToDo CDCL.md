@@ -1,0 +1,8 @@
+- [ ] Two watched literals (Mauritz)
+- [ ] Deriving conflict clauses (Max)
+- [ ] Non-chronological backtracking
+- [ ] Clause deletion strategy
+- [ ] Heuristic for CDCL
+- [ ] Restarts
+- [ ] Preprocessing (Konsti)
+- [ ] Proof logging
