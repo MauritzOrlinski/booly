@@ -1,12 +1,3 @@
-pub mod combined_heuristic;
-pub mod combined_heuristic_reverse;
-pub mod dlcs;
-pub mod dlis;
-pub mod from_shortest_clause;
-pub mod jeroslaw_wang;
-pub mod mom;
-pub mod multi_bandits_learning;
-pub mod static_jw;
 pub mod trivial;
 
 use crate::cnf::cnf_formula::CnfFormula;
