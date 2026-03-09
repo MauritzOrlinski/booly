@@ -150,17 +150,11 @@ impl CNF {
     }
 
     pub fn add_clause(&mut self, clause: Clause) {
-        let max_clause_id = *self
-            .clauses
-            .iter()
-            .max_by_key(|(clause_id, _)| *clause_id)
-            .unwrap()
-            .0;
         for &lit in &clause.lits {
             let var = self.vars.get_mut(&(lit.unsigned_abs() as u32)).unwrap();
             match lit.signum() {
-                1 => var.add_pos_occ(max_clause_id + 1),
-                -1 => var.add_neg_occ(max_clause_id + 1),
+                1 => var.add_pos_occ(self.max_clause_id + 1),
+                -1 => var.add_neg_occ(self.max_clause_id + 1),
                 _ => unreachable!("variable with id = 0 found!"),
             }
         }
