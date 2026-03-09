@@ -77,7 +77,7 @@ fn pdimacs(i: &str) -> IResult<&str, (Vec<Vec<i32>>, u16, u16)> {
     Ok((i, (cs, n as u16, m as u16)))
 }
 
-fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
+pub fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
     pdimacs(i).finish().map(|t| t.1)
 }
 
@@ -128,7 +128,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
             }
             literals.insert(variable_id, polarity);
         }
-        clauses.push(Clause::new(literals))
+        clauses.push(Clause::new(literals, clause_id))
     }
 
     Ok(CnfFormula::new(clauses, variables))
