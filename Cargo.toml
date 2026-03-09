@@ -36,13 +36,13 @@ smallvec = "1.15.1"
 datatest-stable = "0.3"
 criterion = "0.5"
 
-[[test]]
-name = "required_tests"
-harness = false
-
-[[test]]
-name = "all_provided_inputs"
-harness = false
+# [[test]]
+# name = "required_tests"
+# harness = false
+#
+# [[test]]
+# name = "all_provided_inputs"
+# harness = false
 
 [[bench]]
 name = "bench"

@@ -77,7 +77,7 @@ fn pdimacs(i: &str) -> IResult<&str, (Vec<Vec<i32>>, u16, u16)> {
     Ok((i, (cs, n as u16, m as u16)))
 }
 
-fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
+pub fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
     pdimacs(i).finish().map(|t| t.1)
 }
 
