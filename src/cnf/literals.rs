@@ -31,7 +31,7 @@ impl Polarity {
 /// Represents a set of literals. We do not expect very large Clauses, therefore a vec should beat
 /// a HashMap.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Literals(Vec<i32>);
+pub struct Literals(pub Vec<i32>);
 
 impl Literals {
     pub fn new() -> Literals {

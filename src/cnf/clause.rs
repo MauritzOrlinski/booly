@@ -16,16 +16,14 @@ pub struct Clause {
     pub(crate) satisfied_by: Option<VariableId>,
     pub(crate) literals: Literals,
     pub(crate) unassigned_variables: usize,
-    pub(crate) id: usize,
 }
 
 impl Clause {
-    pub fn new(literals: Literals, id: usize) -> Self {
+    pub fn new(literals: Literals) -> Self {
         Clause {
             satisfied_by: None,
             unassigned_variables: literals.len(),
             literals,
-            id: id,
         }
     }
 }

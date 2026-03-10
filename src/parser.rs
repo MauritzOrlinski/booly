@@ -128,7 +128,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
             }
             literals.insert(variable_id, polarity);
         }
-        clauses.push(Clause::new(literals, clause_id))
+        clauses.push(Clause::new(literals))
     }
 
     Ok(CnfFormula::new(clauses, variables))
