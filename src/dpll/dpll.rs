@@ -87,6 +87,10 @@ impl Dpll {
     }
 
     pub fn solve(&mut self) -> DpllStatus {
+        if self.cnf_formula.clauses.is_empty() {
+            return DpllStatus::Sat;
+        }
+
         let cancel_flag = AtomicBool::new(false);
 
         self.solve_interruptable(&cancel_flag)
