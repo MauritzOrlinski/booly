@@ -1,5 +1,13 @@
 use std::collections::BTreeMap;
 
+use itertools::Itertools;
+
+use crate::cnf::{
+    cnf_formula::CnfFormula,
+    literals::{Literals, Polarity},
+    variable::Variables,
+};
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Var {
     pub(crate) val: Option<bool>,
@@ -75,20 +83,20 @@ impl Var {
 }
 
 //TODO: perhaps implement better hash
-fn lit_hash(lit: i64) -> u8 {
+fn lit_hash(lit: i32) -> u8 {
     lit as u8 & 0b111111
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
     pub(crate) sat_by: Option<u32>,
-    pub(crate) lits: Vec<i64>,
+    pub(crate) lits: Vec<i32>,
     pub(crate) act: u8,
     pub(crate) sig: u64,
 }
 
 impl Clause {
-    pub fn new(lits: Vec<i64>) -> Self {
+    pub fn new(lits: Vec<i32>) -> Self {
         Clause {
             sat_by: None,
             act: lits.len() as u8,
@@ -117,6 +125,46 @@ impl CNF {
         }
     }
 
+    pub fn to_cnf_formula(self) -> CnfFormula {
+        let mut clauses: Vec<crate::cnf::clause::Clause> = Vec::new();
+        let mut variables = Variables::new(self.vars.len());
+        let mapping: BTreeMap<usize, u32> = self
+            .clauses
+            .keys()
+            .enumerate()
+            .map(|(a, b)| (a, *b))
+            .collect();
+        for (_, clause) in self.clauses.iter() {
+            let mut literals = Literals::new();
+            for lit in clause.lits.iter() {
+                literals.insert(lit.unsigned_abs(), {
+                    match lit.signum() {
+                        1 => Polarity::Positive,
+                        -1 => Polarity::Negative,
+                        _ => unreachable!("variable with id = 0 found!"),
+                    }
+                });
+            }
+            clauses.push(crate::cnf::clause::Clause::new(literals));
+        }
+        for (var_id, var) in self.vars.iter() {
+            // INFO: assumes that keys of the vars are sequential without gaps,
+            // e.g. no vars are deleted
+            let variable = variables.get_mut(*var_id);
+            var.pos_occ.iter().for_each(|&clause_id| {
+                variable
+                    .positive_occurrences
+                    .push(*mapping.iter().find(|(_, id)| **id == clause_id).unwrap().0);
+            });
+            var.neg_occ.iter().for_each(|&clause_id| {
+                variable
+                    .negative_occurrences
+                    .push(*mapping.iter().find(|(_, id)| **id == clause_id).unwrap().0);
+            });
+        }
+        CnfFormula::new(clauses, variables)
+    }
+
     pub fn from_pre(pre_clauses: &Vec<Vec<i32>>, vars_count: u16) -> CNF {
         let mut clauses = Clauses::new();
         let mut vars: Vars = (1..=vars_count as u32)
@@ -124,7 +172,7 @@ impl CNF {
             .collect();
 
         for (clause_id, pre_clause) in pre_clauses.iter().enumerate() {
-            let mut lits: Vec<i64> = Vec::new();
+            let mut lits: Vec<i32> = Vec::new();
 
             // clause is tautology => don't add
             if pre_clause.iter().any(|&lit| pre_clause.contains(&(-lit))) {
@@ -141,8 +189,8 @@ impl CNF {
                     _ => unreachable!("variable with id = 0 found!"),
                 }
                 // don't add duplicate literals (fucks with clause deletion)
-                if !lits.contains(&(lit as i64)) {
-                    lits.push(lit as i64);
+                if !lits.contains(&lit) {
+                    lits.push(lit);
                 }
             }
             clauses.insert(clause_id as u32 + 1, Clause::new(lits));
@@ -152,7 +200,7 @@ impl CNF {
 
     pub fn add_clause(&mut self, clause: Clause) {
         for &lit in &clause.lits {
-            let var = self.vars.get_mut(&(lit.unsigned_abs() as u32)).unwrap();
+            let var = self.vars.get_mut(&lit.unsigned_abs()).unwrap();
             match lit.signum() {
                 1 => var.add_pos_occ(self.max_clause_id + 1),
                 -1 => var.add_neg_occ(self.max_clause_id + 1),
@@ -167,7 +215,7 @@ impl CNF {
         match self.clauses.get(&clause_id) {
             Some(clause) => clause.lits.iter().for_each(|lit| {
                 self.vars
-                    .get_mut(&(lit.unsigned_abs() as u32))
+                    .get_mut(&lit.unsigned_abs())
                     .unwrap()
                     .remove_clause(clause_id);
             }),

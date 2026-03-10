@@ -5,7 +5,7 @@ use crate::{
 use itertools::{Itertools, iproduct};
 use std::collections::{BTreeMap, VecDeque};
 
-fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i64>>) {
+fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i32>>) {
     let mut resolvants: Vec<(u32, u32)> = vec![];
     let var = cnf.vars.get_mut(&var_id).unwrap();
     for (&pos_clause_id, &neg_clause_id) in iproduct!(&var.pos_occ, &var.neg_occ) {
@@ -14,7 +14,7 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i64>>) {
         // checks for tautology
         let mut tautology = false;
         for &pos_lit in pos_clause.lits.iter() {
-            if pos_lit.unsigned_abs() != var_id as u64 {
+            if pos_lit.unsigned_abs() != var_id {
                 tautology |= {
                     neg_clause
                         .lits
@@ -45,12 +45,12 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i64>>) {
             .for_each(|(pos_clause_id, neg_clause_id)| {
                 let pos_clause = cnf.clauses.get(pos_clause_id).unwrap();
                 let neg_clause = cnf.clauses.get(neg_clause_id).unwrap();
-                let lits: Vec<i64> = pos_clause
+                let lits: Vec<i32> = pos_clause
                     .lits
                     .iter()
                     .chain(neg_clause.lits.iter())
                     .filter_map(|lit| {
-                        if lit.unsigned_abs() as u32 != var_id {
+                        if lit.unsigned_abs() != var_id {
                             Some(*lit)
                         } else {
                             None
@@ -60,7 +60,7 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i64>>) {
                     .collect();
                 cnf.add_clause(Clause::new(lits));
             });
-        let niver_trace: Vec<Vec<i64>> = clause_ids_to_del
+        let niver_trace: Vec<Vec<i32>> = clause_ids_to_del
             .iter()
             .map(|&clause_id| cnf.remove_clause(clause_id).unwrap().lits)
             .collect();
@@ -69,9 +69,9 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i64>>) {
     (false, vec![])
 }
 
-pub fn niver(cnf: &mut CNF) -> VecDeque<(u32, Vec<Vec<i64>>)> {
+pub fn niver(cnf: &mut CNF) -> VecDeque<(u32, Vec<Vec<i32>>)> {
     let mut change = true;
-    let mut niver_trace: VecDeque<(u32, Vec<Vec<i64>>)> = VecDeque::new();
+    let mut niver_trace: VecDeque<(u32, Vec<Vec<i32>>)> = VecDeque::new();
     while change {
         change = false;
         let var_ids: Vec<u32> = cnf.vars.keys().map(|var_id| *var_id).collect();
@@ -87,18 +87,21 @@ pub fn niver(cnf: &mut CNF) -> VecDeque<(u32, Vec<Vec<i64>>)> {
 }
 
 pub fn recover_assigment_niver(
-    mut niver_trace: VecDeque<(u32, Vec<Vec<i64>>)>,
-    mut clauses: Vec<Vec<i64>>,
+    mut niver_trace: VecDeque<(u32, Vec<Vec<i32>>)>,
+    mut clauses: Vec<Vec<i32>>,
     mut assignment: BTreeMap<u32, bool>,
 ) -> BTreeMap<u32, bool> {
     while let Some((var_id, mut niver_clauses)) = niver_trace.pop_front() {
         clauses.append(&mut niver_clauses);
-
         assignment.insert(var_id, true);
         if !clauses.iter().all(|clause| {
-            clause
-                .iter()
-                .any(|lit| *assignment.get(&(lit.unsigned_abs() as u32)).unwrap())
+            clause.iter().any(|lit| {
+                if lit.signum() == 1 {
+                    *assignment.get(&lit.unsigned_abs()).unwrap()
+                } else {
+                    !*assignment.get(&lit.unsigned_abs()).unwrap()
+                }
+            })
         }) {
             assignment.insert(var_id, false);
         }
@@ -107,16 +110,16 @@ pub fn recover_assigment_niver(
 }
 
 pub fn recover_assigment_niver_compat(
-    niver_trace: VecDeque<(u32, Vec<Vec<i64>>)>,
+    niver_trace: VecDeque<(u32, Vec<Vec<i32>>)>,
     cnf_formula: CnfFormula,
 ) -> BTreeMap<u32, bool> {
-    let mut clauses: Vec<Vec<i64>> = Vec::new();
+    let mut clauses: Vec<Vec<i32>> = Vec::new();
     for c in cnf_formula.clauses {
-        clauses.push(c.literals.0.iter().map(|lit| *lit as i64).collect());
+        clauses.push(c.literals.0.iter().map(|lit| *lit).collect());
     }
     let mut assignment: BTreeMap<u32, bool> = BTreeMap::new();
     for (id, v) in cnf_formula.variables.iter().enumerate() {
-        assignment.insert(id as u32 + 1, v.value.unwrap());
+        assignment.insert(id as u32 + 1, v.value.unwrap_or(true));
     }
     recover_assigment_niver(niver_trace, clauses, assignment)
 }
@@ -124,7 +127,38 @@ pub fn recover_assigment_niver_compat(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::parse;
+    use crate::{
+        dpll::{
+            dpll::{Dpll, DpllStatus},
+            heuristics::trivial::Trivial,
+        },
+        parser::parse,
+    };
+
+    #[test]
+    fn niver_test_sat() {
+        let cnf_pre = parse(include_str!("../../inputs/sat/aim-100-3_4-yes1-1.cnf")).unwrap();
+        let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+        let niver_trace = niver(&mut cnf);
+
+        let heuristic = Box::new(Trivial);
+        let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
+        let status = dpll.solve();
+
+        assert_eq!(status, DpllStatus::Sat);
+
+        let assignment = recover_assigment_niver_compat(niver_trace, dpll.cnf_formula);
+        let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+        assert!(cnf.clauses.iter().all(|(_, clause)| {
+            clause.lits.iter().any(|lit| {
+                if lit.signum() == 1 {
+                    *assignment.get(&lit.unsigned_abs()).unwrap()
+                } else {
+                    !*assignment.get(&lit.unsigned_abs()).unwrap()
+                }
+            })
+        }))
+    }
 
     #[test]
     fn ver_does_unit_prop() {
