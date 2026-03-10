@@ -111,7 +111,7 @@ pub struct CNF {
 impl CNF {
     pub fn new(clauses: Clauses, vars: Vars) -> Self {
         CNF {
-            max_clause_id: clauses.len() as u32,
+            max_clause_id: *clauses.keys().max().unwrap(),
             clauses: clauses,
             vars: vars,
         }
@@ -140,6 +140,7 @@ impl CNF {
                     -1 => var.add_neg_occ(clause_id as u32 + 1),
                     _ => unreachable!("variable with id = 0 found!"),
                 }
+                // don't add duplicate literals (fucks with clause deletion)
                 if !lits.contains(&(lit as i64)) {
                     lits.push(lit as i64);
                 }

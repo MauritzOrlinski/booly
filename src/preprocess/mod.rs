@@ -1,3 +1,3 @@
-pub(crate) mod cnf;
-pub(crate) mod niver;
-pub(crate) mod subsume;
+pub mod cnf;
+pub mod niver;
+pub mod subsume;
