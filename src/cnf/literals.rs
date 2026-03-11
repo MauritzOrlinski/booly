@@ -3,6 +3,8 @@ use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 
+pub type Literal = i32;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Polarity {
     Positive,
@@ -31,7 +33,7 @@ impl Polarity {
 /// Represents a set of literals. We do not expect very large Clauses, therefore a vec should beat
 /// a HashMap.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Literals(Vec<i32>);
+pub struct Literals(Vec<Literal>);
 
 impl Literals {
     pub fn new() -> Literals {

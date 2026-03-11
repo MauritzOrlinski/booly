@@ -117,7 +117,8 @@ impl Dpll {
 
         if assignment_result == AssignmentResult::Conflict {
             self.status = Conflict;
-        } else if self.cnf_formula.is_satisfied() {
+        } else if self.cnf_formula.all_assigned() {
+            // if all are assigned and no conflict has arisen => satisfied
             self.status = Sat;
         }
     }

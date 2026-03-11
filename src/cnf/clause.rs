@@ -1,4 +1,4 @@
-use crate::cnf::literals::Literals;
+use crate::cnf::literals::{Literal, Literals, Polarity};
 use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
@@ -11,20 +11,55 @@ pub type ClauseID = usize;
 /// * `satisfied_by` - The variable this clause has first been satisfied by. None, if the clause is not yet satisfied.
 /// * `literals` - The set of literals in this clause
 /// * `unassigned_variables` - The count of how many variables occur in this clause that have not yet been assigned a value.
+/// * `watched1` and `watched2` - The currently watched literals, which are always unassigned
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
     pub(crate) satisfied_by: Option<VariableId>,
     pub(crate) literals: Literals,
-    pub(crate) unassigned_variables: usize,
+    pub(crate) watched1: Literal,
+    pub(crate) watched2: Literal,
+}
+
+pub fn to_lit((value, pol): (VariableId, Polarity)) -> Literal {
+    match pol {
+        Polarity::Positive => value as i32,
+        Polarity::Negative => -(value as i32),
+    }
 }
 
 impl Clause {
     pub fn new(literals: Literals) -> Self {
+        // Safety note: Assumes at least one element
+        let w1 = literals.iter().last().unwrap();
+        let w2 = literals.iter().find(|_| true).unwrap(); // picks first
         Clause {
             satisfied_by: None,
-            unassigned_variables: literals.len(),
             literals,
+            watched1: to_lit(w1),
+            watched2: to_lit(w2),
         }
+    }
+
+    pub fn is_watched(&self, &var: &VariableId) -> bool {
+        var == self.watched1.unsigned_abs() || var == self.watched2.unsigned_abs()
+    }
+
+    pub fn is_unit(&self, assignments: &Vec<Option<bool>>) -> bool {
+        let t = Some(self.watched2.is_negative());
+        assignments[self.watched2.unsigned_abs() as usize - 1] == t
+    }
+
+    pub fn is_satisfied_by_watched(&self, assignments: &Vec<Option<bool>>) -> bool {
+        // Safety Note: We can assume that a watched lit is either unassigned or satisfiying
+        assignments[self.watched1.unsigned_abs() as usize - 1] == Some(self.watched1.is_positive())
+            || assignments[self.watched2.unsigned_abs() as usize - 1]
+                == Some(self.watched2.is_positive())
+    }
+
+    pub fn is_conflict_clause(&self, assignments: &Vec<Option<bool>>) -> bool {
+        assignments[self.watched1.unsigned_abs() as usize - 1] == Some(self.watched1.is_negative())
+            && assignments[self.watched2.unsigned_abs() as usize - 1]
+                == Some(self.watched2.is_negative())
     }
 }
 
