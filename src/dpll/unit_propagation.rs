@@ -23,9 +23,9 @@ impl Dpll {
             // }
             units += 1;
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause);
-            if self.cnf_formula.assignments[new_assignment.variable_id as usize - 1]
-                == Some(new_assignment.value)
-            {
+            let old_assignment =
+                self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
+            if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
                 self.status = Conflict;
             } else {
                 self.assign(new_assignment);

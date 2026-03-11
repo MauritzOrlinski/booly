@@ -11,7 +11,6 @@ use std::mem::swap;
 pub struct CnfFormula {
     pub(crate) clauses: Vec<Clause>,
     pub variables: Variables,
-    pub(crate) unsat_clauses: usize,
     unset_vars: usize,
     pub(crate) assignments: Vec<Option<bool>>,
 }
@@ -19,7 +18,6 @@ pub struct CnfFormula {
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
         CnfFormula {
-            unsat_clauses: clauses.len(),
             clauses,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
