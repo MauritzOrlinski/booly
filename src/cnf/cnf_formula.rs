@@ -1,4 +1,5 @@
-use crate::cnf::clause::{to_lit, Clause, ClauseID};
+use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::literals::to_lit;
 use crate::cnf::variable::Variables;
 use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
 use crate::dpll::assignment::{Assignment, AssignmentResult};
@@ -12,6 +13,8 @@ pub struct CnfFormula {
     pub(crate) clauses: Vec<Clause>,
     pub variables: Variables,
     unset_vars: usize,
+    /// we store the variable assignments now in this assignments vector, as it makes the values
+    /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
 }
 
@@ -40,8 +43,9 @@ impl CnfFormula {
         unit_queue: &mut VecDeque<ClauseID>,
     ) -> AssignmentResult {
         let var_id = assignment.variable_id;
+        let var_index = var_id as usize - 1;
 
-        match self.assignments[var_id as usize - 1] {
+        match self.assignments[var_index] {
             Some(v) if v == assignment.value => return Success,
             Some(_) => return Conflict,
             None => {
@@ -49,11 +53,13 @@ impl CnfFormula {
             }
         }
         let assignee = self.variables.get_mut(assignment.variable_id);
-        assignee.value = Some(assignment.value);
-        self.assignments[var_id as usize - 1] = Some(assignment.value);
+        self.assignments[var_index] = Some(assignment.value);
 
         // TODO: associated_clauses should only be clauses where the var is watched
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
+
+        let mut is_conflict = false;
+        let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
 
         for &clause_id in unsatisfied_clause_ids {
             let falsified_lit = if assignment.value {
@@ -61,11 +67,10 @@ impl CnfFormula {
             } else {
                 var_id as i32
             };
+
             let clause = self.clauses.get_mut(clause_id).unwrap();
 
-            if !clause.is_watched(&assignment.variable_id)
-                || clause.is_satisfied_by_watched(&self.assignments)
-            {
+            if clause.is_satisfied_by_watched(&self.assignments) {
                 continue;
             }
 
@@ -73,35 +78,32 @@ impl CnfFormula {
                 swap(&mut clause.watched1, &mut clause.watched2);
             }
             assert!(clause.watched2 == falsified_lit);
+            // Invariant: watched2 is our assignee that we want to switch out
 
             let other = clause.watched1;
 
-            let new_watched = clause.literals.iter().find(|(id, pol)| {
-                let lit = match pol {
-                    super::literals::Polarity::Positive => *id as i32,
-                    super::literals::Polarity::Negative => -(*id as i32),
-                };
-
+            let new_watched = clause.literals.iter().find(|lit| {
+                let (id, pol) = lit;
+                let lit = to_lit(lit);
                 if lit == other {
                     return false;
                 }
 
-                let satisfying_assignment = Some(match pol {
-                    super::literals::Polarity::Positive => true,
-                    super::literals::Polarity::Negative => false,
-                });
+                let satisfying_assignment = Some(pol.is_positive());
 
-                self.assignments[*id as usize - 1].is_none()
-                    || self.assignments[*id as usize - 1] == satisfying_assignment
+                let current_index = *id as usize - 1;
+
+                self.assignments[current_index].is_none()
+                    || self.assignments[current_index] == satisfying_assignment
             });
 
-            if let Some((id, pol)) = new_watched {
-                clause.watched2 = match pol {
-                    super::literals::Polarity::Positive => id as i32,
-                    super::literals::Polarity::Negative => -(id as i32),
-                };
+            if let Some(lit) = new_watched {
+                let lit = to_lit(&lit);
+                newly_watched.push((lit, clause_id, clause.watched2));
+                clause.watched2 = lit;
                 continue;
             }
+
             let other_id = other.unsigned_abs() as usize - 1;
             let other_satisfying_assignment = Some(other.is_positive());
 
@@ -111,11 +113,38 @@ impl CnfFormula {
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
             } else {
-                return Conflict;
+                is_conflict = true;
+                break;
             }
         }
 
-        Success
+        for (lit, clause_id, old_lit) in newly_watched {
+            let id = lit.unsigned_abs();
+            if lit.is_positive() {
+                self.variables
+                    .get_mut(id)
+                    .positive_watched_occurrences
+                    .push(clause_id);
+            } else {
+                self.variables
+                    .get_mut(id)
+                    .negative_watched_occurrences
+                    .push(clause_id);
+            }
+
+            let assignee = self.variables.get_mut(old_lit.unsigned_abs());
+            if old_lit.is_positive() {
+                let occurrences = &mut assignee.positive_watched_occurrences;
+                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+                occurrences.swap_remove(pos);
+            } else {
+                let occurrences = &mut assignee.negative_watched_occurrences;
+                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+                occurrences.swap_remove(pos);
+            }
+        }
+
+        if is_conflict { Conflict } else { Success }
     }
 
     /// Undos an assignment.
@@ -123,9 +152,7 @@ impl CnfFormula {
     /// # Arguments
     /// * `assignment` - The assignment
     pub fn undo_assignment(&mut self, assignment: &Assignment) {
-        let assignee = self.variables.get_mut(assignment.variable_id);
-        if assignee.value.is_some() {
-            assignee.value = None;
+        if self.assignments[assignment.variable_id as usize - 1].is_some() {
             self.assignments[assignment.variable_id as usize - 1] = None;
             self.unset_vars += 1;
         }
@@ -156,14 +183,14 @@ impl CnfFormula {
         self.variables
             .iter()
             .enumerate()
-            .filter(|(_, v)| v.value.is_none())
+            .filter(|(id, _)| self.assignments[*id].is_none())
             .filter_map(|(i, v)| {
-                if !v.positive_occurrences.is_empty() && v.positive_occurrences.is_empty() {
+                if v.positive_occurrences_count != 0 && v.negative_occurrences_count == 0 {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: true,
                     })
-                } else if v.positive_occurrences.is_empty() && !v.negative_occurrences.is_empty() {
+                } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: false,
@@ -173,6 +200,34 @@ impl CnfFormula {
                 }
             })
             .collect()
+    }
+    pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
+        AssignedVarsView(&self.variables, &self.assignments)
+    }
+}
+pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
+
+impl<'a> fmt::Display for AssignedVarsView<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .0
+                .iter()
+                .enumerate()
+                .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))
+                .map(|(var_id, value)| format!(
+                    "{}{}",
+                    match value {
+                        false => "-",
+                        _ => "",
+                    },
+                    var_id + 1
+                ))
+                .collect::<Vec<String>>()
+                .join(" ")
+        )
     }
 }
 

@@ -14,17 +14,20 @@ pub type VariableId = u32;
 /// * `negative_occurrences` - The IDs of the clauses in which this variable occurs as a positive literal
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
-    pub(crate) value: Option<AssignmentValue>,
-    pub(crate) positive_occurrences: Vec<ClauseID>,
-    pub(crate) negative_occurrences: Vec<ClauseID>,
+    // pub(crate) value: Option<AssignmentValue>,
+    pub(crate) positive_watched_occurrences: Vec<ClauseID>,
+    pub(crate) negative_watched_occurrences: Vec<ClauseID>,
+    pub(crate) positive_occurrences_count: usize,
+    pub(crate) negative_occurrences_count: usize,
 }
 
 impl Variable {
     pub(crate) fn new() -> Variable {
         Variable {
-            value: None,
-            positive_occurrences: vec![],
-            negative_occurrences: vec![],
+            positive_watched_occurrences: vec![],
+            negative_watched_occurrences: vec![],
+            positive_occurrences_count: 0,
+            negative_occurrences_count: 0,
         }
     }
 
@@ -38,15 +41,21 @@ impl Variable {
     /// given assignment and `unsatisfied_clause_ids` is a slice of clauses that contain this variable, but wont be satisifed by this assignment
     pub(crate) fn associated_clauses(&self, value: AssignmentValue) -> (&[ClauseID], &[ClauseID]) {
         match value {
-            true => (&self.positive_occurrences, &self.negative_occurrences),
-            false => (&self.negative_occurrences, &self.positive_occurrences),
+            true => (
+                &self.positive_watched_occurrences,
+                &self.negative_watched_occurrences,
+            ),
+            false => (
+                &self.negative_watched_occurrences,
+                &self.positive_watched_occurrences,
+            ),
         }
     }
 }
 
 /// A wrapper around `Vec<Variable>` to allow pretty string representation in the style of DIMCAS CNF.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Variables(Vec<Variable>);
+pub struct Variables(pub Vec<Variable>);
 
 impl Variables {
     pub fn new(variable_count: usize) -> Variables {
@@ -77,11 +86,11 @@ impl Variables {
     /// # Panics
     /// If there is none.
     #[allow(dead_code)]
-    pub(crate) fn find_unassigned(&self) -> VariableId {
+    pub(crate) fn find_unassigned(&self, assignments: &[Option<AssignmentValue>]) -> VariableId {
         self.0
             .iter()
             .enumerate()
-            .find_map(|(id, variable)| match variable.value {
+            .find_map(|(id, _)| match assignments[id] {
                 Some(_) => None,
                 None => Some(id as u32),
             })
@@ -89,11 +98,14 @@ impl Variables {
             + 1
     }
 
-    pub(crate) fn find_all_unassigned(&self) -> Vec<VariableId> {
+    pub(crate) fn find_all_unassigned(
+        &self,
+        assignments: &[Option<AssignmentValue>],
+    ) -> Vec<VariableId> {
         self.0
             .iter()
             .enumerate()
-            .filter_map(|(id, variable)| match variable.value {
+            .filter_map(|(id, _)| match assignments[id] {
                 Some(_) => None,
                 None => Some(id as u32 + 1),
             })
@@ -109,17 +121,8 @@ impl fmt::Display for Variables {
             self.0
                 .iter()
                 .enumerate()
-                .filter_map(|(variable_id, variable)| variable
-                    .value
-                    .map(|value| (variable_id, value)))
-                .map(|(var_id, variable_value)| format!(
-                    "{}{}",
-                    match variable_value {
-                        true => "",
-                        false => "-",
-                    },
-                    var_id + 1
-                ))
+                // .filter_map(|(variable_id, _)| variable.value.map(|value| (variable_id, value)))
+                .map(|(var_id, _)| format!("{}", var_id + 1))
                 .collect::<Vec<String>>()
                 .join(" ")
         )
