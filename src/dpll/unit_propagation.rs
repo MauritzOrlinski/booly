@@ -18,12 +18,20 @@ impl Dpll {
         // && self.status != DpllStatus::Sat
         {
             let unit_clause = self.cnf_formula.clauses.get(unit_clause_id).unwrap();
-            if unit_clause.satisfied_by.is_some() {
-                continue;
-            }
+            // if unit_clause.satisfied_by.is_some() {
+            //     continue;
+            // }
             units += 1;
-            self.assign(self.find_satisfying_assignment_for_unit_clause(unit_clause));
+            let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause);
+            let old_assignment =
+                self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
+            if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
+                self.status = Conflict;
+            } else {
+                self.assign(new_assignment);
+            }
         }
+
         units
     }
 
@@ -35,18 +43,21 @@ impl Dpll {
     /// # Returns
     /// The satisfying assignment.
     fn find_satisfying_assignment_for_unit_clause(&self, unit_clause: &Clause) -> Assignment {
-        unit_clause
-            .literals
-            .iter()
-            .find_map(|(variable_id, polarity)| {
-                match self.cnf_formula.variables.get(variable_id).value {
-                    None => Some(Assignment::new(
-                        variable_id,
-                        polarity.get_satisfying_assignment(),
-                    )),
-                    Some(_) => None,
-                }
-            })
-            .unwrap()
+        Assignment::new(
+            unit_clause.watched1.unsigned_abs(),
+            unit_clause.watched1.is_positive(),
+        )
+        // .literals
+        // .iter()
+        // .find_map(|(variable_id, polarity)| {
+        //     match self.cnf_formula.variables.get(variable_id).value {
+        //         None => Some(Assignment::new(
+        //             variable_id,
+        //             polarity.get_satisfying_assignment(),
+        //         )),
+        //         Some(_) => None,
+        //     }
+        // })
+        // .unwrap()
     }
 }

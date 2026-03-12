@@ -117,7 +117,8 @@ impl Dpll {
 
         if assignment_result == AssignmentResult::Conflict {
             self.status = Conflict;
-        } else if self.cnf_formula.is_satisfied() {
+        } else if self.cnf_formula.all_assigned() {
+            // if all are assigned and no conflict has arisen => satisfied
             self.status = Sat;
         }
     }
@@ -144,14 +145,15 @@ impl Dpll {
     }
 
     /// Assigns values to all unset variables if formula is satisfiable
+    // TODO: With 2wl there won't be any unset varibales
     fn postprocess(&mut self) {
         if self.status == DpllStatus::Sat {
             self.cnf_formula
                 .variables
-                .find_all_unassigned()
+                .find_all_unassigned(&self.cnf_formula.assignments)
                 .iter()
                 .for_each(|&variable_id| {
-                    self.cnf_formula.variables.get_mut(variable_id).value = Some(false);
+                    self.cnf_formula.assignments[variable_id as usize - 1] = Some(false);
                 });
         }
     }

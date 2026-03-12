@@ -123,12 +123,28 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
             let variable = variables.get_mut(variable_id);
 
             match polarity {
-                Polarity::Positive => variable.positive_occurrences.push(clause_id),
-                Polarity::Negative => variable.negative_occurrences.push(clause_id),
+                Polarity::Positive => variable.positive_occurrences_count += 1,
+                Polarity::Negative => variable.negative_occurrences_count += 1,
             }
             literals.insert(variable_id, polarity);
         }
-        clauses.push(Clause::new(literals))
+        // clauses.push(Clause::new(literals))
+        let clause = Clause::new(literals);
+        let w1 = variables.get_mut(clause.watched1.unsigned_abs());
+        if clause.watched1.is_positive() {
+            w1.positive_watched_occurrences.push(clause_id);
+        } else {
+            w1.negative_watched_occurrences.push(clause_id);
+        }
+        if clause.watched1 != clause.watched2 {
+            let w2 = variables.get_mut(clause.watched2.unsigned_abs());
+            if clause.watched2.is_positive() {
+                w2.positive_watched_occurrences.push(clause_id);
+            } else {
+                w2.negative_watched_occurrences.push(clause_id);
+            }
+        }
+        clauses.push(clause);
     }
 
     Ok(CnfFormula::new(clauses, variables))

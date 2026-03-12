@@ -13,8 +13,8 @@ pub fn verify_satisfied(cnf_formula: &CnfFormula) -> bool {
             .literals
             .iter()
             .any(|(variable_id, var_literal_polarity)| {
-                let var = cnf_formula.variables.get(variable_id);
-                var.value == Some(var_literal_polarity.get_satisfying_assignment())
+                cnf_formula.assignments[variable_id as usize - 1]
+                    == Some(var_literal_polarity.get_satisfying_assignment())
             })
     })
 }

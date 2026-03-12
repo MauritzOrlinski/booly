@@ -1,9 +1,13 @@
+use smallvec::SmallVec;
+
 use crate::cnf::variable::VariableId;
 use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, PartialEq, Clone)]
+pub type Literal = i32;
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Polarity {
     Positive,
     Negative,
@@ -13,10 +17,7 @@ impl Polarity {
     /// Returns the satisfying assignment value for a literals.
     /// E.g. for a literal `-3`, the variable `3` needs to be assigned `False` to satisfy the literal.
     pub fn get_satisfying_assignment(&self) -> AssignmentValue {
-        match self {
-            Polarity::Positive => true,
-            Polarity::Negative => false,
-        }
+        self.is_positive()
     }
 
     pub fn reverse(&self) -> Polarity {
@@ -25,17 +26,35 @@ impl Polarity {
             Polarity::Negative => Polarity::Positive,
         }
     }
+
+    pub fn is_positive(&self) -> bool {
+        match self {
+            Polarity::Positive => true,
+            Polarity::Negative => false,
+        }
+    }
+
+    pub fn is_negative(&self) -> bool {
+        !self.is_positive()
+    }
+}
+
+pub fn to_lit((value, pol): &(VariableId, Polarity)) -> Literal {
+    match pol {
+        Polarity::Positive => *value as i32,
+        Polarity::Negative => -(*value as i32),
+    }
 }
 
 /// A wrapper around `Vec<(VariableID, Polarity)>` to allow pretty string representation in the style of DIMCAS CNF.
 /// Represents a set of literals. We do not expect very large Clauses, therefore a vec should beat
 /// a HashMap.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Literals(Vec<i32>);
+pub struct Literals(SmallVec<[Literal; 6]>);
 
 impl Literals {
     pub fn new() -> Literals {
-        Literals(Vec::new())
+        Literals(SmallVec::new())
     }
 
     pub fn iter(&'_ self) -> impl Iterator<Item = (VariableId, Polarity)> + '_ {

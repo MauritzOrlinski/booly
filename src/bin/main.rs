@@ -1,6 +1,6 @@
 use clap::Parser;
 use dpml::cli::CliArguments;
-use dpml::cnf::cnf_formula::CnfFormula;
+use dpml::cnf::cnf_formula::{AssignedVarsView, CnfFormula};
 use dpml::dpll::dpll::{Dpll, DpllStatus};
 use dpml::parser::parse_cnf;
 use std::fs;
@@ -42,7 +42,7 @@ fn main() {
 s SATISFIABLE
 v {} 0
 t {:.7}",
-            dpll.cnf_formula.variables,
+            dpll.cnf_formula.get_assignment_view(),
             elapsed.as_secs_f64()
         ),
         DpllStatus::Unsat => println!(
