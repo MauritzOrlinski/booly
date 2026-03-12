@@ -3,7 +3,7 @@ use criterion::{
     BenchmarkGroup, BenchmarkId, Criterion, black_box, criterion_group, criterion_main,
 };
 use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::dpll::{dpll::Dpll, heuristics::dlcs::DLCS};
+use dpml::dpll::{dpll::Dpll, heuristics::trivial::Trivial};
 use dpml::parser::parse_cnf;
 use std::path::Path;
 use std::time::Duration;
@@ -34,7 +34,7 @@ fn benchmark_all_in_directory<P: AsRef<Path>>(
 }
 
 fn run_dpll(cnf: CnfFormula) {
-    let heuristic = DLCS;
+    let heuristic = Trivial;
     let mut dpll = Dpll::new(cnf, Box::new(heuristic));
     dpll.solve();
 }

@@ -13,7 +13,7 @@ name = "plot"
 path = "src/bin/plot.rs"
 
 [profile.release]
-debug = false
+debug = true 
 codegen-units = 1
 lto = "fat"
 

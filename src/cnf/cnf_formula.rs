@@ -1,4 +1,4 @@
-use crate::cnf::clause::{Clause, ClauseID, to_lit};
+use crate::cnf::clause::{to_lit, Clause, ClauseID};
 use crate::cnf::variable::Variables;
 use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
 use crate::dpll::assignment::{Assignment, AssignmentResult};
