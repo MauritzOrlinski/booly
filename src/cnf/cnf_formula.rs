@@ -55,7 +55,6 @@ impl CnfFormula {
         let assignee = self.variables.get_mut(assignment.variable_id);
         self.assignments[var_index] = Some(assignment.value);
 
-        // TODO: associated_clauses should only be clauses where the var is watched
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
         let mut is_conflict = false;
@@ -70,16 +69,17 @@ impl CnfFormula {
 
             let clause = self.clauses.get_mut(clause_id).unwrap();
 
-            if clause.is_satisfied_by_watched(&self.assignments) {
-                continue;
-            }
-
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
             }
             assert!(clause.watched2 == falsified_lit);
             // Invariant: watched2 is our assignee that we want to switch out
 
+            if self.assignments[clause.watched1.unsigned_abs() as usize - 1]
+                == Some(clause.watched1.is_positive())
+            {
+                continue;
+            }
             let other = clause.watched1;
 
             let new_watched = clause.literals.iter().find(|lit| {

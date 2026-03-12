@@ -45,7 +45,6 @@ impl Clause {
     }
 
     pub fn is_satisfied_by_watched(&self, assignments: &[Option<bool>]) -> bool {
-        // Safety Note: We can assume that a watched lit is either unassigned or satisfiying
         assignments[self.watched1.unsigned_abs() as usize - 1] == Some(self.watched1.is_positive())
             || assignments[self.watched2.unsigned_abs() as usize - 1]
                 == Some(self.watched2.is_positive())
