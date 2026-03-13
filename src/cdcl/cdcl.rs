@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
-use crate::cdcl::assignment::Assignment;
-use crate::cdcl::cdcl::CdclStatus::Incomplete;
+use crate::cdcl::assignment::{Assignment, AssignmentResult};
+use crate::cdcl::cdcl::CdclStatus::{Incomplete, Sat};
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cdcl::implication_graph::ImplicationGraph;
 use crate::cnf::clause::ClauseID;
@@ -36,11 +36,21 @@ impl Cdcl {
         todo!()
     }
 
-    pub fn unit_propagation() {
-        todo!();
-    }
-    
-    pub fn assign(&mut self, assignment: Assignment) {
-        todo!();
+    pub fn decide(&mut self, assignment: Assignment) {
+        let assignment_result = self
+            .cnf_formula
+            .apply_assignment(&assignment, &mut self.unit_queue);
+        self.implication_graph.push_decision(assignment);
+
+        match assignment_result {
+            AssignmentResult::Conflict => {
+                panic!("There should not be a conflict in a decision. There must be something wrong with the heuristic.")
+            },
+            AssignmentResult::Success => {
+                if self.cnf_formula.all_assigned() {
+                    self.status = Sat;
+                }
+            },
+        }
     }
 }

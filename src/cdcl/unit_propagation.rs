@@ -1,6 +1,6 @@
-use crate::cdcl::assignment::Assignment;
+use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::Cdcl;
-use crate::cdcl::cdcl::CdclStatus::Conflict;
+use crate::cdcl::cdcl::CdclStatus::{Conflict, Sat};
 use crate::cnf::clause::{ClauseID};
 
 impl Cdcl {
@@ -22,11 +22,24 @@ impl Cdcl {
             if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
                 self.status = Conflict;
             } else {
-                self.assign(new_assignment);
+                self.assign_propagation(new_assignment);
             }
         }
 
         units
+    }
+    
+    fn assign_propagation(&mut self, assignment: Assignment) {
+        let assignment_result = self
+            .cnf_formula
+            .apply_assignment(&assignment, &mut self.unit_queue);
+        self.implication_graph.push_forced(assignment);
+
+        if assignment_result == AssignmentResult::Conflict {
+            self.status = Conflict;
+        } else if self.cnf_formula.all_assigned() {
+            self.status = Sat;
+        }
     }
 
     /// Finds the satisfying assignment for a unit clause.
