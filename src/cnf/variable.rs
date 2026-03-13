@@ -1,8 +1,8 @@
 use crate::cnf::clause::ClauseID;
-use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 use std::slice::Iter;
+use crate::cdcl::assignment::AssignmentValue;
 
 pub type VariableId = u32;
 

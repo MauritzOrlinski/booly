@@ -1,8 +1,8 @@
 use clap::Parser;
 use cpu_time::ProcessTime;
 use dpml::dpll::dpll::Dpll;
-use dpml::dpll::heuristics;
-use dpml::dpll::heuristics::Heuristic;
+use dpml::cdcl::heuristics;
+use dpml::cdcl::heuristics::Heuristic;
 use dpml::parser::parse_cnf;
 use gnuplot::AxesCommon;
 use gnuplot::Coordinate::Graph;

@@ -1,6 +1,6 @@
 use dpml::dpll::dpll::Dpll;
 use dpml::dpll::dpll::DpllStatus::{Sat, Unsat};
-use dpml::dpll::heuristics::trivial::Trivial;
+use dpml::cdcl::heuristics::trivial::Trivial;
 use dpml::parser::parse_cnf;
 use std::path::Path;
 

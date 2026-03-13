@@ -1,7 +1,7 @@
 pub mod trivial;
 
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::assignment::Assignment;
+use crate::cdcl::assignment::Assignment;
 use std::fmt::Debug;
 
 pub struct Stats {

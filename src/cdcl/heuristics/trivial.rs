@@ -1,6 +1,6 @@
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::dpll::assignment::Assignment;
-use crate::dpll::heuristics::{Heuristic, Stats};
+use crate::cdcl::assignment::Assignment;
+use crate::cdcl::heuristics::{Heuristic, Stats};
 
 #[derive(Debug)]
 pub struct Trivial;
@@ -18,7 +18,7 @@ impl Heuristic for Trivial {
                     unassigned_clause.watched1.is_positive(),
                 );
 
-                Assignment::new(variable_id, assignment_value)
+                Assignment::new(variable_id, assignment_value, None)
             }
             None => Assignment::new(
                 cnf_formula
@@ -28,17 +28,9 @@ impl Heuristic for Trivial {
                     .unwrap() as u32
                     + 1,
                 true,
+                None
             ),
         }
-        // Assignment::new(
-        //     cnf_formula
-        //         .assignments
-        //         .iter()
-        //         .position(|x| x.is_none())
-        //         .unwrap() as u32
-        //         + 1,
-        //     true,
-        // )
     }
 
     fn is_learning(&self) -> bool {

@@ -1,6 +1,6 @@
 use dpml::dpll::dpll::Dpll;
 use dpml::dpll::dpll::DpllStatus;
-use dpml::dpll::heuristics::trivial::Trivial;
+use dpml::cdcl::heuristics::trivial::Trivial;
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;
