@@ -3,14 +3,14 @@ use crate::cnf::literals::to_lit;
 use crate::cnf::variable::Variables;
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
 use std::mem::swap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: Vec<Clause>,
+    pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
     /// we store the variable assignments now in this assignments vector, as it makes the values
@@ -20,8 +20,11 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
+
+        let clauses_tree: BTreeMap<ClauseID, Clause>  = clauses.into_iter().enumerate().collect();
+
         CnfFormula {
-            clauses,
+            clauses: clauses_tree,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
             variables,
@@ -67,7 +70,7 @@ impl CnfFormula {
                 var_id as i32
             };
 
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(&clause_id).unwrap();
 
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
@@ -172,10 +175,9 @@ impl CnfFormula {
     pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
-            .enumerate()
             .filter_map(|(clause_id, clause)| {
                 if clause.is_unit(&self.assignments) {
-                    Some(clause_id)
+                    Some(*clause_id)
                 } else {
                     None
                 }
@@ -246,7 +248,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|clause| clause.to_string())
+                .map(|(_, clause)| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )

@@ -10,9 +10,9 @@ impl Heuristic for Trivial {
         let unassigned_clause = cnf_formula
             .clauses
             .iter()
-            .find(|clause| !clause.is_satisfied_by_watched(&cnf_formula.assignments));
+            .find(|(_, clause)| !clause.is_satisfied_by_watched(&cnf_formula.assignments));
         match unassigned_clause {
-            Some(unassigned_clause) => {
+            Some((_, unassigned_clause)) => {
                 let (variable_id, assignment_value) = (
                     unassigned_clause.watched1.unsigned_abs(),
                     unassigned_clause.watched1.is_positive(),

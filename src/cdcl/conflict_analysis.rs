@@ -38,7 +38,7 @@ impl Cdcl {
                     // Must be present, because otherwise there would be no conflict
                     &format!("Could not find antecedent clause for assignment: {}", most_recent_assignment)
                 );
-            let antecedent_clause = &self.cnf_formula.clauses[antecedent_clause_id];
+            let antecedent_clause = &self.cnf_formula.clauses.get(&antecedent_clause_id).unwrap();
 
             let resolution = Self::resolve(
                 &learned_clause_literals,
@@ -124,7 +124,7 @@ mod tests {
 
         fn execute(&self, conflict_clause_id: ClauseID) -> Clause {
 
-            let conflict_clause = &self.cnf.clauses[conflict_clause_id];
+            let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
 
             let cdcl = Cdcl {
                 cnf_formula: self.cnf.clone(),
