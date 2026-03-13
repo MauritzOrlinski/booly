@@ -3,6 +3,7 @@ use dpml::cli::CliArguments;
 use dpml::cnf::cnf_formula::{AssignedVarsView, CnfFormula};
 use dpml::dpll::dpll::{Dpll, DpllStatus};
 use dpml::parser::parse_cnf;
+use dpml::proof_logger::{self, ProofLogger};
 use std::fs;
 use std::time::Instant;
 
@@ -29,7 +30,7 @@ fn main() {
     };
 
     let heuristic = cli.load_heuristic();
-
+    let mut log = ProofLogger::create("proof.drat");
     let mut dpll = Dpll::new(cnf_formula, heuristic);
 
     let start = Instant::now();
