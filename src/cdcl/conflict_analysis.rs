@@ -6,7 +6,7 @@ use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
 
 impl Cdcl {
-    fn generate_learned_clause(&self, conflict_clause: &Clause) -> Clause {
+    pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Clause {
         let mut learned_clause_literals = conflict_clause.literals.clone();
         let variables_from_current_decision_level = self.implication_graph
             .get_assignments_of_current_decision_level()
@@ -27,7 +27,7 @@ impl Cdcl {
             }
 
             let most_recent_assignment = self.implication_graph
-                .get_latest_assignment(&learned_clause_literals)
+                .get_latest_assignment_for_given_literals(&learned_clause_literals)
                 .expect(
                     // Must be present, because otherwise there would be no conflict
                     &format!("Could not find latest assignment for conflict clause: {}", conflict_clause)
@@ -51,7 +51,7 @@ impl Cdcl {
         Clause::new(learned_clause_literals)
     }
 
-    fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
+    pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
         if clause.literals.len() < 2 {
             return 0;
         }

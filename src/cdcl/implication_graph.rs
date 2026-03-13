@@ -50,7 +50,7 @@ impl ImplicationGraph {
 
     /// Finds the assignment within a clause that occurred most recently on the trail.
     /// This is used during conflict analysis to identify the most recent contributor to a conflict.
-    pub fn get_latest_assignment(&self, clause: &Literals) -> Option<&Assignment> {
+    pub fn get_latest_assignment_for_given_literals(&self, clause: &Literals) -> Option<&Assignment> {
         self.trail.iter().rfind(|assignment| {
             clause.iter()
                 .any(|(variable_id, _)| variable_id == assignment.variable_id)
@@ -68,6 +68,13 @@ impl ImplicationGraph {
         Some(level)
     }
 
+    pub fn get_current_decision_level(&self) -> usize {
+        self.decision_level_start.len()
+    }
+
+    pub fn get_latest_assignment(&self) -> Option<&Assignment> {
+        self.trail.last()
+    }
 
     /// Reverts the solver to a previous decision level, undoing all assignments made after that point.
     ///
