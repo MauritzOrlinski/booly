@@ -242,6 +242,8 @@ impl CNF {
 
         clause.lits.retain(|&lit_| lit_ != lit);
 
+        clause.sig &= !(1 << lit_hash(lit));
+
         match lit.signum() {
             1 => var.pos_occ.retain(|&clause_id_| clause_id_ != clause_id),
             -1 => var.neg_occ.retain(|&clause_id_| clause_id_ != clause_id),
