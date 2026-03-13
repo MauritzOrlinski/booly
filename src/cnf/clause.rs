@@ -1,4 +1,4 @@
-use crate::cnf::literals::{Literal, Literals, Polarity, to_lit};
+use crate::cnf::literals::{Literal, Literals, to_lit};
 use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
@@ -16,32 +16,22 @@ pub type ClauseID = usize;
 pub struct Clause {
     pub(crate) satisfied_by: Option<VariableId>,
     pub(crate) literals: Literals,
-<<<<<<< HEAD
     pub(crate) watched1: Literal,
     pub(crate) watched2: Literal,
-=======
-    pub(crate) unassigned_variables: usize,
->>>>>>> 84161c2 (NIVER)
 }
 
 impl Clause {
     pub fn new(literals: Literals) -> Self {
-<<<<<<< HEAD
         // Safety note: Assumes at least one element
         let w1 = literals.iter().last().unwrap();
         let w2 = literals.iter().find(|x| x.0 != w1.0).unwrap_or(w1); // picks
 
         // first different lit
-=======
->>>>>>> 84161c2 (NIVER)
         Clause {
             satisfied_by: None,
             literals,
-<<<<<<< HEAD
             watched1: to_lit(&w1),
             watched2: to_lit(&w2),
-=======
->>>>>>> 84161c2 (NIVER)
         }
     }
 

@@ -29,18 +29,6 @@ impl CnfFormula {
         }
     }
 
-    pub fn add_clause(&mut self, clause: Clause) {
-        let clause_id = self.clauses.len();
-        for (variable_id, polarity) in clause.literals.iter() {
-            let variable = self.variables.get_mut(variable_id);
-            match polarity {
-                Polarity::Positive => variable.positive_occurrences.push(clause_id),
-                Polarity::Negative => variable.negative_occurrences.push(clause_id),
-            }
-        }
-        self.clauses.push(clause);
-    }
-
     /// Applies an assignment to this formula.
     ///
     /// # Arguments

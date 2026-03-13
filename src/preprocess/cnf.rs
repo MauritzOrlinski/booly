@@ -134,7 +134,12 @@ impl CNF {
             .enumerate()
             .map(|(a, b)| (a, *b))
             .collect();
-        for (_, clause) in self.clauses.iter().filter(|(_, clause)| clause.active) {
+        for (clause_id, (_, clause)) in self
+            .clauses
+            .iter()
+            .filter(|(_, clause)| clause.active)
+            .enumerate()
+        {
             let mut literals = Literals::new();
             for lit in clause.lits.iter() {
                 literals.insert(lit.unsigned_abs(), {
@@ -145,22 +150,27 @@ impl CNF {
                     }
                 });
             }
-            clauses.push(crate::cnf::clause::Clause::new(literals));
+            let clause = crate::cnf::clause::Clause::new(literals);
+            let w1 = variables.get_mut(clause.watched1.unsigned_abs());
+            if clause.watched1.is_positive() {
+                w1.positive_watched_occurrences.push(clause_id);
+            } else {
+                w1.negative_watched_occurrences.push(clause_id);
+            }
+            if clause.watched1 != clause.watched2 {
+                let w2 = variables.get_mut(clause.watched2.unsigned_abs());
+                if clause.watched2.is_positive() {
+                    w2.positive_watched_occurrences.push(clause_id);
+                } else {
+                    w2.negative_watched_occurrences.push(clause_id);
+                }
+            }
+            clauses.push(clause);
         }
         for (var_id, var) in self.vars.iter() {
-            // INFO: assumes that keys of the vars are sequential without gaps,
-            // e.g. no vars are deleted
             let variable = variables.get_mut(*var_id);
-            var.pos_occ.iter().for_each(|&clause_id| {
-                variable
-                    .positive_occurrences
-                    .push(*mapping.iter().find(|(_, id)| **id == clause_id).unwrap().0);
-            });
-            var.neg_occ.iter().for_each(|&clause_id| {
-                variable
-                    .negative_occurrences
-                    .push(*mapping.iter().find(|(_, id)| **id == clause_id).unwrap().0);
-            });
+            variable.positive_occurrences_count = var.pos_occ.len();
+            variable.negative_occurrences_count = var.neg_occ.len();
         }
         CnfFormula::new(clauses, variables)
     }

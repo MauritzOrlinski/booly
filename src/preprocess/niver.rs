@@ -113,8 +113,8 @@ pub fn recover_assigment_niver_compat(
     cnf_formula: CnfFormula,
 ) -> BTreeMap<u32, bool> {
     let mut assignment: BTreeMap<u32, bool> = BTreeMap::new();
-    for (id, v) in cnf_formula.variables.iter().enumerate() {
-        assignment.insert(id as u32 + 1, v.value.unwrap_or(true));
+    for (id, v) in cnf_formula.assignments.iter().enumerate() {
+        assignment.insert(id as u32 + 1, v.unwrap_or(true));
     }
     recover_assigment_niver(niver_trace, cnf, assignment)
 }
