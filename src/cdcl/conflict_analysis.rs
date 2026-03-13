@@ -82,7 +82,7 @@ mod tests {
     use std::collections::VecDeque;
     use smallvec::smallvec;
     use crate::cdcl::assignment::Assignment;
-    use crate::cdcl::cdcl::{Cdcl};
+    use crate::cdcl::cdcl::{Cdcl, CdclStatus};
     use crate::cdcl::implication_graph::ImplicationGraph;
     use crate::cnf::clause::{Clause, ClauseID};
     use crate::cnf::cnf_formula::CnfFormula;
@@ -128,6 +128,8 @@ mod tests {
             let cdcl = Cdcl {
                 cnf_formula: self.cnf.clone(),
                 implication_graph: self.implication_graph.clone(),
+                status: CdclStatus::Incomplete,
+                unit_queue: Default::default(),
             };
 
             let learned = cdcl.generate_learned_clause(conflict_clause);

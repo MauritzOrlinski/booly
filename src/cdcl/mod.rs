@@ -3,3 +3,4 @@ mod implication_graph;
 pub mod cdcl;
 mod conflict_analysis;
 pub mod heuristics;
+pub mod unit_propagation;
