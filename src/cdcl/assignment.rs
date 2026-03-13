@@ -2,6 +2,7 @@ use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
 use std::ops::Not;
+use crate::cnf::clause::ClauseID;
 
 pub type AssignmentValue = bool;
 
@@ -15,18 +16,12 @@ pub enum AssignmentResult {
 pub struct Assignment {
     pub(crate) variable_id: VariableId,
     pub(crate) value: AssignmentValue,
+    pub(crate) reason: Option<ClauseID>,
 }
 
 impl Assignment {
-    pub fn new(variable_id: VariableId, value: AssignmentValue) -> Self {
-        Assignment { variable_id, value }
-    }
-
-    pub fn inverse(&self) -> Assignment {
-        Assignment {
-            variable_id: self.variable_id,
-            value: self.value.not(),
-        }
+    pub fn new(variable_id: VariableId, value: AssignmentValue, reason: Option<ClauseID>) -> Self {
+        Assignment { variable_id, value, reason }
     }
 }
 
