@@ -5,7 +5,7 @@ use crate::{
 use itertools::{Itertools, iproduct};
 use std::collections::{BTreeMap, VecDeque};
 
-fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i32>>) {
+pub fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i32>>) {
     let mut resolvants: Vec<(u32, u32)> = vec![];
     let var = cnf.vars.get_mut(&var_id).unwrap();
     for (&pos_clause_id, &neg_clause_id) in iproduct!(&var.pos_occ, &var.neg_occ) {
@@ -36,7 +36,7 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i32>>) {
         .chain(var.neg_occ.iter())
         .clone()
         .unique()
-        .map(|clause_id| *clause_id)
+        .cloned()
         .collect();
     // size measure: number of clauses
     if !clause_ids_to_del.is_empty() && resolvants.len() <= clause_ids_to_del.len() {
@@ -49,13 +49,8 @@ fn ver(var_id: u32, cnf: &mut CNF) -> (bool, Vec<Vec<i32>>) {
                     .lits
                     .iter()
                     .chain(neg_clause.lits.iter())
-                    .filter_map(|lit| {
-                        if lit.unsigned_abs() != var_id {
-                            Some(*lit)
-                        } else {
-                            None
-                        }
-                    })
+                    .filter(|lit| lit.unsigned_abs() != var_id)
+                    .cloned()
                     .unique()
                     .collect();
                 cnf.add_clause(Clause::new(lits));
@@ -74,7 +69,7 @@ pub fn niver(cnf: &mut CNF) -> VecDeque<(u32, Vec<Vec<i32>>)> {
     let mut niver_trace: VecDeque<(u32, Vec<Vec<i32>>)> = VecDeque::new();
     while change {
         change = false;
-        let var_ids: Vec<u32> = cnf.vars.keys().map(|var_id| *var_id).collect();
+        let var_ids: Vec<u32> = cnf.vars.keys().cloned().collect();
         for var_id in var_ids {
             if cnf.vars.get(&var_id).unwrap().active {
                 let (change_, niver_trace_) = ver(var_id, cnf);
@@ -115,7 +110,7 @@ pub fn recover_assigment_niver_compat(
 ) -> BTreeMap<u32, bool> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
     for c in cnf_formula.clauses {
-        clauses.push(c.literals.0.iter().map(|lit| *lit).collect());
+        clauses.push(c.literals.0.iter().cloned().collect());
     }
     let mut assignment: BTreeMap<u32, bool> = BTreeMap::new();
     for (id, v) in cnf_formula.variables.iter().enumerate() {
