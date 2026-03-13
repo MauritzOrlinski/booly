@@ -1,6 +1,7 @@
 use crate::cdcl::assignment::Assignment;
+use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
-use crate::cnf::variable::{VariableId, Variables};
+use crate::cnf::variable::{VariableId};
 
 pub type DecisionLevel = usize;
 
@@ -12,7 +13,7 @@ pub type DecisionLevel = usize;
 #[derive(Debug, Clone)]
 pub struct ImplicationGraph {
     trail: Vec<Assignment>,
-    decision_level_start: Vec<DecisionLevel>,
+    decision_level_start: Vec<usize>,
 }
 
 impl ImplicationGraph {
@@ -65,5 +66,24 @@ impl ImplicationGraph {
         let trail_index = self.trail.iter().position(|a| a.variable_id == *variable)?;
         let level = self.decision_level_start.partition_point(|&start_index| start_index <= trail_index);
         Some(level)
+    }
+
+
+    /// Reverts the solver to a previous decision level, undoing all assignments made after that point.
+    ///
+    /// # Arguments
+    /// * `cnf_formula` - The formula for this backjump
+    /// * `desired_decision_level` - The target level to return to. All assignments above this decision level will be removed.
+    ///
+    /// # Panics
+    /// Panics if `desired_decision_level` is higher than current decision level or negative.
+    pub fn backjump(&mut self, cnf_formula: &mut CnfFormula, desired_decision_level: DecisionLevel) {
+        let split_point = self.decision_level_start[desired_decision_level];
+        for assignment in &self.trail[split_point..]{
+            cnf_formula.undo_assignment(assignment);
+        }
+        self.trail.truncate(split_point);
+        self.decision_level_start.truncate(desired_decision_level);
+
     }
 }

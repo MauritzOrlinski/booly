@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Incomplete, Sat};
 use crate::cnf::cnf_formula::CnfFormula;
-use crate::cdcl::implication_graph::ImplicationGraph;
+use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::ClauseID;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -52,5 +52,11 @@ impl Cdcl {
                 }
             },
         }
+    }
+
+    pub fn backjump(&mut self, decision_level: DecisionLevel) {
+        self.status = Incomplete;
+
+
     }
 }

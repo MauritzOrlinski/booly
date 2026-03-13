@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use crate::cdcl::cdcl::Cdcl;
+use crate::cdcl::implication_graph::DecisionLevel;
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
@@ -50,7 +51,7 @@ impl Cdcl {
         Clause::new(learned_clause_literals)
     }
 
-    fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> usize {
+    fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
         if clause.literals.len() < 2 {
             return 0;
         }
