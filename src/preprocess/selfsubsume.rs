@@ -20,22 +20,19 @@ fn selfsubsumes_aux(clause_id_1: u32, clause_id_2: u32, lit: i32, cnf: &CNF) -> 
 }
 
 pub fn selfsubsumes(clause_id: u32, cnf: &mut CNF) -> bool {
-    if let Some(clause) = cnf.clauses.get(&clause_id) {
-        let sub_clause_and_lit = clause.lits.iter().find_map(|&lit| {
-            cnf.clauses.iter().find_map(|(&clause_id_, _)| {
-                if clause_id_ != clause_id && selfsubsumes_aux(clause_id_, clause_id, lit, cnf) {
-                    Some((clause_id, lit))
-                } else {
-                    None
-                }
-            })
-        });
-        if let Some((sub_clause, sub_lit)) = sub_clause_and_lit {
-            cnf.remove_lit(sub_clause, sub_lit);
-            true
-        } else {
-            false
-        }
+    let clause = cnf.clauses.get(&clause_id).unwrap();
+    let sub_clause_and_lit = clause.lits.iter().find_map(|&lit| {
+        cnf.clauses.iter().find_map(|(&clause_id_, _)| {
+            if clause_id_ != clause_id && selfsubsumes_aux(clause_id_, clause_id, lit, cnf) {
+                Some((clause_id, lit))
+            } else {
+                None
+            }
+        })
+    });
+    if let Some((sub_clause, sub_lit)) = sub_clause_and_lit {
+        cnf.remove_lit(sub_clause, sub_lit);
+        true
     } else {
         false
     }
@@ -43,8 +40,10 @@ pub fn selfsubsumes(clause_id: u32, cnf: &mut CNF) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{parser::parse, preprocess::selfsubsume::selfsubsumes};
+    use crate::{
+        parser::parse,
+        preprocess::{cnf::CNF, selfsubsume::selfsubsumes},
+    };
 
     #[test]
     fn test_selfsubsumes() {

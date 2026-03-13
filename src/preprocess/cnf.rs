@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 
 use itertools::Itertools;
 
@@ -10,7 +10,6 @@ use crate::cnf::{
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Var {
-    pub(crate) val: Option<bool>,
     pub(crate) pos_occ: Vec<u32>,
     pub(crate) neg_occ: Vec<u32>,
     pub(crate) active: bool,
@@ -19,7 +18,6 @@ pub struct Var {
 impl Var {
     pub(crate) fn new() -> Var {
         Var {
-            val: None,
             pos_occ: vec![],
             neg_occ: vec![],
             active: true,
@@ -91,7 +89,6 @@ pub fn lit_hash(lit: i32) -> u8 {
 pub struct Clause {
     pub(crate) sat_by: Option<u32>,
     pub(crate) lits: Vec<i32>,
-    pub(crate) act: u8,
     pub(crate) sig: u64,
     pub(crate) active: bool,
 }
@@ -100,7 +97,6 @@ impl Clause {
     pub fn new(lits: Vec<i32>) -> Self {
         Clause {
             sat_by: None,
-            act: lits.len() as u8,
             sig: lits.iter().fold(0, |acc, &lit| acc | (1 << lit_hash(lit))),
             lits,
             active: true,
@@ -127,16 +123,18 @@ impl CNF {
         }
     }
 
-    pub fn to_cnf_formula(self) -> CnfFormula {
+    pub fn to_cnf_formula(&self) -> CnfFormula {
         let mut clauses: Vec<crate::cnf::clause::Clause> = Vec::new();
         let mut variables = Variables::new(self.vars.len());
         let mapping: BTreeMap<usize, u32> = self
             .clauses
-            .keys()
+            .iter()
+            .filter_map(|(clause_id, clause)| if clause.active { Some(clause_id) } else { None })
+            .sorted()
             .enumerate()
             .map(|(a, b)| (a, *b))
             .collect();
-        for (_, clause) in self.clauses.iter() {
+        for (_, clause) in self.clauses.iter().filter(|(_, clause)| clause.active) {
             let mut literals = Literals::new();
             for lit in clause.lits.iter() {
                 literals.insert(lit.unsigned_abs(), {
@@ -233,7 +231,6 @@ impl CNF {
         let var = self.vars.get_mut(&lit.unsigned_abs()).unwrap();
 
         clause.lits.retain(|&lit_| lit_ != lit);
-        clause.act -= 1;
 
         match lit.signum() {
             1 => var.pos_occ.retain(|&clause_id_| clause_id_ != clause_id),
@@ -242,7 +239,82 @@ impl CNF {
         }
     }
 
-    pub fn unit_prop(&mut self) {
-        //TODO:
+    pub fn unit_prop(&mut self) -> Vec<i32> {
+        let mut clause_id_and_lit: VecDeque<(u32, i32)> = self
+            .clauses
+            .iter()
+            .filter_map(|(clause_id, clause)| {
+                if clause.lits.len() == 1 {
+                    Some((*clause_id, clause.lits[0]))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        while let Some((clause_id, lit)) = clause_id_and_lit.pop_front() {
+            let var = self.vars.get(&lit.unsigned_abs()).unwrap().clone();
+            match lit.signum() {
+                1 => {
+                    for &clause_id in var
+                        .neg_occ
+                        .iter()
+                        .filter(|&&clause_id_| clause_id_ != clause_id)
+                    {
+                        self.remove_lit(clause_id, lit);
+                        let clause = self.clauses.get(&clause_id).unwrap();
+                        if clause.lits.len() == 1 {
+                            clause_id_and_lit.push_back((clause_id, clause.lits[0]));
+                        }
+                    }
+                }
+                -1 => {
+                    for &clause_id in var
+                        .pos_occ
+                        .iter()
+                        .filter(|&&clause_id_| clause_id_ != clause_id)
+                    {
+                        self.remove_lit(clause_id, lit);
+                        let clause = self.clauses.get(&clause_id).unwrap();
+                        if clause.lits.len() == 1 {
+                            clause_id_and_lit.push_back((clause_id, clause.lits[0]));
+                        }
+                    }
+                }
+                _ => unreachable!("variable with id = 0 found!"),
+            }
+        }
+        clause_id_and_lit.iter().map(|(_, lit)| *lit).collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::parse;
+    #[test]
+    fn test_cnf_parser_skip_tautologies() {
+        let cnf_pre = parse(
+            "\
+p cnf 2 2
+1 2 0
+-2 2 0
+",
+        )
+        .unwrap();
+        let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+        assert_eq!(cnf.clauses.len(), 1);
+    }
+
+    #[test]
+    fn test_cnf_parser_skip_duplicate_literals() {
+        let cnf_pre = parse(
+            "\
+p cnf 3 1
+1 2 2 0
+",
+        )
+        .unwrap();
+        let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+        assert_eq!(cnf.clauses[&1].lits, vec![1, 2]);
     }
 }
