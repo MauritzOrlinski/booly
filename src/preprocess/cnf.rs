@@ -83,7 +83,7 @@ impl Var {
 }
 
 //TODO: perhaps implement better hash
-fn lit_hash(lit: i32) -> u8 {
+pub fn lit_hash(lit: i32) -> u8 {
     lit as u8 & 0b111111
 }
 
@@ -93,6 +93,7 @@ pub struct Clause {
     pub(crate) lits: Vec<i32>,
     pub(crate) act: u8,
     pub(crate) sig: u64,
+    pub(crate) active: bool,
 }
 
 impl Clause {
@@ -102,6 +103,7 @@ impl Clause {
             act: lits.len() as u8,
             sig: lits.iter().fold(0, |acc, &lit| acc | (1 << lit_hash(lit))),
             lits,
+            active: true,
         }
     }
 }
@@ -211,16 +213,36 @@ impl CNF {
         self.max_clause_id += 1;
     }
 
-    pub fn remove_clause(&mut self, clause_id: u32) -> Option<Clause> {
-        match self.clauses.get(&clause_id) {
-            Some(clause) => clause.lits.iter().for_each(|lit| {
-                self.vars
-                    .get_mut(&lit.unsigned_abs())
-                    .unwrap()
-                    .remove_clause(clause_id);
-            }),
+    pub fn deactivate_clause(&mut self, clause_id: u32) {
+        match self.clauses.get_mut(&clause_id) {
+            Some(clause) => {
+                clause.lits.iter().for_each(|lit| {
+                    self.vars
+                        .get_mut(&lit.unsigned_abs())
+                        .unwrap()
+                        .remove_clause(clause_id);
+                });
+                clause.active = false;
+            }
             None => {}
         }
-        self.clauses.remove(&clause_id)
+    }
+
+    pub fn remove_lit(&mut self, clause_id: u32, lit: i32) {
+        let clause = self.clauses.get_mut(&clause_id).unwrap();
+        let var = self.vars.get_mut(&lit.unsigned_abs()).unwrap();
+
+        clause.lits.retain(|&lit_| lit_ != lit);
+        clause.act -= 1;
+
+        match lit.signum() {
+            1 => var.pos_occ.retain(|&clause_id_| clause_id_ != clause_id),
+            -1 => var.neg_occ.retain(|&clause_id_| clause_id_ != clause_id),
+            _ => unreachable!("variable with id = 0 found!"),
+        }
+    }
+
+    pub fn unit_prop(&mut self) {
+        //TODO:
     }
 }
