@@ -50,7 +50,7 @@ pub fn to_lit((value, pol): &(VariableId, Polarity)) -> Literal {
 /// Represents a set of literals. We do not expect very large Clauses, therefore a vec should beat
 /// a HashMap.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Literals(SmallVec<[Literal; 6]>);
+pub struct Literals(pub SmallVec<[Literal; 6]>);
 
 impl Literals {
     pub fn new() -> Literals {
