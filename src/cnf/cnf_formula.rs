@@ -1,8 +1,8 @@
-use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{to_lit, Literals};
-use crate::cnf::variable::Variables;
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
+use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::literals::{Literals, to_lit};
+use crate::cnf::variable::Variables;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
@@ -13,6 +13,7 @@ pub struct CnfFormula {
     pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
+    pub(crate) variable_count: usize,
     /// we store the variable assignments now in this assignments vector, as it makes the values
     /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
@@ -20,14 +21,14 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
-
-        let clauses_tree: BTreeMap<ClauseID, Clause>  = clauses.into_iter().enumerate().collect();
+        let clauses_tree: BTreeMap<ClauseID, Clause> = clauses.into_iter().enumerate().collect();
 
         CnfFormula {
             clauses: clauses_tree,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
-            variables,
+            variable_count: variables.len(),
+            variables: variables,
         }
     }
 
@@ -195,13 +196,13 @@ impl CnfFormula {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: true,
-                        reason: None
+                        reason: None,
                     })
                 } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: false,
-                        reason: None
+                        reason: None,
                     })
                 } else {
                     None

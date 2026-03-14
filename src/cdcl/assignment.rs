@@ -1,8 +1,7 @@
+use crate::cnf::clause::ClauseID;
 use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
-use std::ops::Not;
-use crate::cnf::clause::ClauseID;
 
 pub type AssignmentValue = bool;
 
@@ -21,7 +20,11 @@ pub struct Assignment {
 
 impl Assignment {
     pub fn new(variable_id: VariableId, value: AssignmentValue, reason: Option<ClauseID>) -> Self {
-        Assignment { variable_id, value, reason }
+        Assignment {
+            variable_id,
+            value,
+            reason,
+        }
     }
 }
 

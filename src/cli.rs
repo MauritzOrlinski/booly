@@ -1,5 +1,3 @@
-use crate::cdcl::heuristics::Heuristic;
-use crate::cdcl::heuristics::trivial::Trivial;
 use clap::ValueHint;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
@@ -23,13 +21,6 @@ pub struct CliArguments {
 }
 
 impl CliArguments {
-    pub fn get_heuristic(&self) -> Box<dyn Heuristic> {
-        Box::new(Trivial)
-    }
-    pub fn load_heuristic(&self) -> Box<dyn Heuristic> {
-        self.get_heuristic()
-    }
-
     pub fn get_input_file(&self) -> PathBuf {
         self.input_file.clone()
     }

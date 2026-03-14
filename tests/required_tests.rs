@@ -1,13 +1,11 @@
-use dpml::cdcl::heuristics::trivial::Trivial;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;
-use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = Trivial;
-    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf);
 
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Sat);
@@ -17,8 +15,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = Trivial;
-    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf);
 
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Unsat);

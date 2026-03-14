@@ -1,14 +1,13 @@
 use criterion::measurement::WallTime;
 use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkGroup, BenchmarkId, Criterion,
+    BenchmarkGroup, BenchmarkId, Criterion, black_box, criterion_group, criterion_main,
 };
+use dpml::cdcl::cdcl::Cdcl;
 use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::parser::parse_cnf;
 use std::path::Path;
 use std::time::Duration;
 use std::{fs, io};
-use dpml::cdcl::cdcl::Cdcl;
-use dpml::cdcl::heuristics::trivial::Trivial;
 
 fn benchmark(c: &mut Criterion<WallTime>) -> io::Result<()> {
     benchmark_all_in_directory("inputs/test/sat", c.benchmark_group("satisfiable"))?;
@@ -36,8 +35,7 @@ fn benchmark_all_in_directory<P: AsRef<Path>>(
 }
 
 fn run_dpll(cnf: CnfFormula) {
-    let heuristic = Trivial;
-    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf);
     dpll.solve();
 }
 

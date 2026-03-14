@@ -1,10 +1,10 @@
 use clap::Parser;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::cli::CliArguments;
-use dpml::cnf::cnf_formula::{AssignedVarsView, CnfFormula};
+use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::parser::parse_cnf;
 use std::fs;
 use std::time::Instant;
-use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -28,9 +28,7 @@ fn main() {
         }
     };
 
-    let heuristic = cli.load_heuristic();
-
-    let mut dpll = Cdcl::new(cnf_formula, heuristic);
+    let mut dpll = Cdcl::new(cnf_formula);
 
     let start = Instant::now();
     let result = dpll.solve();

@@ -1,4 +1,4 @@
-use crate::cnf::literals::{to_lit, Literal, Literals, Polarity};
+use crate::cnf::literals::{Literal, Literals, to_lit};
 use crate::cnf::variable::{VariableId, Variables};
 use std::fmt;
 use std::fmt::Formatter;

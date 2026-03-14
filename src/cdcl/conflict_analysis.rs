@@ -1,14 +1,15 @@
-use itertools::Itertools;
 use crate::cdcl::cdcl::Cdcl;
 use crate::cdcl::implication_graph::DecisionLevel;
-use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::clause::Clause;
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
+use itertools::Itertools;
 
 impl Cdcl {
     pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Literals {
         let mut learned_clause_literals = conflict_clause.literals.clone();
-        let variables_from_current_decision_level = self.implication_graph
+        let variables_from_current_decision_level = self
+            .implication_graph
             .get_assignments_of_current_decision_level()
             .iter()
             .map(|assignment| assignment.variable_id)
@@ -17,33 +18,42 @@ impl Cdcl {
         loop {
             let variables_from_current_decision_level_in_learned_clause = learned_clause_literals
                 .iter()
-                .filter(|(learned_variable, _)| variables_from_current_decision_level.contains(learned_variable))
+                .filter(|(learned_variable, _)| {
+                    variables_from_current_decision_level.contains(learned_variable)
+                })
                 .count();
 
             match variables_from_current_decision_level_in_learned_clause {
                 n if n == 1 => break,
                 n if n > 1 => (),
-                _ => panic!("At least one variable in learned clause should have been assigned in current decision level."),
+                _ => panic!(
+                    "At least one variable in learned clause should have been assigned in current decision level."
+                ),
             }
 
-            let most_recent_assignment = self.implication_graph
+            let most_recent_assignment = self
+                .implication_graph
                 .get_latest_assignment_for_given_literals(&learned_clause_literals)
                 .expect(
                     // Must be present, because otherwise there would be no conflict
-                    &format!("Could not find latest assignment for conflict clause: {}", conflict_clause)
+                    &format!(
+                        "Could not find latest assignment for conflict clause: {}",
+                        conflict_clause
+                    ),
                 );
-            let antecedent_clause_id = most_recent_assignment
-                .reason
-                .expect(
-                    // Must be present, because otherwise there would be no conflict
-                    &format!("Could not find antecedent clause for assignment: {}", most_recent_assignment)
-                );
+            let antecedent_clause_id = most_recent_assignment.reason.expect(
+                // Must be present, because otherwise there would be no conflict
+                &format!(
+                    "Could not find antecedent clause for assignment: {}",
+                    most_recent_assignment
+                ),
+            );
             let antecedent_clause = &self.cnf_formula.clauses.get(&antecedent_clause_id).unwrap();
 
             let resolution = Self::resolve(
                 &learned_clause_literals,
                 &antecedent_clause.literals,
-                most_recent_assignment.variable_id
+                most_recent_assignment.variable_id,
             );
 
             learned_clause_literals = resolution;
@@ -56,9 +66,11 @@ impl Cdcl {
             return 0;
         }
 
-        let decision_levels = clause.iter()
+        let decision_levels = clause
+            .iter()
             .map(|(variable, _)| {
-                self.implication_graph.get_decision_level(&variable)
+                self.implication_graph
+                    .get_decision_level(&variable)
                     .expect("Variables in learned clause must have a decision level.")
             })
             .sorted()
@@ -67,7 +79,7 @@ impl Cdcl {
         decision_levels[decision_levels.len() - 2]
     }
 
-    fn resolve(clause_a: &Literals, clause_b: &Literals, pivot: VariableId) -> (Literals) {
+    fn resolve(clause_a: &Literals, clause_b: &Literals, pivot: VariableId) -> Literals {
         let mut literals_a = clause_a.clone();
         literals_a.remove(pivot);
         let mut literals_b = clause_b.clone();
@@ -76,21 +88,18 @@ impl Cdcl {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
-    use smallvec::smallvec;
     use crate::cdcl::assignment::Assignment;
     use crate::cdcl::cdcl::{Cdcl, CdclStatus};
-    use crate::cdcl::heuristics::trivial::Trivial;
     use crate::cdcl::implication_graph::ImplicationGraph;
-    use crate::cnf::clause::{Clause, ClauseID};
+    use crate::cnf::clause::ClauseID;
     use crate::cnf::cnf_formula::CnfFormula;
     use crate::cnf::literals::Literals;
     use crate::cnf::variable::VariableId;
     use crate::parser::parse_cnf;
-
+    use smallvec::smallvec;
+    use std::collections::VecDeque;
 
     struct ConflictAnalysisTest {
         cnf: CnfFormula,
@@ -98,7 +107,6 @@ mod tests {
     }
 
     impl ConflictAnalysisTest {
-
         fn new(cnf_string: &str) -> Self {
             let cnf = parse_cnf(cnf_string).unwrap();
             let implication_graph = ImplicationGraph::new();
@@ -115,7 +123,12 @@ mod tests {
             self
         }
 
-        fn propagate(&mut self, variable_id: VariableId, value: bool, reason: ClauseID) -> &mut Self {
+        fn propagate(
+            &mut self,
+            variable_id: VariableId,
+            value: bool,
+            reason: ClauseID,
+        ) -> &mut Self {
             let assignment = Assignment::new(variable_id, value, Some(reason));
             self.cnf.apply_assignment(&assignment, &mut VecDeque::new());
             self.implication_graph.push_forced(assignment);
@@ -123,7 +136,6 @@ mod tests {
         }
 
         fn execute(&self, conflict_clause_id: ClauseID) -> Literals {
-
             let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
 
             let cdcl = Cdcl {
@@ -131,28 +143,25 @@ mod tests {
                 implication_graph: self.implication_graph.clone(),
                 status: CdclStatus::Incomplete,
                 unit_queue: Default::default(),
-                heuristic: Box::new(Trivial),
+                lit_prio: Default::default(),
+                lit_counter: Default::default(),
             };
 
             let learned = cdcl.generate_learned_clause(conflict_clause);
             learned
         }
-
     }
 
     #[test]
     fn test_single_resolution() {
-
-        let cnf ="\
+        let cnf = "\
 p cnf 3 2
 1 2 3 0
 1 2 -3 0";
 
         let mut test = ConflictAnalysisTest::new(cnf);
 
-        test.decide(1, false)
-            .decide(2, false)
-            .propagate(3, true, 0);
+        test.decide(1, false).decide(2, false).propagate(3, true, 0);
 
         let result = test.execute(1);
         assert_eq!(result, Literals(smallvec![1, 2]));
@@ -160,8 +169,7 @@ p cnf 3 2
 
     #[test]
     fn test_deep_multiple_resolutions() {
-
-        let cnf ="\
+        let cnf = "\
 p cnf 5 4
 1 2 3 0
 -3 4 0
