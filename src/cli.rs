@@ -1,16 +1,6 @@
+use clap::Parser;
 use clap::ValueHint;
-use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
-
-#[derive(ValueEnum, Debug, Clone, Copy)]
-enum SimpleHeuristicCliArgument {
-    Trivial,
-}
-
-#[derive(ValueEnum, Debug, Clone, Copy)]
-enum CompositeHeuristicCliArgument {
-    Trivial,
-}
 
 #[derive(Parser, Debug)]
 #[command(name = "dpml", version)]
