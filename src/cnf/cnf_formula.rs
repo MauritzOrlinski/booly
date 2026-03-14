@@ -1,5 +1,5 @@
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::to_lit;
+use crate::cnf::literals::{to_lit, Literals};
 use crate::cnf::variable::Variables;
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
@@ -209,8 +209,15 @@ impl CnfFormula {
             })
             .collect()
     }
+    
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
+    }
+    
+    pub fn add_clause(&mut self, literals: Literals) {
+        let id = self.clauses.len();
+        let clause = Clause::new(literals, &mut self.variables, id);
+        self.clauses.insert(id, clause);
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);

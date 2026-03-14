@@ -6,7 +6,7 @@ use crate::cnf::literals::Literals;
 use crate::cnf::variable::VariableId;
 
 impl Cdcl {
-    pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Clause {
+    pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Literals {
         let mut learned_clause_literals = conflict_clause.literals.clone();
         let variables_from_current_decision_level = self.implication_graph
             .get_assignments_of_current_decision_level()
@@ -48,16 +48,15 @@ impl Cdcl {
 
             learned_clause_literals = resolution;
         }
-        Clause::new(learned_clause_literals)
+        learned_clause_literals
     }
 
-    pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
-        if clause.literals.len() < 2 {
+    pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Literals) -> DecisionLevel {
+        if clause.len() < 2 {
             return 0;
         }
 
-        let decision_levels = clause.literals
-            .iter()
+        let decision_levels = clause.iter()
             .map(|(variable, _)| {
                 self.implication_graph.get_decision_level(&variable)
                     .expect("Variables in learned clause must have a decision level.")
@@ -65,7 +64,7 @@ impl Cdcl {
             .sorted()
             .collect::<Vec<_>>();
 
-        return decision_levels[decision_levels.len() - 2];
+        decision_levels[decision_levels.len() - 2]
     }
 
     fn resolve(clause_a: &Literals, clause_b: &Literals, pivot: VariableId) -> (Literals) {
@@ -122,7 +121,7 @@ mod tests {
             self
         }
 
-        fn execute(&self, conflict_clause_id: ClauseID) -> Clause {
+        fn execute(&self, conflict_clause_id: ClauseID) -> Literals {
 
             let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
 
@@ -154,7 +153,7 @@ p cnf 3 2
             .propagate(3, true, 0);
 
         let result = test.execute(1);
-        assert_eq!(result.literals, Literals(smallvec![1, 2]));
+        assert_eq!(result, Literals(smallvec![1, 2]));
     }
 
     #[test]
