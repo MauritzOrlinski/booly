@@ -120,32 +120,36 @@ impl CnfFormula {
         }
 
         for (lit, clause_id, old_lit) in newly_watched {
-            let id = lit.unsigned_abs();
-            if lit.is_positive() {
-                self.variables
-                    .get_mut(id)
-                    .positive_watched_occurrences
-                    .push(clause_id);
-            } else {
-                self.variables
-                    .get_mut(id)
-                    .negative_watched_occurrences
-                    .push(clause_id);
-            }
-
-            let assignee = self.variables.get_mut(old_lit.unsigned_abs());
-            if old_lit.is_positive() {
-                let occurrences = &mut assignee.positive_watched_occurrences;
-                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-                occurrences.swap_remove(pos);
-            } else {
-                let occurrences = &mut assignee.negative_watched_occurrences;
-                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-                occurrences.swap_remove(pos);
-            }
+            self.update_watchlists(lit, clause_id, old_lit);
         }
 
         if is_conflict { Conflict } else { Success }
+    }
+
+    fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
+        let id = lit.unsigned_abs();
+        if lit.is_positive() {
+            self.variables
+                .get_mut(id)
+                .positive_watched_occurrences
+                .push(clause_id);
+        } else {
+            self.variables
+                .get_mut(id)
+                .negative_watched_occurrences
+                .push(clause_id);
+        }
+
+        let assignee = self.variables.get_mut(old_lit.unsigned_abs());
+        if old_lit.is_positive() {
+            let occurrences = &mut assignee.positive_watched_occurrences;
+            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+            occurrences.swap_remove(pos);
+        } else {
+            let occurrences = &mut assignee.negative_watched_occurrences;
+            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+            occurrences.swap_remove(pos);
+        }
     }
 
     /// Undos an assignment.

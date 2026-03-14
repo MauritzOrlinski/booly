@@ -154,21 +154,7 @@ impl CNF {
                     }
                 });
             }
-            let clause = crate::cnf::clause::Clause::new(literals);
-            let w1 = variables.get_mut(clause.watched1.unsigned_abs());
-            if clause.watched1.is_positive() {
-                w1.positive_watched_occurrences.push(clause_id);
-            } else {
-                w1.negative_watched_occurrences.push(clause_id);
-            }
-            if clause.watched1 != clause.watched2 {
-                let w2 = variables.get_mut(clause.watched2.unsigned_abs());
-                if clause.watched2.is_positive() {
-                    w2.positive_watched_occurrences.push(clause_id);
-                } else {
-                    w2.negative_watched_occurrences.push(clause_id);
-                }
-            }
+            let clause = crate::cnf::clause::Clause::new(literals, &mut variables, clause_id);
             clauses.push(clause);
         }
         CnfFormula::new(clauses, variables)
