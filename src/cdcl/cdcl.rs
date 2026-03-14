@@ -25,14 +25,15 @@ pub struct Cdcl {
 
 impl Cdcl {
     pub fn new(
-        cnf_formula: CnfFormula
+        cnf_formula: CnfFormula,
+        heuristic: Box<dyn Heuristic>,
     ) -> Cdcl {
         Cdcl {
             cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
             unit_queue: VecDeque::new(),
-            heuristic: Box::new(Trivial),
+            heuristic,
         }
     }
 
@@ -54,7 +55,8 @@ impl Cdcl {
                     let learned_clause = self.generate_learned_clause(&conflict_clause);
                     let backjump_decision_level = self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
-                    self.cnf_formula.add_clause(learned_clause);
+                    let learned_clause_id =self.cnf_formula.add_clause(learned_clause);
+                    self.unit_queue.push_back(learned_clause_id);
                 },
                 Incomplete => {
                     if self.cnf_formula.all_assigned() {

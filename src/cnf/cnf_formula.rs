@@ -209,15 +209,16 @@ impl CnfFormula {
             })
             .collect()
     }
-    
+
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
     }
-    
-    pub fn add_clause(&mut self, literals: Literals) {
+
+    pub fn add_clause(&mut self, literals: Literals) -> ClauseID {
         let id = self.clauses.len();
         let clause = Clause::new(literals, &mut self.variables, id);
         self.clauses.insert(id, clause);
+        id
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);

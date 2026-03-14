@@ -1,17 +1,16 @@
-use dpml::dpll::dpll::Dpll;
-use dpml::dpll::dpll::DpllStatus;
 use dpml::cdcl::heuristics::trivial::Trivial;
 use dpml::parser::parse_cnf;
 use dpml::verify::verify_satisfied;
 use std::path::Path;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = Trivial;
-    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
-    assert_eq!(result, DpllStatus::Sat);
+    assert_eq!(result, CdclStatus::Sat);
     assert!(verify_satisfied(&dpll.cnf_formula));
     Ok(())
 }
@@ -19,10 +18,10 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = Trivial;
-    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
-    assert_eq!(result, DpllStatus::Unsat);
+    assert_eq!(result, CdclStatus::Unsat);
     Ok(())
 }
 
