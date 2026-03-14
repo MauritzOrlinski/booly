@@ -213,11 +213,10 @@ impl CnfFormula {
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
     }
-
-    pub fn add_clause(&mut self, literals: Literals) -> ClauseID {
-        let id = self.clauses.len();
-        let clause = Clause::new(literals, &mut self.variables, id);
-        self.clauses.insert(id, clause);
+    
+    pub fn get_next_clause_id(&self) -> ClauseID {
+        let id = self.clauses.len() as ClauseID;
+        assert!(!self.clauses.contains_key(&id));
         id
     }
 }

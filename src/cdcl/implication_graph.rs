@@ -1,4 +1,7 @@
+use std::fmt;
+use std::fmt::Formatter;
 use crate::cdcl::assignment::Assignment;
+use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::{VariableId};
@@ -92,5 +95,23 @@ impl ImplicationGraph {
         self.trail.truncate(split_point);
         self.decision_level_start.truncate(desired_decision_level);
 
+    }
+}
+
+impl fmt::Display for ImplicationGraph {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.trail.iter()
+                .map(|assignment| {
+                    match assignment.reason {
+                        None => format!(" D:{}", assignment),
+                        Some(_) => format!("→{}", assignment),
+                    }
+
+                })
+                .collect::<Vec<String>>().join("")
+        )
     }
 }

@@ -2,26 +2,37 @@ use itertools::Itertools;
 use crate::cdcl::cdcl::Cdcl;
 use crate::cdcl::implication_graph::DecisionLevel;
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::Literals;
+use crate::cnf::literals::{to_lit, Literal, Literals};
 use crate::cnf::variable::VariableId;
 
 impl Cdcl {
-    pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Literals {
-        let mut learned_clause_literals = conflict_clause.literals.clone();
+    pub(crate) fn generate_learned_clause(&self, conflict_clause: &Clause) -> Clause {
+        let mut learned_clause_literals: Literals = conflict_clause.literals.clone();
         let variables_from_current_decision_level = self.implication_graph
             .get_assignments_of_current_decision_level()
             .iter()
             .map(|assignment| assignment.variable_id)
             .collect::<Vec<_>>();
 
-        loop {
-            let variables_from_current_decision_level_in_learned_clause = learned_clause_literals
-                .iter()
-                .filter(|(learned_variable, _)| variables_from_current_decision_level.contains(learned_variable))
-                .count();
+        let first_uip: Literal;
 
-            match variables_from_current_decision_level_in_learned_clause {
-                n if n == 1 => break,
+        loop {
+            let variables_from_current_decision_level_in_learned_clause: Vec<Literal> = learned_clause_literals
+                .iter()
+                .filter_map(|(learned_variable, polarity)| {
+                    if variables_from_current_decision_level.contains(&learned_variable) {
+                        Some(to_lit(&(learned_variable, polarity)))
+                    } else { 
+                        None
+                    }
+                })
+                .collect();
+
+            match variables_from_current_decision_level_in_learned_clause.len() {
+                n if n == 1 => {
+                    first_uip = variables_from_current_decision_level_in_learned_clause[0];
+                    break
+                },
                 n if n > 1 => (),
                 _ => panic!("At least one variable in learned clause should have been assigned in current decision level."),
             }
@@ -48,16 +59,28 @@ impl Cdcl {
 
             learned_clause_literals = resolution;
         }
-        learned_clause_literals
+
+        Clause {
+            satisfied_by: None,
+            literals: learned_clause_literals,
+            watched1: first_uip,
+            watched2: first_uip,
+        }
     }
 
-    pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Literals) -> DecisionLevel {
-        if clause.len() < 2 {
+    pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
+        if clause.literals.len() < 2 {
             return 0;
         }
 
-        let decision_levels = clause.iter()
+        println!("Implication trail: {}", self.implication_graph);
+        println!("Clause: {}", clause);
+
+        let decision_levels = clause.literals.iter()
             .map(|(variable, _)| {
+
+
+
                 self.implication_graph.get_decision_level(&variable)
                     .expect("Variables in learned clause must have a decision level.")
             })
@@ -122,7 +145,7 @@ mod tests {
             self
         }
 
-        fn execute(&self, conflict_clause_id: ClauseID) -> Literals {
+        fn execute(&self, conflict_clause_id: ClauseID) -> Clause {
 
             let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
 
@@ -155,7 +178,7 @@ p cnf 3 2
             .propagate(3, true, 0);
 
         let result = test.execute(1);
-        assert_eq!(result, Literals(smallvec![1, 2]));
+        assert_eq!(result.literals, Literals(smallvec![1, 2]));
     }
 
     #[test]
