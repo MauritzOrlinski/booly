@@ -1,6 +1,6 @@
-use crate::preprocess::cnf::CNF;
+use crate::preprocess::cnf::{clause::ClauseID, cnf::CNF};
 
-fn subsumes(clause_id_1: u32, clause_id_2: u32, cnf: &CNF) -> bool {
+fn subsumes(clause_id_1: ClauseID, clause_id_2: ClauseID, cnf: &CNF) -> bool {
     let clause_1 = cnf.clauses.get(&clause_id_1).unwrap();
     let clause_2 = cnf.clauses.get(&clause_id_2).unwrap();
     if clause_1.sig & !clause_2.sig != 0 {
@@ -10,17 +10,23 @@ fn subsumes(clause_id_1: u32, clause_id_2: u32, cnf: &CNF) -> bool {
     }
 }
 
-pub fn subsumed(clause_id: u32, cnf: &CNF) -> bool {
-    cnf.clauses
+pub fn subsumed(clause_id: ClauseID, cnf: &CNF) -> bool {
+    let clause = cnf.clauses.get(&clause_id).unwrap();
+    let clause_ids = if clause.lits[0].pos() {
+        &cnf.vars.get(&clause.lits[0].var_id()).unwrap().pos_occ
+    } else {
+        &cnf.vars.get(&clause.lits[0].var_id()).unwrap().neg_occ
+    };
+    clause_ids
         .iter()
-        .any(|(&clause_id_, _)| clause_id_ != clause_id && subsumes(clause_id, clause_id_, cnf))
+        .any(|&clause_id_| clause_id_ != clause_id && subsumes(clause_id, clause_id_, cnf))
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
         parser::parse,
-        preprocess::{cnf::CNF, subsume::subsumed},
+        preprocess::{cnf::cnf::CNF, subsume::subsumed},
     };
 
     #[test]

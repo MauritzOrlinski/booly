@@ -1,8 +1,11 @@
 use std::collections::{BTreeMap, VecDeque};
 
-use itertools::Itertools;
-
-use crate::preprocess::{cnf::CNF, niver::niver, selfsubsume::selfsubsumes, subsume::subsumed};
+use crate::preprocess::{
+    cnf::{clause::ClauseID, cnf::CNF, var::VarId},
+    niver::niver,
+    selfsubsume::selfsubsumes,
+    subsume::subsumed,
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Reason {
@@ -37,20 +40,20 @@ impl RoundTrace {
     }
 }
 
-pub fn preprocess(cnf: &mut CNF) -> VecDeque<(u32, Vec<u32>)> {
-    let mut round_traces: BTreeMap<u32, RoundTrace> = cnf
+pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
+    let mut round_traces: BTreeMap<ClauseID, RoundTrace> = cnf
         .clauses
         .keys()
         .map(|&clause_id| (clause_id, RoundTrace::new(Reason::Add, Round::Prev)))
         .collect();
-    let mut niver_trace: VecDeque<(u32, Vec<u32>)> = VecDeque::new();
-    let mut niver_vars: VecDeque<u32> = VecDeque::new();
+    let mut niver_trace: Vec<(VarId, Vec<ClauseID>)> = Vec::new();
+    let mut niver_vars: VecDeque<VarId> = VecDeque::new();
     let mut change: u8 = 0b11;
 
     while change == 0b11 {
         change = 0;
 
-        let mut clauses: VecDeque<u32> = round_traces
+        let mut clauses: VecDeque<ClauseID> = round_traces
             .iter()
             .filter_map(|(clause_id, round_trace)| {
                 if round_trace.recently() {
@@ -69,13 +72,7 @@ pub fn preprocess(cnf: &mut CNF) -> VecDeque<(u32, Vec<u32>)> {
                 let round_trace = round_traces.get_mut(&clause_id).unwrap();
                 round_trace.reason = Reason::Stren;
                 round_trace.round = Round::Curr;
-                niver_vars.append(
-                    &mut cnf
-                        .unit_prop()
-                        .iter()
-                        .map(|lit| lit.unsigned_abs())
-                        .collect(),
-                );
+                niver_vars.append(&mut cnf.unit_prop().iter().map(|lit| lit.var_id()).collect());
             }
         }
 
@@ -99,7 +96,7 @@ pub fn preprocess(cnf: &mut CNF) -> VecDeque<(u32, Vec<u32>)> {
                         .unwrap()
                         .lits
                         .iter()
-                        .map(|&lit| lit.unsigned_abs())
+                        .map(|&lit| lit.var_id())
                         .collect(),
                 );
             }
@@ -115,7 +112,7 @@ pub fn preprocess(cnf: &mut CNF) -> VecDeque<(u32, Vec<u32>)> {
                 for clause_id in niver_trace_.iter() {
                     round_traces.insert(*clause_id, RoundTrace::new(Reason::Add, Round::Curr));
                 }
-                niver_trace.push_back((var_id, niver_trace_));
+                niver_trace.push((var_id, niver_trace_));
                 niver_vars.push_back(var_id);
                 change |= 0b01;
             }
@@ -145,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_preprocess_sat() {
-        let cnf_pre = parse(include_str!("../../inputs/sat/aim-200-2_0-yes1-2.cnf")).unwrap();
+        let cnf_pre = parse(include_str!("../../inputs/sat/aim-200-3_4-yes1-1.cnf")).unwrap();
 
         let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
         let niver_trace = preprocess(&mut cnf);
@@ -160,10 +157,10 @@ mod tests {
         let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
         assert!(cnf.clauses.iter().all(|(_, clause)| {
             clause.lits.iter().any(|lit| {
-                if lit.signum() == 1 {
-                    *assignment.get(&lit.unsigned_abs()).unwrap()
+                if lit.pos() {
+                    *assignment.get(&lit.var_id()).unwrap()
                 } else {
-                    !*assignment.get(&lit.unsigned_abs()).unwrap()
+                    !*assignment.get(&lit.var_id()).unwrap()
                 }
             })
         }))

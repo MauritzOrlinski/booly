@@ -13,7 +13,7 @@ name = "plot"
 path = "src/bin/plot.rs"
 
 [profile.release]
-debug = true 
+debug = true
 codegen-units = 1
 lto = "fat"
 
@@ -36,10 +36,10 @@ smallvec = "1.15.1"
 datatest-stable = "0.3"
 criterion = "0.5"
 
-# [[test]]
-# name = "required_tests"
-# harness = false
-#
+[[test]]
+name = "required_tests"
+harness = false
+
 # [[test]]
 # name = "all_provided_inputs"
 # harness = false
