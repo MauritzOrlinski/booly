@@ -23,7 +23,7 @@ pub type Clauses = BTreeMap<ClauseID, Clause>;
 pub struct CNF {
     pub clauses: Clauses,
     pub vars: Vars,
-    pub units: VecDeque<VarId>,
+    pub units: VecDeque<(ClauseID, Lit)>,
     max_clause_id: ClauseID,
 }
 
@@ -32,9 +32,9 @@ impl CNF {
         CNF {
             units: clauses
                 .iter()
-                .filter_map(|(_, clause)| {
+                .filter_map(|(&clause_id, clause)| {
                     if clause.lits.len() == 1 {
-                        Some(clause.lits[0].var_id())
+                        Some((clause_id, clause.lits[0]))
                     } else {
                         None
                     }
@@ -47,9 +47,9 @@ impl CNF {
         }
     }
 
-    pub fn add_unit(&mut self, var_id: VarId) {
-        if !self.units.contains(&var_id) {
-            self.units.push_back(var_id);
+    pub fn add_unit(&mut self, clause_id: ClauseID, lit: Lit) {
+        if self.units.iter().all(|(_, lit_)| *lit_ != lit) {
+            self.units.push_back((clause_id, lit));
         }
     }
 
@@ -63,7 +63,7 @@ impl CNF {
             }
         }
         if clause.lits.len() == 1 {
-            self.add_unit(clause.lits[0].var_id());
+            self.add_unit(self.max_clause_id + 1, clause.lits[0]);
         }
         self.clauses.insert(self.max_clause_id + 1, clause);
         self.max_clause_id += 1;
@@ -96,17 +96,13 @@ impl CNF {
 
         let clause = self.clauses.get(&clause_id).unwrap();
         if clause.lits.len() == 1 {
-            self.add_unit(clause.lits[0].var_id());
+            self.add_unit(clause_id, clause.lits[0]);
         }
     }
 
     pub fn unit_prop(&mut self) -> Vec<ClauseID> {
         let mut deac_clause_ids: Vec<ClauseID> = Vec::new();
-        while let Some(clause_id) = self.units.pop_front() {
-            if !self.clauses.get(&clause_id).unwrap().active {
-                continue;
-            }
-            let lit = self.clauses.get(&clause_id).unwrap().lits[0];
+        while let Some((clause_id, lit)) = self.units.pop_front() {
             let var = self.vars.get(&lit.var_id()).unwrap().clone();
             if lit.pos() {
                 var.neg_occ
@@ -135,7 +131,14 @@ impl CNF {
         deac_clause_ids
     }
 
-    pub fn to_cnf_formula(&self) -> CnfFormula {
+    pub fn to_cnf_formula(&mut self) -> CnfFormula {
+        // reactive units so that the assigment to recovered
+        self.clauses.iter_mut().for_each(|(_, clause)| {
+            if clause.lits.len() == 1 {
+                clause.active = true;
+            }
+        });
+
         let mut clauses: Vec<crate::cnf::clause::Clause> = Vec::new();
         let mut variables = Variables::new(self.vars.len());
         for (clause_id, (_, clause)) in self
@@ -183,7 +186,7 @@ impl CNF {
                     -1 => var.add_neg_occ(clause_id as u32 + 1),
                     _ => unreachable!("variable with id = 0 found!"),
                 }
-                // don't add duplicate literals (fucks with clause deletion)
+                // don't add duplicate literals
                 if !lits.contains(&Lit::new(pre_lit)) {
                     lits.push(Lit::new(pre_lit));
                 }

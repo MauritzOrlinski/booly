@@ -12,6 +12,9 @@ fn subsumes(clause_id_1: ClauseID, clause_id_2: ClauseID, cnf: &CNF) -> bool {
 
 pub fn subsumed(clause_id: ClauseID, cnf: &CNF) -> bool {
     let clause = cnf.clauses.get(&clause_id).unwrap();
+    if clause.lits.len() == 0 {
+        return false;
+    }
     let clause_ids = if clause.lits[0].pos() {
         &cnf.vars.get(&clause.lits[0].var_id()).unwrap().pos_occ
     } else {

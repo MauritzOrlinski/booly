@@ -8,10 +8,7 @@ use crate::{
     },
 };
 use itertools::{Itertools, iproduct};
-use std::collections::{BTreeMap, VecDeque};
-
-//TODO: When niver does pure lits we need to save the assignment,
-//e.g. at the end only -3 -6 0 exists, so we need to set 3 to false AND 6 to false
+use std::collections::BTreeMap;
 
 fn pre_resolvant_tautology(
     clause_id_1: ClauseID,
@@ -99,29 +96,22 @@ pub fn recover_assigment_niver(
         for clause_id in clause_ids {
             cnf.clauses.get_mut(&clause_id).unwrap().active = true;
         }
-        let mut debug = true;
-        for val in vec![true, false] {
-            assignment.insert(var_id, val);
-            if cnf
-                .clauses
-                .iter()
-                .filter(|(_, clause)| clause.active)
-                .all(|(_, clause)| {
-                    clause.lits.iter().any(|lit| {
-                        if lit.pos() {
-                            *assignment.get(&lit.var_id()).unwrap()
-                        } else {
-                            !*assignment.get(&lit.var_id()).unwrap()
-                        }
-                    })
+        assignment.insert(var_id, true);
+        if !cnf
+            .clauses
+            .iter()
+            .filter(|(_, clause)| clause.active)
+            .all(|(_, clause)| {
+                clause.lits.iter().any(|lit| {
+                    if lit.pos() {
+                        *assignment.get(&lit.var_id()).unwrap()
+                    } else {
+                        !*assignment.get(&lit.var_id()).unwrap()
+                    }
                 })
-            {
-                debug = false;
-                break;
-            }
-        }
-        if debug {
-            unreachable!("niver failed to recover assignment");
+            })
+        {
+            assignment.insert(var_id, false);
         }
     }
     assignment

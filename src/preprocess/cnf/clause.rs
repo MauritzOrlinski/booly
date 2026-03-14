@@ -4,7 +4,6 @@ pub type ClauseID = u32;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Clause {
-    //TODO: perhaps store lit with smalles amount of pos_occ (and similary for neg_occ) for subsume
     pub lits: Vec<Lit>,
     pub sig: u64,
     pub active: bool,

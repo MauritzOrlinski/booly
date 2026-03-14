@@ -1,5 +1,7 @@
 use std::collections::{BTreeMap, VecDeque};
 
+use itertools::Itertools;
+
 use crate::preprocess::{
     cnf::{clause::ClauseID, cnf::CNF, var::VarId},
     niver::niver,
@@ -40,6 +42,7 @@ impl RoundTrace {
     }
 }
 
+// SatELite Preprocessor of the lecture slides
 pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
     let mut round_traces: BTreeMap<ClauseID, RoundTrace> = cnf
         .clauses
@@ -50,6 +53,7 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
     let mut niver_vars: VecDeque<VarId> = VecDeque::new();
     let mut change: u8 = 0b11;
 
+    // repeat until either no more (self)-subsumption happens or NiVER changes nothing
     while change == 0b11 {
         change = 0;
 
@@ -65,6 +69,7 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
             .copied()
             .collect();
 
+        // self-subsumption
         while let Some(clause_id) = clauses.pop_front() {
             if selfsubsumes(clause_id, cnf) {
                 change |= 0b10;
@@ -72,12 +77,13 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
                 let round_trace = round_traces.get_mut(&clause_id).unwrap();
                 round_trace.reason = Reason::Stren;
                 round_trace.round = Round::Curr;
-                // cnf.unit_prop().iter().for_each(|&clause_id| {
-                //     round_traces.insert(clause_id, RoundTrace::new(Reason::Del, Round::Curr));
-                // });
+                cnf.unit_prop().iter().for_each(|&clause_id| {
+                    round_traces.insert(clause_id, RoundTrace::new(Reason::Del, Round::Curr));
+                });
             }
         }
 
+        // subsumption
         for (&clause_id, round_trace) in round_traces.iter_mut() {
             if round_trace.reason == Reason::Add
                 && round_trace.round == Round::Prev
@@ -89,6 +95,7 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
             }
         }
 
+        // NiVER
         for (clause_id, round_trace) in round_traces.iter() {
             if round_trace.recently() {
                 niver_vars.append(
@@ -103,7 +110,7 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
                 );
             }
         }
-        //TODO: remove duplicates in niver_vars?
+        niver_vars = niver_vars.iter().unique().copied().collect();
         while let Some(var_id) = niver_vars.pop_front() {
             let var = cnf.vars.get(&var_id).unwrap();
             if std::cmp::min(var.pos_occ.len(), var.neg_occ.len()) > 10 {
@@ -148,6 +155,7 @@ mod tests {
 
         let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
         let niver_trace = preprocess(&mut cnf);
+        println!("{:?}", niver_trace);
 
         let heuristic = Box::new(Trivial);
         let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);

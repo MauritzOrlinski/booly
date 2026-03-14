@@ -20,7 +20,6 @@ impl Lit {
         }
     }
 
-    //TODO: better hash?
     pub fn hash(self) -> u8 {
         self.0 as u8 & 0b111111
     }
