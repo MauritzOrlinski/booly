@@ -6,7 +6,7 @@ use crate::cdcl::heuristics::{Heuristic};
 pub struct Trivial;
 
 impl Heuristic for Trivial {
-    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula, _: i32) -> Assignment {
+    fn chose_next_assignment(&mut self, cnf_formula: &CnfFormula) -> Assignment {
         let unassigned_clause = cnf_formula
             .clauses
             .iter()

@@ -1,6 +1,8 @@
 use std::collections::VecDeque;
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Incomplete, Sat, Unsat, Conflict};
+use crate::cdcl::heuristics::Heuristic;
+use crate::cdcl::heuristics::trivial::Trivial;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
@@ -18,6 +20,7 @@ pub struct Cdcl {
     pub(crate) implication_graph: ImplicationGraph,
     pub(crate) status: CdclStatus,
     pub(crate) unit_queue: VecDeque<ClauseID>,
+    pub(crate) heuristic: Box<dyn Heuristic>,
 }
 
 impl Cdcl {
@@ -29,6 +32,7 @@ impl Cdcl {
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
             unit_queue: VecDeque::new(),
+            heuristic: Box::new(Trivial),
         }
     }
 
@@ -50,8 +54,15 @@ impl Cdcl {
                     let learned_clause = self.generate_learned_clause(&conflict_clause);
                     let backjump_decision_level = self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
+                    self.cnf_formula.add_clause(learned_clause);
                 },
-                Incomplete => {},
+                Incomplete => {
+                    if self.cnf_formula.all_assigned() {
+                        return Sat;
+                    }
+                    let next_assignment= self.heuristic.chose_next_assignment(&self.cnf_formula);
+                    self.decide(next_assignment);
+                },
             }
         }
     }

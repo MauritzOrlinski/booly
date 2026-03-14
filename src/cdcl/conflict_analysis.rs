@@ -83,6 +83,7 @@ mod tests {
     use smallvec::smallvec;
     use crate::cdcl::assignment::Assignment;
     use crate::cdcl::cdcl::{Cdcl, CdclStatus};
+    use crate::cdcl::heuristics::trivial::Trivial;
     use crate::cdcl::implication_graph::ImplicationGraph;
     use crate::cnf::clause::{Clause, ClauseID};
     use crate::cnf::cnf_formula::CnfFormula;
@@ -130,6 +131,7 @@ mod tests {
                 implication_graph: self.implication_graph.clone(),
                 status: CdclStatus::Incomplete,
                 unit_queue: Default::default(),
+                heuristic: Box::new(Trivial),
             };
 
             let learned = cdcl.generate_learned_clause(conflict_clause);

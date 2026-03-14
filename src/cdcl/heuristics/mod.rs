@@ -8,6 +8,5 @@ pub trait Heuristic: Debug {
     fn chose_next_assignment(
         &mut self,
         cnf_formula: &CnfFormula,
-        decision_level: i32,
     ) -> Assignment;
 }
