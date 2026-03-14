@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_niver_does_unit_prop() {
+    fn test_niver_does_pure_literal() {
         let cnf_pre = parse(
             "\
 p cnf 3 2

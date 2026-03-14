@@ -72,7 +72,9 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
                 let round_trace = round_traces.get_mut(&clause_id).unwrap();
                 round_trace.reason = Reason::Stren;
                 round_trace.round = Round::Curr;
-                niver_vars.append(&mut cnf.unit_prop().iter().map(|lit| lit.var_id()).collect());
+                // cnf.unit_prop().iter().for_each(|&clause_id| {
+                //     round_traces.insert(clause_id, RoundTrace::new(Reason::Del, Round::Curr));
+                // });
             }
         }
 

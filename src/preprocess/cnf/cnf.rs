@@ -1,5 +1,7 @@
 use std::collections::{BTreeMap, VecDeque};
 
+use itertools::Itertools;
+
 use crate::{
     cnf::{
         cnf_formula::CnfFormula,
@@ -21,15 +23,33 @@ pub type Clauses = BTreeMap<ClauseID, Clause>;
 pub struct CNF {
     pub clauses: Clauses,
     pub vars: Vars,
+    pub units: VecDeque<VarId>,
     max_clause_id: ClauseID,
 }
 
 impl CNF {
     pub fn new(clauses: Clauses, vars: Vars) -> Self {
         CNF {
+            units: clauses
+                .iter()
+                .filter_map(|(_, clause)| {
+                    if clause.lits.len() == 1 {
+                        Some(clause.lits[0].var_id())
+                    } else {
+                        None
+                    }
+                })
+                .unique()
+                .collect(),
             max_clause_id: *clauses.keys().max().unwrap(),
             clauses: clauses,
             vars: vars,
+        }
+    }
+
+    pub fn add_unit(&mut self, var_id: VarId) {
+        if !self.units.contains(&var_id) {
+            self.units.push_back(var_id);
         }
     }
 
@@ -41,6 +61,9 @@ impl CNF {
             } else {
                 var.add_neg_occ(self.max_clause_id + 1);
             }
+        }
+        if clause.lits.len() == 1 {
+            self.add_unit(clause.lits[0].var_id());
         }
         self.clauses.insert(self.max_clause_id + 1, clause);
         self.max_clause_id += 1;
@@ -70,37 +93,46 @@ impl CNF {
         } else {
             remove_element(&mut var.neg_occ, clause_id);
         }
+
+        let clause = self.clauses.get(&clause_id).unwrap();
+        if clause.lits.len() == 1 {
+            self.add_unit(clause.lits[0].var_id());
+        }
     }
 
-    //TODO: find other units
-    pub fn unit_prop(&mut self) -> Vec<Lit> {
-        let mut clause_id_and_lit: VecDeque<(ClauseID, Lit)> = self
-            .clauses
-            .iter()
-            .filter_map(|(clause_id, clause)| {
-                if clause.lits.len() == 1 {
-                    Some((*clause_id, clause.lits[0]))
-                } else {
-                    None
-                }
-            })
-            .collect();
-        while let Some((clause_id, lit)) = clause_id_and_lit.pop_front() {
+    pub fn unit_prop(&mut self) -> Vec<ClauseID> {
+        let mut deac_clause_ids: Vec<ClauseID> = Vec::new();
+        while let Some(clause_id) = self.units.pop_front() {
+            if !self.clauses.get(&clause_id).unwrap().active {
+                continue;
+            }
+            let lit = self.clauses.get(&clause_id).unwrap().lits[0];
             let var = self.vars.get(&lit.var_id()).unwrap().clone();
-            let occ = if lit.pos() {
-                &var.neg_occ
+            if lit.pos() {
+                var.neg_occ
+                    .iter()
+                    .filter(|&&clause_id_| clause_id_ != clause_id)
+                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.not()));
+                var.pos_occ.iter().for_each(|&clause_id_| {
+                    if clause_id_ != clause_id {
+                        self.deactivate_clause(clause_id_);
+                        deac_clause_ids.push(clause_id_);
+                    }
+                });
             } else {
-                &var.pos_occ
-            };
-            for &clause_id in occ.iter().filter(|&&clause_id_| clause_id_ != clause_id) {
-                self.remove_lit(clause_id, lit);
-                let clause = self.clauses.get(&clause_id).unwrap();
-                if clause.lits.len() == 1 {
-                    clause_id_and_lit.push_back((clause_id, clause.lits[0]));
-                }
+                var.pos_occ
+                    .iter()
+                    .filter(|&&clause_id_| clause_id_ != clause_id)
+                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.not()));
+                var.neg_occ.iter().for_each(|&clause_id_| {
+                    if clause_id_ != clause_id {
+                        self.deactivate_clause(clause_id_);
+                        deac_clause_ids.push(clause_id_);
+                    }
+                });
             }
         }
-        clause_id_and_lit.iter().map(|(_, lit)| *lit).collect()
+        deac_clause_ids
     }
 
     pub fn to_cnf_formula(&self) -> CnfFormula {
@@ -205,5 +237,21 @@ p cnf 3 1
         .unwrap();
         let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
         assert_eq!(cnf.clauses[&1].lits, vec![Lit::new(1), Lit::new(2)]);
+    }
+
+    #[test]
+    fn test_cnf_unit_prop() {
+        let cnf_pre = parse(
+            "\
+p cnf 3 3
+1 0
+-1 2 0
+-2 3 0
+",
+        )
+        .unwrap();
+        let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+        cnf.unit_prop();
+        assert!(cnf.clauses.iter().all(|(_, clause)| clause.lits.len() == 1));
     }
 }

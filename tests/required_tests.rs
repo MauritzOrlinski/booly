@@ -30,8 +30,8 @@ fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     Ok(())
 }
 
-fn test_preprocess_sat() {
-    let cnf_pre = parse(include_str!("../inputs/sat/aim-200-3_4-yes1-1.cnf")).unwrap();
+fn test_preprocess_sat(_: &Path, input: String) -> datatest_stable::Result<()> {
+    let cnf_pre = parse(input.as_str()).unwrap();
 
     let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
     let niver_trace = preprocess(&mut cnf);
@@ -52,10 +52,35 @@ fn test_preprocess_sat() {
                 !*assignment.get(&lit.var_id()).unwrap()
             }
         })
-    }))
+    }));
+    Ok(())
+}
+
+fn test_preprocess_unsat(_: &Path, input: String) -> datatest_stable::Result<()> {
+    let cnf_pre = parse(input.as_str()).unwrap();
+
+    let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+    preprocess(&mut cnf);
+
+    if cnf
+        .clauses
+        .iter()
+        .any(|(_, clause)| clause.active && clause.lits.len() == 0)
+    {
+        return Ok(());
+    }
+
+    let heuristic = Box::new(Trivial);
+    let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
+    let status = dpll.solve();
+
+    assert_eq!(status, DpllStatus::Unsat);
+    Ok(())
 }
 
 datatest_stable::harness! {
+    { test = test_preprocess_sat, root = "./inputs/test/sat", pattern = r"^.*\.cnf$" },
+    { test = test_preprocess_unsat, root = "./inputs/test/unsat", pattern = r"^.*\.cnf$" },
     { test = test_satisfied, root = "./inputs/test/sat", pattern = r"^.*\.cnf$" },
     { test = test_unsatisfiable, root = "./inputs/test/unsat", pattern = r"^.*\.cnf$" },
 }
