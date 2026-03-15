@@ -55,8 +55,9 @@ impl Cdcl {
                     let learned_clause = self.generate_learned_clause(&conflict_clause);
                     let backjump_decision_level = self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
-                    let learned_clause_id =self.cnf_formula.add_clause(learned_clause);
-                    self.unit_queue.push_back(learned_clause_id);
+                    let clause_id = self.cnf_formula.get_next_clause_id();
+                    self.cnf_formula.clauses.insert(clause_id, learned_clause);
+                    self.unit_queue.push_back(clause_id);
                 },
                 Incomplete => {
                     if self.cnf_formula.all_assigned() {

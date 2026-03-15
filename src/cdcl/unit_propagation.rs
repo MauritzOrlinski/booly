@@ -20,6 +20,7 @@ impl Cdcl {
             let old_assignment =
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
             if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
+                self.implication_graph.push_forced(new_assignment);
                 self.status = Conflict;
             } else {
                 self.assign_propagation(new_assignment);
