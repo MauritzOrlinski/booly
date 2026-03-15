@@ -7,3 +7,4 @@ perf.data.old
 plot.png
 plot/data/*.csv
 model.json
+proof.drat

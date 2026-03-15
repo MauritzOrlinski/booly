@@ -14,7 +14,7 @@ pub type DecisionLevel = usize;
 /// * `decision_level_start` - A list of indices in the trail at which new decision level start
 #[derive(Debug, Clone)]
 pub struct ImplicationGraph {
-    trail: Vec<Assignment>,
+    pub trail: Vec<Assignment>,
     decision_level_start: Vec<usize>,
 }
 
@@ -99,7 +99,10 @@ impl ImplicationGraph {
     /// * `Some(usize)` - The level (1-indexed based on the partition).
     /// * `None` - If the variable has not been assigned.
     pub fn get_decision_level(&self, variable: &VariableId) -> Option<usize> {
-        let trail_index = self.trail.iter().position(|a| a.variable_id == *variable)?;
+        let trail_index = self
+            .trail
+            .iter()
+            .rposition(|a| a.variable_id == *variable)?;
         let level = self
             .decision_level_start
             .partition_point(|&start_index| start_index <= trail_index);
@@ -127,15 +130,18 @@ impl ImplicationGraph {
         cnf_formula: &mut CnfFormula,
         desired_decision_level: DecisionLevel,
     ) {
-        if self.get_current_decision_level() < desired_decision_level
-            || self.get_current_decision_level() == 0
-        {
+        let current = self.get_current_decision_level();
+
+        if desired_decision_level >= current {
             return;
         }
+
         let split_point = self.decision_level_start[desired_decision_level];
+
         for assignment in &self.trail[split_point..] {
             cnf_formula.undo_assignment(assignment);
         }
+
         self.trail.truncate(split_point);
         self.decision_level_start.truncate(desired_decision_level);
     }

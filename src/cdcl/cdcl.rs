@@ -106,14 +106,14 @@ impl Cdcl {
                     if self.implication_graph.get_current_decision_level() == 0 {
                         return Unsat;
                     }
-                    let conflict_clause: &Clause = &self
+                    let conflict_clause = self
                         .cnf_formula
                         .clauses
                         .get(conflict_clause_id)
                         .unwrap()
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();
-                    let learned_clause = self.generate_learned_clause(conflict_clause, clause_id);
+                    let learned_clause = self.generate_learned_clause(&conflict_clause, clause_id);
                     for &literal in learned_clause.literals.0.iter() {
                         self.lit_counter
                             .entry(literal)
@@ -121,6 +121,7 @@ impl Cdcl {
                     }
                     let backjump_decision_level =
                         self.get_backjump_level_for_learned_clause(&learned_clause);
+
                     self.backjump(backjump_decision_level);
                     self.cnf_formula.clauses.insert(clause_id, learned_clause);
                     self.unit_queue.push_back(clause_id);
