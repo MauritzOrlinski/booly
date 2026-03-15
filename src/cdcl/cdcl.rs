@@ -416,4 +416,3 @@ p cnf 50 300
         println!("\n\n\n\n\n\n{:#?}", cdcl.status);
     }
 }
-
