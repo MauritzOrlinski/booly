@@ -1,8 +1,6 @@
-use dpml::dpll::dpll::Dpll;
-use dpml::dpll::dpll::DpllStatus;
-use dpml::dpll::heuristics::trivial::Trivial;
-use dpml::parser::parse;
-use dpml::parser::parse_cnf;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
+use dpml::cdcl::heuristics::trivial::Trivial;
+use dpml::parser::{parse, parse_cnf};
 use dpml::preprocess::cnf::cnf::CNF;
 use dpml::preprocess::niver::recover_assigment_niver_compat;
 use dpml::preprocess::preprocess::preprocess;
@@ -12,21 +10,22 @@ use std::path::Path;
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = Trivial;
-    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
-    assert_eq!(result, DpllStatus::Sat);
+    assert_eq!(result, CdclStatus::Sat);
     assert!(verify_satisfied(&dpll.cnf_formula));
+
     Ok(())
 }
 
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
     let heuristic = Trivial;
-    let mut dpll = Dpll::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
 
     let result = dpll.solve();
-    assert_eq!(result, DpllStatus::Unsat);
+    assert_eq!(result, CdclStatus::Unsat);
     Ok(())
 }
 
@@ -37,12 +36,12 @@ fn test_preprocess_sat(_: &Path, input: String) -> datatest_stable::Result<()> {
     let niver_trace = preprocess(&mut cnf);
 
     let heuristic = Box::new(Trivial);
-    let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
-    let status = dpll.solve();
+    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), heuristic);
+    let status = cdcl.solve();
 
-    assert_eq!(status, DpllStatus::Sat);
+    assert_eq!(status, CdclStatus::Sat);
 
-    let assignment = recover_assigment_niver_compat(niver_trace, cnf, dpll.cnf_formula);
+    let assignment = recover_assigment_niver_compat(niver_trace, cnf, cdcl.cnf_formula);
     let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
     assert!(cnf.clauses.iter().all(|(_, clause)| {
         clause.lits.iter().any(|lit| {
@@ -71,10 +70,10 @@ fn test_preprocess_unsat(_: &Path, input: String) -> datatest_stable::Result<()>
     }
 
     let heuristic = Box::new(Trivial);
-    let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
-    let status = dpll.solve();
+    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), heuristic);
+    let status = cdcl.solve();
 
-    assert_eq!(status, DpllStatus::Unsat);
+    assert_eq!(status, CdclStatus::Unsat);
     Ok(())
 }
 

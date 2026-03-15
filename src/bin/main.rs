@@ -1,7 +1,7 @@
 use clap::Parser;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::cli::CliArguments;
-use dpml::cnf::cnf_formula::{AssignedVarsView, CnfFormula};
-use dpml::dpll::dpll::{Dpll, DpllStatus};
+use dpml::cnf::cnf_formula::CnfFormula;
 use dpml::parser::parse_cnf;
 use std::fs;
 use std::time::Instant;
@@ -30,14 +30,14 @@ fn main() {
 
     let heuristic = cli.load_heuristic();
 
-    let mut dpll = Dpll::new(cnf_formula, heuristic);
+    let mut dpll = Cdcl::new(cnf_formula, heuristic);
 
     let start = Instant::now();
     let result = dpll.solve();
     let elapsed = start.elapsed();
 
     match result {
-        DpllStatus::Sat => println!(
+        CdclStatus::Sat => println!(
             "\
 s SATISFIABLE
 v {} 0
@@ -45,12 +45,12 @@ t {:.7}",
             dpll.cnf_formula.get_assignment_view(),
             elapsed.as_secs_f64()
         ),
-        DpllStatus::Unsat => println!(
+        CdclStatus::Unsat => println!(
             "\
 s UNSATISFIABLE
 t {:.7}",
             elapsed.as_secs_f64()
         ),
-        DpllStatus::Incomplete | DpllStatus::Conflict => unreachable!(),
+        CdclStatus::Incomplete | CdclStatus::Conflict(_) => unreachable!(),
     }
 }

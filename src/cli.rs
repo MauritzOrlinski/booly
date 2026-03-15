@@ -1,5 +1,5 @@
-use crate::dpll::heuristics::Heuristic;
-use crate::dpll::heuristics::trivial::Trivial;
+use crate::cdcl::heuristics::Heuristic;
+use crate::cdcl::heuristics::trivial::Trivial;
 use clap::ValueHint;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;

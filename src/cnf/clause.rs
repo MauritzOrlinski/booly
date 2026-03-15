@@ -1,6 +1,5 @@
 use crate::cnf::literals::{Literal, Literals, to_lit};
-use crate::cnf::variable::VariableId;
-use crate::cnf::variable::Variables;
+use crate::cnf::variable::{VariableId, Variables};
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -43,12 +42,42 @@ impl Clause {
             }
         }
 
-        // first different lit
         Clause {
             satisfied_by: None,
             literals,
             watched1: to_lit(&w1),
             watched2: to_lit(&w2),
+        }
+    }
+
+    pub fn new_with_watched(
+        literals: Literals,
+        w1: i32,
+        w2: i32,
+        variables: &mut Variables,
+        clause_id: usize,
+    ) -> Self {
+        let w1_var = variables.get_mut(w1.unsigned_abs());
+
+        if w1.is_positive() {
+            w1_var.positive_watched_occurrences.push(clause_id);
+        } else {
+            w1_var.negative_watched_occurrences.push(clause_id);
+        }
+        if w1 != w2 {
+            let w2_var = variables.get_mut(w2.unsigned_abs());
+            if w2.is_positive() {
+                w2_var.positive_watched_occurrences.push(clause_id);
+            } else {
+                w2_var.negative_watched_occurrences.push(clause_id);
+            }
+        }
+
+        Clause {
+            satisfied_by: None,
+            literals,
+            watched1: w1,
+            watched2: w2,
         }
     }
 
@@ -59,6 +88,7 @@ impl Clause {
     pub fn is_unit(&self, assignments: &[Option<bool>]) -> bool {
         let t = Some(self.watched2.is_negative());
         assignments[self.watched2.unsigned_abs() as usize - 1] == t
+            || self.watched1 == self.watched2
     }
 
     pub fn is_satisfied_by_watched(&self, assignments: &[Option<bool>]) -> bool {
