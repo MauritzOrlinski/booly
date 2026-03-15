@@ -17,13 +17,18 @@ impl Cdcl {
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause_id);
             let old_assignment =
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
-            if old_assignment.is_some() {
-                if old_assignment != Some(new_assignment.value) {
-                    self.implication_graph.push_forced(new_assignment);
+
+            match old_assignment {
+                Some(value) if value != new_assignment.value => {
                     self.status = Conflict(unit_clause_id);
+                    break;
                 }
-            } else {
-                self.assign_propagation(new_assignment);
+                Some(_) => {
+                    continue;
+                }
+                None => {
+                    self.assign_propagation(new_assignment);
+                }
             }
         }
     }
@@ -34,7 +39,12 @@ impl Cdcl {
             .apply_assignment(&assignment, &mut self.unit_queue);
         self.implication_graph.push_forced(assignment);
         match assignment_result {
-            AssignmentResult::Conflict(clause_id) => self.status = Conflict(clause_id),
+            AssignmentResult::Conflict(clause_id) => {
+                self.status = {
+                    self.unit_queue.clear();
+                    Conflict(clause_id)
+                }
+            }
             AssignmentResult::Success if self.cnf_formula.all_assigned() => self.status = Sat,
             AssignmentResult::Success => (),
         }

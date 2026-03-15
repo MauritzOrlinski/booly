@@ -87,6 +87,7 @@ impl CnfFormula {
             let new_watched = clause.literals.iter().find(|lit| {
                 let (id, pol) = lit;
                 let lit = to_lit(lit);
+
                 if lit == other {
                     return false;
                 }
@@ -111,6 +112,8 @@ impl CnfFormula {
 
             if self.assignments[other_id].is_none() {
                 assert!(clause.is_unit(&self.assignments));
+                assert!(clause.watched1 != 0);
+                assert!(self.assignments[clause.watched1.unsigned_abs() as usize - 1].is_none());
                 unit_queue.push_back(clause_id);
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
@@ -124,8 +127,8 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict_id.is_some() {
-            Conflict(is_conflict_id.unwrap())
+        if let Some(is_conflict_id) = is_conflict_id {
+            Conflict(is_conflict_id)
         } else {
             Success
         }
