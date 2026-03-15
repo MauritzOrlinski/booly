@@ -9,7 +9,7 @@ use std::path::Path;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let mut cdcl = Cdcl::new(cnf, true, Box::new(LubyHeuristic::new(10)));
+    let mut cdcl = Cdcl::new(cnf, true, Box::new(LubyHeuristic::new(10)), None);
 
     let result = cdcl.solve();
     assert_eq!(result, CdclStatus::Sat);
@@ -19,7 +19,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let mut dpll = Cdcl::new(cnf, true, Box::new(LubyHeuristic::new(10)));
+    let mut dpll = Cdcl::new(cnf, true, Box::new(LubyHeuristic::new(10)), None);
 
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Unsat);
@@ -32,7 +32,12 @@ fn test_sat_with_preprocess(_: &Path, input: String) -> datatest_stable::Result<
     let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
     let niver_trace = preprocess(&mut cnf);
 
-    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), true, Box::new(LubyHeuristic::new(10)));
+    let mut cdcl = Cdcl::new(
+        cnf.to_cnf_formula(),
+        true,
+        Box::new(LubyHeuristic::new(10)),
+        None,
+    );
     let status = cdcl.solve();
 
     assert_eq!(status, CdclStatus::Sat);
@@ -65,7 +70,12 @@ fn test_unsat_with_preprocess(_: &Path, input: String) -> datatest_stable::Resul
         return Ok(());
     }
 
-    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), true, Box::new(LubyHeuristic::new(10)));
+    let mut cdcl = Cdcl::new(
+        cnf.to_cnf_formula(),
+        true,
+        Box::new(LubyHeuristic::new(10)),
+        None,
+    );
     let status = cdcl.solve();
 
     assert_eq!(status, CdclStatus::Unsat);

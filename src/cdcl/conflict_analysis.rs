@@ -85,9 +85,13 @@ impl Cdcl {
                     .find(|x| x.0 == second_latest.variable_id)
                     .expect("should be included"),
             )
-        } else {first_uip};
+        } else {
+            first_uip
+        };
 
-        let lbd = self.implication_graph.calculate_lbd(&learned_clause_literals);
+        let lbd = self
+            .implication_graph
+            .calculate_lbd(&learned_clause_literals);
 
         Clause::new_with_watched(
             learned_clause_literals,
@@ -134,7 +138,7 @@ impl Cdcl {
 #[cfg(test)]
 mod tests {
     use crate::cdcl::assignment::Assignment;
-    use crate::cdcl::cdcl::{Cdcl, CdclStatus, CLAUSES_INITIAL_LIMIT};
+    use crate::cdcl::cdcl::{CLAUSES_INITIAL_LIMIT, Cdcl, CdclStatus};
     use crate::cdcl::heuristics::SolverStats;
     use crate::cdcl::heuristics::restart::Never;
     use crate::cdcl::implication_graph::ImplicationGraph;
@@ -195,6 +199,7 @@ mod tests {
                 clauses_limit: CLAUSES_INITIAL_LIMIT,
                 enable_phase_saving: false,
                 phase: vec![],
+                proof_logger: None,
             };
 
             let learned = cdcl

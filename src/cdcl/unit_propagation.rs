@@ -14,7 +14,6 @@ impl Cdcl {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && !self.status.is_conflict()
         {
-
             if !self.cnf_formula.clauses.contains_key(&unit_clause_id) {
                 continue;
             }

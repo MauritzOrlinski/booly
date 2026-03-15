@@ -7,7 +7,7 @@ use dpml::parser::parse_cnf;
 use dpml::preprocess::cnf::cnf::CNF;
 use dpml::preprocess::niver::recover_assigment_niver_compat;
 use dpml::preprocess::preprocess::preprocess;
-// use dpml::proof_logger::ProofLogger;
+use dpml::proof_logger::ProofLogger;
 use std::fs;
 use std::time::Instant;
 
@@ -16,9 +16,11 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 fn main() {
     let cli = CliArguments::parse();
-    if cli.get_proof_logging() {
-        // let mut log = ProofLogger::create("proof.drat");
-    }
+    let proof_logger = if cli.get_proof_logging() {
+        Some(ProofLogger::create("proof.drat")).unwrap().ok()
+    } else {
+        None
+    };
 
     let cnf_formula_str: String = match fs::read_to_string(&cli.get_input_file()) {
         Ok(value) => value,
@@ -42,6 +44,7 @@ fn main() {
             cnf.to_cnf_formula(),
             cli.get_disable_preprocess(),
             cli.get_restart_heuristic(),
+            proof_logger,
         );
 
         let start = Instant::now();
@@ -98,6 +101,7 @@ tp {:.7}",
             cnf_formula,
             cli.get_disable_preprocess(),
             cli.get_restart_heuristic(),
+            proof_logger,
         );
 
         let start = Instant::now();

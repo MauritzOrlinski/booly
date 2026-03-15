@@ -8,12 +8,19 @@ pub struct ProofClause {
     lits: Vec<Literal>,
 }
 
+impl ProofClause {
+    pub fn new(lits: Vec<Literal>) -> ProofClause {
+        ProofClause { lits: lits }
+    }
+}
+
 pub enum ProofStep {
     Comment(String),
     Clause(ProofClause),
     Delete(ProofClause),
 }
 
+#[derive(Debug)]
 pub struct ProofLogger<W>
 where
     W: Write,
