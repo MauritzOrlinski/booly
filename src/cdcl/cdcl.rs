@@ -115,21 +115,19 @@ impl Cdcl {
                     if self.cnf_formula.all_assigned() {
                         return Sat;
                     }
-                    let next_assignment: Assignment;
-                    loop {
-                        let (lit, _) = self.lit_prio.pop().unwrap();
-                        if self
-                            .cnf_formula
-                            .assignments
-                            .get(lit.unsigned_abs() as usize)
-                            .is_none()
-                        {
-                            next_assignment =
-                                Assignment::new(lit.unsigned_abs(), lit.signum() == 1, None);
-                            break;
-                        }
-                    }
-                    self.decide(next_assignment);
+                    let (lit, _) = self
+                        .lit_prio
+                        .clone()
+                        .into_sorted_iter()
+                        .find(|(lit, _)| {
+                            self.cnf_formula
+                                .assignments
+                                .get(lit.unsigned_abs() as usize - 1)
+                                .unwrap()
+                                .is_none()
+                        })
+                        .unwrap();
+                    self.decide(Assignment::new(lit.unsigned_abs(), lit.signum() == 1, None));
                 }
             }
         }
