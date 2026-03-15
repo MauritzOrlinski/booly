@@ -113,7 +113,7 @@ impl ImplicationGraph {
     pub fn get_current_decision_level(&self) -> usize {
         self.decision_level_start.len()
     }
-
+    #[allow(unused)]
     pub fn get_latest_assignment(&self) -> Option<&Assignment> {
         self.trail.last()
     }
