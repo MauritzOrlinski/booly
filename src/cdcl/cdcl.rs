@@ -1,5 +1,7 @@
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Conflict, Incomplete, Sat, Unsat};
+use crate::cdcl::heuristics::restart::{FixedIntervalHeuristic, GeometricHeuristic};
+use crate::cdcl::heuristics::{Heuristic, RestartHeuristic, SolverStats};
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::cnf_formula::CnfFormula;
@@ -30,6 +32,8 @@ pub struct Cdcl {
     pub(crate) implication_graph: ImplicationGraph,
     pub(crate) status: CdclStatus,
     pub(crate) unit_queue: VecDeque<ClauseID>,
+    pub(crate) restart_heuristic: Box<dyn RestartHeuristic>,
+    pub(crate) stats: SolverStats,
     pub(crate) lit_prio: PriorityQueue<Literal, usize>,
     pub(crate) lit_counter: BTreeMap<Literal, usize>,
 }
@@ -62,6 +66,12 @@ impl Cdcl {
             cnf_formula: cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
+            stats: SolverStats::new(),
+            restart_heuristic: Box::new(GeometricHeuristic {
+                threshold: 100,
+                max_restarts: 8,
+                factor: 1.5,
+            }),
         }
     }
 
@@ -99,7 +109,7 @@ impl Cdcl {
                         .unwrap()
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();
-                    let learned_clause = self.generate_learned_clause(&conflict_clause, clause_id);
+                    let learned_clause = self.generate_learned_clause(conflict_clause, clause_id);
                     for &literal in learned_clause.literals.0.iter() {
                         self.lit_counter
                             .entry(literal)
@@ -110,6 +120,12 @@ impl Cdcl {
                     self.backjump(backjump_decision_level);
                     self.cnf_formula.clauses.insert(clause_id, learned_clause);
                     self.unit_queue.push_back(clause_id);
+
+                    // Check if restart is needed
+                    self.stats.conflict_count += 1;
+                    if self.restart_heuristic.should_restart(&self.stats) {
+                        self.restart();
+                    }
                 }
                 Incomplete => {
                     if self.cnf_formula.all_assigned() {
@@ -156,6 +172,12 @@ impl Cdcl {
         self.implication_graph
             .backjump(&mut self.cnf_formula, decision_level);
         self.unit_queue.clear();
+    }
+
+    pub fn restart(&mut self) {
+        self.backjump(0);
+        self.stats.conflict_count = 0;
+        self.stats.number_of_restarts += 1;
     }
 }
 
