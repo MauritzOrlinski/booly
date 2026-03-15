@@ -1,17 +1,16 @@
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Conflict, Incomplete, Sat, Unsat};
-use crate::cdcl::heuristics::restart::LubyHeuristic;
 use crate::cdcl::heuristics::{RestartHeuristic, SolverStats};
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
-use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literal;
 use priority_queue::PriorityQueue;
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
-pub const CLAUSES_INITIAL_LIMIT : usize = 1000;
-pub const CLAUSES_LIMIT_STEP_SIZE : usize = 100;
+pub const CLAUSES_INITIAL_LIMIT: usize = 1000;
+pub const CLAUSES_LIMIT_STEP_SIZE: usize = 100;
 pub const DELETION_INTERVAL: u32 = 1000;
 
 #[derive(Debug, PartialEq, Clone, Copy)]

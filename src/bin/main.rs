@@ -2,10 +2,12 @@ use clap::Parser;
 use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::cli::CliArguments;
 use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::parser::{parse, parse_cnf};
+use dpml::parser::parse;
+use dpml::parser::parse_cnf;
 use dpml::preprocess::cnf::cnf::CNF;
 use dpml::preprocess::niver::recover_assigment_niver_compat;
 use dpml::preprocess::preprocess::preprocess;
+// use dpml::proof_logger::ProofLogger;
 use std::fs;
 use std::time::Instant;
 
@@ -14,6 +16,9 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 fn main() {
     let cli = CliArguments::parse();
+    if cli.get_proof_logging() {
+        // let mut log = ProofLogger::create("proof.drat");
+    }
 
     let cnf_formula_str: String = match fs::read_to_string(&cli.get_input_file()) {
         Ok(value) => value,

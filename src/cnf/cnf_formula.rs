@@ -1,9 +1,9 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{Polarity, to_lit};
+use crate::cnf::literals::to_lit;
 use crate::cnf::variable::Variables;
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
 use std::mem::swap;
@@ -204,8 +204,11 @@ impl CnfFormula {
         self.clauses.keys().last().map(|id| id + 1).unwrap_or(0)
     }
 
-    pub fn get_learned_clauses(&self) -> Vec<(&ClauseID, &Clause)>{
-        self.clauses.iter().skip(self.learned_clause_start).collect()
+    pub fn get_learned_clauses(&self) -> Vec<(&ClauseID, &Clause)> {
+        self.clauses
+            .iter()
+            .skip(self.learned_clause_start)
+            .collect()
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
@@ -243,7 +246,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|(clause_id, clause)| clause.to_string())
+                .map(|(_, clause)| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )
