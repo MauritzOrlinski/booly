@@ -52,10 +52,6 @@ impl Cdcl {
     /// The satisfying assignment.
     fn find_satisfying_assignment_for_unit_clause(&self, unit_clause_id: ClauseID) -> Assignment {
         let unit_clause = &self.cnf_formula.clauses.get(&unit_clause_id).unwrap();
-
-        println!("Current assignment: {}", self.cnf_formula.get_assignment_view());
-        println!("Sat assignment for {} is {}", unit_clause, unit_clause.watched1);
-
         Assignment::new(
             unit_clause.watched1.unsigned_abs(),
             unit_clause.watched1.is_positive(),
