@@ -5,7 +5,7 @@ use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literal;
-use crate::proof_logger::ProofLogger;
+use crate::proof_logger::{ProofClause, ProofLogger};
 use priority_queue::PriorityQueue;
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
@@ -115,12 +115,25 @@ impl Cdcl {
             }
             self.propagate_unit_clauses();
             match self.status {
-                Sat | Unsat => {
+                Unsat => {
+                    if let Some(proof_logger) = &mut self.proof_logger {
+                        proof_logger
+                            .log_clause(ProofClause { lits: Vec::new() })
+                            .unwrap();
+                    }
+                    return self.status;
+                }
+                Sat => {
                     return self.status;
                 }
                 Conflict(conflict_clause_id) => {
                     conflicts += 1;
                     if self.implication_graph.get_current_decision_level() == 0 {
+                        if let Some(proof_logger) = &mut self.proof_logger {
+                            proof_logger
+                                .log_clause(ProofClause { lits: Vec::new() })
+                                .unwrap();
+                        }
                         return Unsat;
                     }
                     let conflict_clause = self

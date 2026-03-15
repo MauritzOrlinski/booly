@@ -8,7 +8,7 @@ use crate::cnf::literals::to_lit;
 pub type Literal = i32;
 
 pub struct ProofClause {
-    lits: Vec<Literal>,
+    pub lits: Vec<Literal>,
 }
 
 impl From<&Clause> for ProofClause {
