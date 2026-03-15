@@ -5,9 +5,11 @@ use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literal;
+use crate::proof_logger::ProofLogger;
 use priority_queue::PriorityQueue;
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
+use std::fs::File;
 
 pub const CLAUSES_INITIAL_LIMIT: usize = 1000;
 pub const CLAUSES_LIMIT_STEP_SIZE: usize = 100;
@@ -42,6 +44,7 @@ pub struct Cdcl {
     pub(crate) clauses_limit: usize,
     pub(crate) enable_phase_saving: bool,
     pub(crate) phase: Vec<Option<bool>>,
+    pub(crate) proof_logger: Option<ProofLogger<File>>,
 }
 
 impl Cdcl {
@@ -49,6 +52,7 @@ impl Cdcl {
         cnf_formula: CnfFormula,
         enable_phase_saving: bool,
         restart_heuristic: Box<dyn RestartHeuristic>,
+        proof_logger: Option<ProofLogger<File>>,
     ) -> Cdcl {
         Cdcl {
             unit_queue: cnf_formula.generate_unit_queue(),
@@ -81,6 +85,7 @@ impl Cdcl {
             restart_heuristic: restart_heuristic,
             enable_phase_saving: enable_phase_saving,
             clauses_limit: CLAUSES_INITIAL_LIMIT,
+            proof_logger,
         }
     }
 
@@ -126,6 +131,13 @@ impl Cdcl {
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();
                     let learned_clause = self.generate_learned_clause(&conflict_clause, clause_id);
+
+                    // if let Some(proof_logger) = &mut self.proof_logger {
+                    //     proof_logger
+                    //         .log_clause(ProofClause::new(learned_clause))
+                    //         .unwrap();
+                    // }
+
                     for &literal in learned_clause.literals.0.iter() {
                         self.lit_counter
                             .entry(literal)

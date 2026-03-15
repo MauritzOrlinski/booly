@@ -199,6 +199,7 @@ mod tests {
                 clauses_limit: CLAUSES_INITIAL_LIMIT,
                 enable_phase_saving: false,
                 phase: vec![],
+                proof_logger: None,
             };
             let id = cdcl.cnf_formula.get_next_clause_id();
             cdcl.generate_learned_clause(conflict_clause, id)
