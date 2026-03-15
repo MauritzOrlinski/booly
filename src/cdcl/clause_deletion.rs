@@ -3,7 +3,6 @@ use crate::cdcl::implication_graph::ImplicationGraph;
 use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
-use crate::cnf::variable::VariableId;
 use itertools::Itertools;
 
 impl Cdcl {
@@ -31,7 +30,7 @@ impl Cdcl {
 
         let learned_clauses_sorted: Vec<_> = learned_clauses_filtered
             .iter()
-            .sorted_by_key(|(_, clause)| clause.literal_block_distance)
+            .sorted_unstable_by_key(|(_, clause)| clause.literal_block_distance)
             .map(|(id, _)| *id)
             .collect();
 
@@ -48,7 +47,7 @@ impl Cdcl {
                     proof_logger.log_delete(clause.into()).unwrap();
                 }
                 for &lit in &clause.literals.0 {
-                    let variable = self.cnf_formula.variables.get_mut(lit.abs() as VariableId);
+                    let variable = self.cnf_formula.variables.get_mut(lit.unsigned_abs());
 
                     if lit.is_positive() {
                         variable
