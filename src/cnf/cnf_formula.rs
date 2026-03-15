@@ -1,7 +1,7 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{to_lit, Literals};
+use crate::cnf::literals::{Literals, Polarity, to_lit};
 use crate::cnf::variable::Variables;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
@@ -223,6 +223,18 @@ impl CnfFormula {
         assert!(!self.clauses.contains_key(&id));
         id
     }
+
+    pub fn test_sat(&self) -> bool {
+        self.clauses.iter().all(|(_, clause)| {
+            clause
+                .literals
+                .iter()
+                .any(|(var_id, polarity)| match polarity {
+                    Polarity::Positive => self.assignments.get(var_id as usize).unwrap().unwrap(),
+                    Polarity::Negative => !self.assignments.get(var_id as usize).unwrap().unwrap(),
+                })
+        })
+    }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
 
@@ -232,7 +244,7 @@ impl<'a> fmt::Display for AssignedVarsView<'a> {
             f,
             "{}",
             self.0
-                 .0
+                .0
                 .iter()
                 .enumerate()
                 .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))

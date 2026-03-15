@@ -1,8 +1,8 @@
+use dpml::cdcl::cdcl::Cdcl;
 use dpml::cdcl::cdcl::CdclStatus::{Sat, Unsat};
 use dpml::cdcl::heuristics::trivial::Trivial;
 use dpml::parser::parse_cnf;
 use std::path::Path;
-use dpml::cdcl::cdcl::Cdcl;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
@@ -11,6 +11,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
     let result = dpll.solve();
     assert_eq!(result, Sat);
+    assert!(dpll.cnf_formula.test_sat());
     Ok(())
 }
 
