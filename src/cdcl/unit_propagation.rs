@@ -10,12 +10,10 @@ impl Cdcl {
     /// # Returns
     /// An optional DPLL result. `Satisfied`, if the cnf has been satisfied during unit propagation.
     /// `Conflict`, if there has been a conflict during unit propagation. `None` otherwise.
-    pub(crate) fn propagate_unit_clauses(&mut self) -> usize {
-        let mut units = 0;
+    pub(crate) fn propagate_unit_clauses(&mut self) {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && self.status != Conflict
         {
-            units += 1;
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause_id);
             let old_assignment =
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
@@ -26,8 +24,6 @@ impl Cdcl {
                 self.assign_propagation(new_assignment);
             }
         }
-
-        units
     }
     
     fn assign_propagation(&mut self, assignment: Assignment) {
