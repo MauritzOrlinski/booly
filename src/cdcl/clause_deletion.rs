@@ -6,7 +6,8 @@ use crate::cnf::literals::Literals;
 use itertools::Itertools;
 
 impl Cdcl {
-    pub fn determine_clauses_for_deletion(&self) -> Vec<ClauseID> {
+
+    pub fn determine_clauses_for_deletion(&self) -> Vec<&ClauseID> {
         let learned_clauses = self.cnf_formula.get_learned_clauses();
 
         if self.clauses_limit >= learned_clauses.len() {

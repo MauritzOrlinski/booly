@@ -3,14 +3,14 @@ use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::literals::{Polarity, to_lit};
 use crate::cnf::variable::Variables;
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
 use std::mem::swap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: Vec<Clause>,
+    pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
     pub(crate) variable_count: usize,
@@ -22,9 +22,12 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
+        let len = clauses.len();
+        let clause_map = clauses.into_iter().enumerate().collect();
+        
         CnfFormula {
-            learned_clause_start: clauses.len(),
-            clauses: clauses,
+            learned_clause_start: len,
+            clauses: clause_map,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
             variable_count: variables.len(),
@@ -71,7 +74,7 @@ impl CnfFormula {
                 var_id as i32
             };
 
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(&clause_id).unwrap();
 
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
@@ -180,10 +183,9 @@ impl CnfFormula {
     pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
-            .enumerate()
             .filter_map(|(clause_id, clause)| {
                 if clause.is_unit(&self.assignments) {
-                    Some(clause_id)
+                    Some(*clause_id)
                 } else {
                     None
                 }
@@ -202,7 +204,7 @@ impl CnfFormula {
     }
 
     pub fn test_sat(&self) -> bool {
-        self.clauses.iter().all(|clause| {
+        self.clauses.iter().all(|(_, clause)| {
             clause
                 .literals
                 .iter()
@@ -221,8 +223,8 @@ impl CnfFormula {
         })
     }
 
-    pub fn get_learned_clauses(&self) -> Vec<(ClauseID, &Clause)>{
-        self.clauses.iter().enumerate().skip(self.learned_clause_start).collect()
+    pub fn get_learned_clauses(&self) -> Vec<(&ClauseID, &Clause)>{
+        self.clauses.iter().skip(self.learned_clause_start).collect()
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
@@ -260,7 +262,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|clause| clause.to_string())
+                .map(|(clause_id, clause)| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )

@@ -62,7 +62,7 @@ impl Cdcl {
                     most_recent_assignment
                 ),
             );
-            let antecedent_clause = &self.cnf_formula.clauses.get(antecedent_clause_id).unwrap();
+            let antecedent_clause = &self.cnf_formula.clauses.get(&antecedent_clause_id).unwrap();
 
             let resolution = Self::resolve(
                 &learned_clause_literals,
@@ -177,7 +177,7 @@ mod tests {
         }
 
         fn execute(&self, conflict_clause_id: ClauseID) -> Clause {
-            let conflict_clause = &self.cnf.clauses.get(conflict_clause_id).unwrap();
+            let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
 
             let mut cdcl = Cdcl {
                 cnf_formula: self.cnf.clone(),
