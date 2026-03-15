@@ -137,7 +137,6 @@ mod tests {
     use crate::cdcl::cdcl::{Cdcl, CdclStatus};
     use crate::cdcl::heuristics::SolverStats;
     use crate::cdcl::heuristics::restart::FixedIntervalHeuristic;
-    use crate::cdcl::heuristics::trivial::Trivial;
     use crate::cdcl::implication_graph::ImplicationGraph;
     use crate::cnf::clause::{Clause, ClauseID};
     use crate::cnf::cnf_formula::CnfFormula;

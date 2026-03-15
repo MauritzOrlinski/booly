@@ -6,4 +6,3 @@
 - [ ] Restarts
 - [x] Preprocessing (Konsti)
 - [ ] Proof logging
-
