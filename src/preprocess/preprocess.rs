@@ -43,13 +43,13 @@ impl RoundTrace {
 }
 
 // SatELite Preprocessor of the lecture slides
-pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
+pub fn preprocess(cnf: &mut CNF) -> VecDeque<(VarId, Vec<ClauseID>)> {
     let mut round_traces: BTreeMap<ClauseID, RoundTrace> = cnf
         .clauses
         .keys()
         .map(|&clause_id| (clause_id, RoundTrace::new(Reason::Add, Round::Prev)))
         .collect();
-    let mut niver_trace: Vec<(VarId, Vec<ClauseID>)> = Vec::new();
+    let mut niver_trace: VecDeque<(VarId, Vec<ClauseID>)> = VecDeque::new();
     let mut niver_vars: VecDeque<VarId> = VecDeque::new();
     let mut change: u8 = 0b11;
 
@@ -121,7 +121,7 @@ pub fn preprocess(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
                 for clause_id in niver_trace_.iter() {
                     round_traces.insert(*clause_id, RoundTrace::new(Reason::Add, Round::Curr));
                 }
-                niver_trace.push((var_id, niver_trace_));
+                niver_trace.push_back((var_id, niver_trace_));
                 niver_vars.push_back(var_id);
                 change |= 0b01;
             }

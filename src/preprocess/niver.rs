@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::{
     cnf::cnf_formula::CnfFormula,
     preprocess::cnf::{
@@ -8,7 +10,7 @@ use crate::{
     },
 };
 use itertools::{Itertools, iproduct};
-use std::collections::BTreeMap;
+use rustc_hash::FxHashMap;
 
 fn pre_resolvant_tautology(
     clause_id_1: ClauseID,
@@ -21,7 +23,7 @@ fn pre_resolvant_tautology(
     clause_1
         .lits
         .iter()
-        .any(|&lit| lit.var_id() != var_id && clause_2.lits.iter().contains(&lit.not()))
+        .any(|&lit| lit.var_id() != var_id && clause_2.lits.iter().contains(&lit.neg()))
 }
 
 pub fn niver(var_id: VarId, cnf: &mut CNF) -> (bool, Vec<ClauseID>) {
@@ -68,9 +70,9 @@ pub fn niver(var_id: VarId, cnf: &mut CNF) -> (bool, Vec<ClauseID>) {
     (false, Vec::new())
 }
 
-pub fn niver_all(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
+pub fn niver_all(cnf: &mut CNF) -> VecDeque<(VarId, Vec<ClauseID>)> {
     let mut change = true;
-    let mut niver_trace: Vec<(VarId, Vec<ClauseID>)> = Vec::new();
+    let mut niver_trace: VecDeque<(VarId, Vec<ClauseID>)> = VecDeque::new();
     while change {
         change = false;
         let var_ids: Vec<VarId> = cnf.vars.keys().cloned().collect();
@@ -79,7 +81,7 @@ pub fn niver_all(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
                 let (change_, niver_trace_) = niver(var_id, cnf);
                 if change_ {
                     change = true;
-                    niver_trace.push((var_id, niver_trace_));
+                    niver_trace.push_back((var_id, niver_trace_));
                 }
             }
         }
@@ -88,11 +90,11 @@ pub fn niver_all(cnf: &mut CNF) -> Vec<(VarId, Vec<ClauseID>)> {
 }
 
 pub fn recover_assigment_niver(
-    mut niver_trace: Vec<(VarId, Vec<ClauseID>)>,
+    mut niver_trace: VecDeque<(VarId, Vec<ClauseID>)>,
     mut cnf: CNF,
-    mut assignment: BTreeMap<VarId, bool>,
-) -> BTreeMap<VarId, bool> {
-    while let Some((var_id, clause_ids)) = niver_trace.pop() {
+    mut assignment: FxHashMap<VarId, bool>,
+) -> FxHashMap<VarId, bool> {
+    while let Some((var_id, clause_ids)) = niver_trace.pop_back() {
         for clause_id in clause_ids {
             cnf.clauses.get_mut(&clause_id).unwrap().active = true;
         }
@@ -118,11 +120,12 @@ pub fn recover_assigment_niver(
 }
 
 pub fn recover_assigment_niver_compat(
-    niver_trace: Vec<(VarId, Vec<ClauseID>)>,
+    niver_trace: VecDeque<(VarId, Vec<ClauseID>)>,
     cnf: CNF,
     cnf_formula: CnfFormula,
-) -> BTreeMap<VarId, bool> {
-    let mut assignment: BTreeMap<VarId, bool> = BTreeMap::new();
+) -> FxHashMap<VarId, bool> {
+    let mut assignment: FxHashMap<VarId, bool> =
+        FxHashMap::with_capacity_and_hasher(cnf_formula.assignments.len(), Default::default());
     for (id, v) in cnf_formula.assignments.iter().enumerate() {
         assignment.insert(id as u32 + 1, v.unwrap_or(true));
     }

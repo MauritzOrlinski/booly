@@ -1,13 +1,13 @@
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Conflict, Incomplete, Sat, Unsat};
-use crate::cdcl::heuristics::restart::{FixedIntervalHeuristic, GeometricHeuristic};
-use crate::cdcl::heuristics::{Heuristic, RestartHeuristic, SolverStats};
+use crate::cdcl::heuristics::restart::GeometricHeuristic;
+use crate::cdcl::heuristics::{RestartHeuristic, SolverStats};
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literal;
 use priority_queue::PriorityQueue;
-use std::collections::BTreeMap;
+use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -35,7 +35,7 @@ pub struct Cdcl {
     pub(crate) restart_heuristic: Box<dyn RestartHeuristic>,
     pub(crate) stats: SolverStats,
     pub(crate) lit_prio: PriorityQueue<Literal, usize>,
-    pub(crate) lit_counter: BTreeMap<Literal, usize>,
+    pub(crate) lit_counter: FxHashMap<Literal, usize>,
 }
 
 impl Cdcl {
@@ -68,8 +68,8 @@ impl Cdcl {
             status: Incomplete,
             stats: SolverStats::new(),
             restart_heuristic: Box::new(GeometricHeuristic {
-                threshold: 100,
-                max_restarts: 8,
+                threshold: 400,
+                max_restarts: 10,
                 factor: 1.5,
             }),
         }
@@ -105,7 +105,7 @@ impl Cdcl {
                     let conflict_clause: &Clause = &self
                         .cnf_formula
                         .clauses
-                        .get(&conflict_clause_id)
+                        .get(conflict_clause_id)
                         .unwrap()
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();

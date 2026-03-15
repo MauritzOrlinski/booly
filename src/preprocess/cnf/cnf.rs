@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, VecDeque};
-
 use itertools::Itertools;
+use rustc_hash::FxHashMap;
+use std::collections::VecDeque;
 
 use crate::{
     cnf::{
@@ -16,8 +16,8 @@ use crate::{
     },
 };
 
-pub type Vars = BTreeMap<VarId, Var>;
-pub type Clauses = BTreeMap<ClauseID, Clause>;
+pub type Vars = FxHashMap<VarId, Var>;
+pub type Clauses = FxHashMap<ClauseID, Clause>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CNF {
@@ -86,7 +86,7 @@ impl CNF {
 
         remove_element(&mut clause.lits, lit);
 
-        clause.sig &= !(1 << lit.hash());
+        clause.sig &= !(1 << lit.hash1());
 
         if lit.pos() {
             remove_element(&mut var.pos_occ, clause_id);
@@ -108,7 +108,7 @@ impl CNF {
                 var.neg_occ
                     .iter()
                     .filter(|&&clause_id_| clause_id_ != clause_id)
-                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.not()));
+                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.neg()));
                 var.pos_occ.iter().for_each(|&clause_id_| {
                     if clause_id_ != clause_id {
                         self.deactivate_clause(clause_id_);
@@ -119,7 +119,7 @@ impl CNF {
                 var.pos_occ
                     .iter()
                     .filter(|&&clause_id_| clause_id_ != clause_id)
-                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.not()));
+                    .for_each(|&clause_id| self.remove_lit(clause_id, lit.neg()));
                 var.neg_occ.iter().for_each(|&clause_id_| {
                     if clause_id_ != clause_id {
                         self.deactivate_clause(clause_id_);
@@ -170,8 +170,8 @@ impl CNF {
         CnfFormula::new(clauses, variables)
     }
 
-    pub fn from_pre(pre_clauses: &Vec<Vec<i32>>, vars_count: u16) -> CNF {
-        let mut clauses = Clauses::new();
+    pub fn from_pre(pre_clauses: &[Vec<i32>], vars_count: u16) -> CNF {
+        let mut clauses = Clauses::default();
         let mut vars: Vars = (1..=vars_count as u32)
             .map(|v_id| (v_id, Var::new()))
             .collect();
