@@ -1,8 +1,8 @@
 use crate::cdcl::cdcl::Cdcl;
 use crate::cdcl::implication_graph::DecisionLevel;
-use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::clause::Clause;
 use crate::cnf::literals::{Literal, Literals, to_lit};
-use crate::cnf::variable::{VariableId, Variables};
+use crate::cnf::variable::VariableId;
 use itertools::Itertools;
 
 impl Cdcl {
@@ -78,10 +78,13 @@ impl Cdcl {
             .get_2nd_latest_assignment_for_given_literals(&learned_clause_literals);
 
         if let Some(second_latest) = second_latest {
-            let watched2 =
-                second_latest.variable_id as i32 * if second_latest.value { 1 } else { -1 };
+            let watched2 = to_lit(
+                &learned_clause_literals
+                    .iter()
+                    .find(|x| x.0 == second_latest.variable_id)
+                    .expect("should be included"),
+            );
 
-            // TODO: Update watchlists
             Clause::new_with_watched(
                 learned_clause_literals,
                 first_uip,
