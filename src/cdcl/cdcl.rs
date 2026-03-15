@@ -10,6 +10,9 @@ use priority_queue::PriorityQueue;
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
+pub const CLAUSES_INITIAL_LIMIT : usize = 1000;
+pub const CLAUSES_LIMIT_STEP_SIZE : usize = 1000;
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CdclStatus {
     Sat,
@@ -36,6 +39,7 @@ pub struct Cdcl {
     pub(crate) stats: SolverStats,
     pub(crate) lit_prio: PriorityQueue<Literal, usize>,
     pub(crate) lit_counter: FxHashMap<Literal, usize>,
+    pub(crate) clauses_limit: usize,
 }
 
 impl Cdcl {
@@ -72,6 +76,7 @@ impl Cdcl {
                 max_restarts: 10,
                 factor: 1.5,
             }),
+            clauses_limit: CLAUSES_INITIAL_LIMIT,
         }
     }
 

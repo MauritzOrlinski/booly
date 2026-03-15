@@ -17,11 +17,13 @@ pub struct CnfFormula {
     /// we store the variable assignments now in this assignments vector, as it makes the values
     /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
+    pub(crate) learned_clause_start: usize,
 }
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
         CnfFormula {
+            learned_clause_start: clauses.len(),
             clauses: clauses,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
@@ -217,6 +219,10 @@ impl CnfFormula {
                         .unwrap(),
                 })
         })
+    }
+
+    pub fn get_learned_clauses(&self) -> Vec<(ClauseID, &Clause)>{
+        self.clauses.iter().enumerate().skip(self.learned_clause_start).collect()
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);

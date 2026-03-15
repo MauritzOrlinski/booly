@@ -18,7 +18,7 @@ pub struct Clause {
     pub(crate) literals: Literals,
     pub(crate) watched1: Literal,
     pub(crate) watched2: Literal,
-    literal_block_distance: usize,
+    pub(crate) literal_block_distance: usize,
 }
 
 impl Clause {
