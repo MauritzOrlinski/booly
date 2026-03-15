@@ -78,8 +78,8 @@ fn test_preprocess_unsat(_: &Path, input: String) -> datatest_stable::Result<()>
 }
 
 datatest_stable::harness! {
-    { test = test_preprocess_sat, root = "./inputs/test/sat", pattern = r"^.*\.cnf$" },
-    { test = test_preprocess_unsat, root = "./inputs/test/unsat", pattern = r"^.*\.cnf$" },
+    { test = test_preprocess_sat, root = "./inputs/sat", pattern = r"^.*\.cnf$" },
+    { test = test_preprocess_unsat, root = "./inputs/unsat", pattern = r"^.*\.cnf$" },
     { test = test_satisfied, root = "./inputs/test/sat", pattern = r"^.*\.cnf$" },
     { test = test_unsatisfiable, root = "./inputs/test/unsat", pattern = r"^.*\.cnf$" },
 }

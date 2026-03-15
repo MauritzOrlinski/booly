@@ -54,7 +54,6 @@ impl Cdcl {
                 }
                 Conflict(conflict_clause_id) => {
                     if self.implication_graph.get_current_decision_level() == 0 {
-                        println!("{}", self.cnf_formula);
                         return Unsat;
                     }
                     let conflict_clause: &Clause = &self
