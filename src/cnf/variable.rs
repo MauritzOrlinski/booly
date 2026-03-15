@@ -1,5 +1,5 @@
+use crate::cdcl::assignment::AssignmentValue;
 use crate::cnf::clause::ClauseID;
-use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 use std::slice::Iter;
@@ -76,40 +76,6 @@ impl Variables {
 
     pub fn iter(&'_ self) -> Iter<'_, Variable> {
         self.0.iter()
-    }
-
-    /// Find any unassigned variable. Expects there to be at least one.
-    ///
-    /// # Returns
-    /// The unassigned variable ID.
-    ///
-    /// # Panics
-    /// If there is none.
-    #[allow(dead_code)]
-    pub(crate) fn find_unassigned(&self, assignments: &[Option<AssignmentValue>]) -> VariableId {
-        self.0
-            .iter()
-            .enumerate()
-            .find_map(|(id, _)| match assignments[id] {
-                Some(_) => None,
-                None => Some(id as u32),
-            })
-            .unwrap()
-            + 1
-    }
-
-    pub(crate) fn find_all_unassigned(
-        &self,
-        assignments: &[Option<AssignmentValue>],
-    ) -> Vec<VariableId> {
-        self.0
-            .iter()
-            .enumerate()
-            .filter_map(|(id, _)| match assignments[id] {
-                Some(_) => None,
-                None => Some(id as u32 + 1),
-            })
-            .collect::<Vec<VariableId>>()
     }
 }
 

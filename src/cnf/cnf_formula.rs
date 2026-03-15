@@ -1,30 +1,37 @@
+use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
+use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::literals::to_lit;
 use crate::cnf::variable::Variables;
-use crate::dpll::assignment::AssignmentResult::{Conflict, Success};
-use crate::dpll::assignment::{Assignment, AssignmentResult};
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
 use std::mem::swap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: Vec<Clause>,
+    pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
+    pub(crate) variable_count: usize,
     /// we store the variable assignments now in this assignments vector, as it makes the values
     /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
+    pub(crate) learned_clause_start: usize,
 }
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
+        let len = clauses.len();
+        let clause_map = clauses.into_iter().enumerate().collect();
+
         CnfFormula {
-            clauses,
+            learned_clause_start: len,
+            clauses: clause_map,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
-            variables,
+            variable_count: variables.len(),
+            variables: variables,
         }
     }
 
@@ -47,7 +54,7 @@ impl CnfFormula {
 
         match self.assignments[var_index] {
             Some(v) if v == assignment.value => return Success,
-            Some(_) => return Conflict,
+            Some(_) => unreachable!(), // we assume that we do not assign twice
             None => {
                 self.unset_vars -= 1;
             }
@@ -57,7 +64,7 @@ impl CnfFormula {
 
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
-        let mut is_conflict = false;
+        let mut is_conflict_id = None;
         let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
 
         for &clause_id in unsatisfied_clause_ids {
@@ -67,7 +74,7 @@ impl CnfFormula {
                 var_id as i32
             };
 
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = self.clauses.get_mut(&clause_id).unwrap();
 
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
@@ -85,6 +92,7 @@ impl CnfFormula {
             let new_watched = clause.literals.iter().find(|lit| {
                 let (id, pol) = lit;
                 let lit = to_lit(lit);
+
                 if lit == other {
                     return false;
                 }
@@ -109,42 +117,52 @@ impl CnfFormula {
 
             if self.assignments[other_id].is_none() {
                 assert!(clause.is_unit(&self.assignments));
+                assert!(clause.watched1 != 0);
+                assert!(self.assignments[clause.watched1.unsigned_abs() as usize - 1].is_none());
                 unit_queue.push_back(clause_id);
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
             } else {
-                is_conflict = true;
+                is_conflict_id = Some(clause_id);
                 break;
             }
         }
 
         for (lit, clause_id, old_lit) in newly_watched {
-            let id = lit.unsigned_abs();
-            if lit.is_positive() {
-                self.variables
-                    .get_mut(id)
-                    .positive_watched_occurrences
-                    .push(clause_id);
-            } else {
-                self.variables
-                    .get_mut(id)
-                    .negative_watched_occurrences
-                    .push(clause_id);
-            }
-
-            let assignee = self.variables.get_mut(old_lit.unsigned_abs());
-            if old_lit.is_positive() {
-                let occurrences = &mut assignee.positive_watched_occurrences;
-                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-                occurrences.swap_remove(pos);
-            } else {
-                let occurrences = &mut assignee.negative_watched_occurrences;
-                let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-                occurrences.swap_remove(pos);
-            }
+            self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict { Conflict } else { Success }
+        if let Some(is_conflict_id) = is_conflict_id {
+            Conflict(is_conflict_id)
+        } else {
+            Success
+        }
+    }
+
+    fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
+        let id = lit.unsigned_abs();
+        if lit.is_positive() {
+            self.variables
+                .get_mut(id)
+                .positive_watched_occurrences
+                .push(clause_id);
+        } else {
+            self.variables
+                .get_mut(id)
+                .negative_watched_occurrences
+                .push(clause_id);
+        }
+
+        let assignee = self.variables.get_mut(old_lit.unsigned_abs());
+        if old_lit.is_positive() {
+            let occurrences = &mut assignee.positive_watched_occurrences;
+            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+            occurrences.swap_remove(pos);
+        } else {
+            let occurrences = &mut assignee.negative_watched_occurrences;
+            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
+            occurrences.swap_remove(pos);
+        }
     }
 
     /// Undos an assignment.
@@ -168,10 +186,9 @@ impl CnfFormula {
     pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
-            .enumerate()
             .filter_map(|(clause_id, clause)| {
                 if clause.is_unit(&self.assignments) {
-                    Some(clause_id)
+                    Some(*clause_id)
                 } else {
                     None
                 }
@@ -179,30 +196,19 @@ impl CnfFormula {
             .collect()
     }
 
-    pub fn pure_literals(&self) -> Vec<Assignment> {
-        self.variables
-            .iter()
-            .enumerate()
-            .filter(|(id, _)| self.assignments[*id].is_none())
-            .filter_map(|(i, v)| {
-                if v.positive_occurrences_count != 0 && v.negative_occurrences_count == 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: true,
-                    })
-                } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: false,
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
+    }
+
+    pub fn get_next_clause_id(&self) -> ClauseID {
+        self.clauses.keys().last().map(|id| id + 1).unwrap_or(0)
+    }
+
+    pub fn get_learned_clauses(&self) -> Vec<(&ClauseID, &Clause)> {
+        self.clauses
+            .iter()
+            .skip(self.learned_clause_start)
+            .collect()
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
@@ -240,107 +246,81 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|clause| clause.to_string())
+                .map(|(_, clause)| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )
     }
 }
 
-// TODO: Fix test with twl
-//
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::parser::parse_cnf;
-//
-//     #[test]
-//     fn test_formula_assign_is_reversible() {
-//         let mut cnf = parse_cnf(
-//             "\
-// p cnf 6 2
-// 1 2 3 0
-// 4 5 6 0",
-//         )
-//         .unwrap();
-//
-//         let snapshot = cnf.clone();
-//
-//         let mut assignment = Assignment::new(1, true);
-//         let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
-//         let _ = cnf.undo_assignment(&mut assignment);
-//
-//         assert_eq!(snapshot, cnf);
-//     }
-//
-//     #[test]
-//     fn test_unit_queue() {
-//         let mut cnf = parse_cnf(
-//             "\
-// p cnf 5 2
-// 1 2 0
-// 3 4 5 0",
-//         )
-//         .unwrap();
-//
-//         let mut assignment = Assignment::new(1, false);
-//         let mut queue: VecDeque<ClauseID> = VecDeque::new();
-//
-//         let _ = cnf.apply_assignment(&mut assignment, &mut queue);
-//         assert!(!queue.is_empty());
-//     }
-//
-//     #[test]
-//     fn test_satisfy_occurance_in_single_clause() {
-//         let mut cnf = parse_cnf(
-//             "\
-// p cnf 4 2
-// 1 2 0
-// 3 4 0",
-//         )
-//         .unwrap();
-//
-//         assert!(!cnf.all_assigned());
-//
-//         let unit_queue = &mut VecDeque::new();
-//
-//         let first_assignment = &Assignment::new(1, true);
-//         let second_assignment = &Assignment::new(3, true);
-//
-//         let _ = cnf.apply_assignment(first_assignment, unit_queue);
-//
-//         assert!(!cnf.all_assigned());
-//
-//         let _ = cnf.apply_assignment(second_assignment, unit_queue);
-//
-//         assert!(!cnf.all_assigned());
-//
-//         let _ = cnf.undo_assignment(second_assignment);
-//
-//         assert!(!cnf.all_assigned());
-//     }
-//
-//     //     #[test]
-//     //     fn test_satisfy_occurance_in_multiple_clauses() {
-//     //         let mut cnf = parse_cnf(
-//     //             "\
-//     // p cnf 3 2
-//     // 1 2 0
-//     // 1 3 0",
-//     //         )
-//     //         .unwrap();
-//     //
-//     //         assert!(!cnf.is_satisfied());
-//     //
-//     //         let unit_queue = &mut VecDeque::new();
-//     //         let assignment = &Assignment::new(1, true);
-//     //
-//     //         let _ = cnf.apply_assignment(assignment, unit_queue);
-//     //
-//     //         assert!(cnf.is_satisfied());
-//     //
-//     //         let _ = cnf.undo_assignment(assignment);
-//     //
-//     //         assert!(!cnf.is_satisfied());
-//     //     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::parse_cnf;
+
+    #[test]
+    fn test_formula_assign_is_reversible() {
+        let mut cnf = parse_cnf(
+            "\
+p cnf 6 2
+1 2 3 0
+4 5 6 0",
+        )
+        .unwrap();
+
+        let snapshot = cnf.clone();
+
+        let mut assignment = Assignment::new(1, true, None);
+        let _ = cnf.apply_assignment(&mut assignment, &mut VecDeque::new());
+        let _ = cnf.undo_assignment(&mut assignment);
+
+        assert_eq!(snapshot, cnf);
+    }
+
+    #[test]
+    fn test_unit_queue() {
+        let mut cnf = parse_cnf(
+            "\
+p cnf 5 2
+1 2 0
+3 4 5 0",
+        )
+        .unwrap();
+
+        let mut assignment = Assignment::new(1, false, None);
+        let mut queue: VecDeque<ClauseID> = VecDeque::new();
+
+        let _ = cnf.apply_assignment(&mut assignment, &mut queue);
+        assert!(!queue.is_empty());
+    }
+
+    #[test]
+    fn test_satisfy_occurance_in_single_clause() {
+        let mut cnf = parse_cnf(
+            "\
+p cnf 4 2
+1 2 0
+3 4 0",
+        )
+        .unwrap();
+
+        assert!(!cnf.all_assigned());
+
+        let unit_queue = &mut VecDeque::new();
+
+        let first_assignment = &Assignment::new(1, true, None);
+        let second_assignment = &Assignment::new(3, true, None);
+
+        let _ = cnf.apply_assignment(first_assignment, unit_queue);
+
+        assert!(!cnf.all_assigned());
+
+        let _ = cnf.apply_assignment(second_assignment, unit_queue);
+
+        assert!(!cnf.all_assigned());
+
+        let _ = cnf.undo_assignment(second_assignment);
+
+        assert!(!cnf.all_assigned());
+    }
+}

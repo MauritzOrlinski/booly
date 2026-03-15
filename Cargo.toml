@@ -8,12 +8,8 @@ default-run = "main"
 name = "main"
 path = "src/bin/main.rs"
 
-[[bin]]
-name = "plot"
-path = "src/bin/plot.rs"
-
 [profile.release]
-debug = true 
+debug = true
 codegen-units = 1
 lto = "fat"
 
@@ -31,19 +27,13 @@ rand = "0.9.2"
 serde = {version = "1.0.228", features = ["derive"]}
 serde_json = "1.0.149"
 smallvec = "1.15.1"
+priority-queue = "2.7.0"
+rustc-hash = "2.1.1"
 
 [dev-dependencies]
 datatest-stable = "0.3"
 criterion = "0.5"
 
 [[test]]
-name = "required_tests"
-harness = false
-
-[[test]]
 name = "all_provided_inputs"
-harness = false
-
-[[bench]]
-name = "bench"
 harness = false

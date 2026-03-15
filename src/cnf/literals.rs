@@ -1,7 +1,7 @@
-use smallvec::SmallVec;
+use smallvec::{SmallVec, smallvec};
 
+use crate::cdcl::assignment::AssignmentValue;
 use crate::cnf::variable::VariableId;
-use crate::dpll::assignment::AssignmentValue;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -50,7 +50,7 @@ pub fn to_lit((value, pol): &(VariableId, Polarity)) -> Literal {
 /// Represents a set of literals. We do not expect very large Clauses, therefore a vec should beat
 /// a HashMap.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Literals(SmallVec<[Literal; 6]>);
+pub struct Literals(pub SmallVec<[Literal; 6]>);
 
 impl Literals {
     pub fn new() -> Literals {
@@ -78,6 +78,19 @@ impl Literals {
             Polarity::Negative => -var,
         };
         self.0.push(var);
+    }
+
+    pub fn remove(&mut self, var: VariableId) {
+        self.0.retain(|literal| literal.unsigned_abs() != var);
+    }
+
+    pub fn combine(a: &Literals, b: &Literals) -> Literals {
+        let mut combined: SmallVec<[Literal; 6]> = smallvec![];
+        combined.extend(a.0.iter().cloned());
+        combined.extend(b.0.iter().cloned());
+        combined.sort();
+        combined.dedup();
+        Literals(combined)
     }
 }
 

@@ -77,7 +77,7 @@ fn pdimacs(i: &str) -> IResult<&str, (Vec<Vec<i32>>, u16, u16)> {
     Ok((i, (cs, n as u16, m as u16)))
 }
 
-fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
+pub fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
     pdimacs(i).finish().map(|t| t.1)
 }
 
@@ -106,7 +106,6 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
                 crude_clauses.remove(crude_clause_id);
             });
     }
-
     let mut clauses: Vec<Clause> = Vec::new();
     let mut variables = Variables::new(variable_count as usize);
 
@@ -129,21 +128,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
             literals.insert(variable_id, polarity);
         }
         // clauses.push(Clause::new(literals))
-        let clause = Clause::new(literals);
-        let w1 = variables.get_mut(clause.watched1.unsigned_abs());
-        if clause.watched1.is_positive() {
-            w1.positive_watched_occurrences.push(clause_id);
-        } else {
-            w1.negative_watched_occurrences.push(clause_id);
-        }
-        if clause.watched1 != clause.watched2 {
-            let w2 = variables.get_mut(clause.watched2.unsigned_abs());
-            if clause.watched2.is_positive() {
-                w2.positive_watched_occurrences.push(clause_id);
-            } else {
-                w2.negative_watched_occurrences.push(clause_id);
-            }
-        }
+        let clause = Clause::new(literals, &mut variables, clause_id, 0);
         clauses.push(clause);
     }
 

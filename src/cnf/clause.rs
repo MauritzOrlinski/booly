@@ -1,5 +1,5 @@
-use crate::cnf::literals::{Literal, Literals, Polarity, to_lit};
-use crate::cnf::variable::VariableId;
+use crate::cnf::literals::{Literal, Literals, to_lit};
+use crate::cnf::variable::{VariableId, Variables};
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -18,20 +18,70 @@ pub struct Clause {
     pub(crate) literals: Literals,
     pub(crate) watched1: Literal,
     pub(crate) watched2: Literal,
+    pub(crate) literal_block_distance: usize,
 }
 
 impl Clause {
-    pub fn new(literals: Literals) -> Self {
+    pub fn new(literals: Literals, variables: &mut Variables, clause_id: usize, literal_block_distance: usize) -> Self {
         // Safety note: Assumes at least one element
         let w1 = literals.iter().last().unwrap();
         let w2 = literals.iter().find(|x| x.0 != w1.0).unwrap_or(w1); // picks
 
-        // first different lit
+        let w1_var = variables.get_mut(w1.0);
+
+        if w1.1.is_positive() {
+            w1_var.positive_watched_occurrences.push(clause_id);
+        } else {
+            w1_var.negative_watched_occurrences.push(clause_id);
+        }
+        if w1 != w2 {
+            let w2_var = variables.get_mut(w2.0);
+            if w2.1.is_positive() {
+                w2_var.positive_watched_occurrences.push(clause_id);
+            } else {
+                w2_var.negative_watched_occurrences.push(clause_id);
+            }
+        }
+
         Clause {
             satisfied_by: None,
             literals,
             watched1: to_lit(&w1),
             watched2: to_lit(&w2),
+            literal_block_distance,
+        }
+    }
+
+    pub fn new_with_watched(
+        literals: Literals,
+        w1: i32,
+        w2: i32,
+        variables: &mut Variables,
+        clause_id: usize,
+        literal_block_distance: usize,
+    ) -> Self {
+        let w1_var = variables.get_mut(w1.unsigned_abs());
+
+        if w1.is_positive() {
+            w1_var.positive_watched_occurrences.push(clause_id);
+        } else {
+            w1_var.negative_watched_occurrences.push(clause_id);
+        }
+        if w1 != w2 {
+            let w2_var = variables.get_mut(w2.unsigned_abs());
+            if w2.is_positive() {
+                w2_var.positive_watched_occurrences.push(clause_id);
+            } else {
+                w2_var.negative_watched_occurrences.push(clause_id);
+            }
+        }
+
+        Clause {
+            satisfied_by: None,
+            literals,
+            watched1: w1,
+            watched2: w2,
+            literal_block_distance,
         }
     }
 
@@ -42,6 +92,7 @@ impl Clause {
     pub fn is_unit(&self, assignments: &[Option<bool>]) -> bool {
         let t = Some(self.watched2.is_negative());
         assignments[self.watched2.unsigned_abs() as usize - 1] == t
+            || self.watched1 == self.watched2
     }
 
     pub fn is_satisfied_by_watched(&self, assignments: &[Option<bool>]) -> bool {

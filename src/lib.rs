@@ -1,6 +1,7 @@
+pub mod cdcl;
 pub mod cli;
 pub mod cnf;
-pub mod dpll;
 pub mod parser;
+pub mod preprocess;
 pub mod proof_logger;
 pub mod verify;

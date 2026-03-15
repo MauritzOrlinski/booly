@@ -1,8 +1,8 @@
-- [ ] Two watched literals (Mauritz)
-- [ ] Deriving conflict clauses (Max)
-- [ ] Non-chronological backtracking
-- [ ] Clause deletion strategy
-- [ ] Heuristic for CDCL
-- [ ] Restarts
-- [ ] Preprocessing (Konsti)
+- [x] Two watched literals (Mauritz)
+- [x] Deriving conflict clauses (Max)
+- [x] Non-chronological backtracking
+- [x] Clause deletion strategy
+- [x] Heuristic for CDCL
+- [x] Restarts
+- [x] Preprocessing (Konsti)
 - [ ] Proof logging
