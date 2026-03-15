@@ -5,5 +5,5 @@ perf.data
 perf.data.old
 .idea
 plot.png
-*.csv
+plot/data/*.csv
 model.json

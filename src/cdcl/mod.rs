@@ -1,6 +1,6 @@
 pub(crate) mod assignment;
 pub mod cdcl;
 mod conflict_analysis;
-mod heuristics;
+pub mod heuristics;
 mod implication_graph;
 pub mod unit_propagation;

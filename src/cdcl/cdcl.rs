@@ -1,6 +1,6 @@
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Conflict, Incomplete, Sat, Unsat};
-use crate::cdcl::heuristics::restart::GeometricHeuristic;
+use crate::cdcl::heuristics::restart::LubyHeuristic;
 use crate::cdcl::heuristics::{RestartHeuristic, SolverStats};
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
@@ -36,10 +36,16 @@ pub struct Cdcl {
     pub(crate) stats: SolverStats,
     pub(crate) lit_prio: PriorityQueue<Literal, usize>,
     pub(crate) lit_counter: FxHashMap<Literal, usize>,
+    pub(crate) enable_phase_saving: bool,
+    pub(crate) phase: Vec<Option<bool>>,
 }
 
 impl Cdcl {
-    pub fn new(cnf_formula: CnfFormula) -> Cdcl {
+    pub fn new(
+        cnf_formula: CnfFormula,
+        enable_phase_saving: bool,
+        restart_heuristic: Box<dyn RestartHeuristic>,
+    ) -> Cdcl {
         Cdcl {
             unit_queue: cnf_formula.generate_unit_queue(),
             lit_counter: {
@@ -63,15 +69,13 @@ impl Cdcl {
                     })
                     .collect()
             },
+            phase: cnf_formula.assignments.clone(),
             cnf_formula: cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
             stats: SolverStats::new(),
-            restart_heuristic: Box::new(GeometricHeuristic {
-                threshold: 400,
-                max_restarts: 10,
-                factor: 1.5,
-            }),
+            restart_heuristic: restart_heuristic,
+            enable_phase_saving: enable_phase_saving,
         }
     }
 
@@ -131,6 +135,7 @@ impl Cdcl {
                     if self.cnf_formula.all_assigned() {
                         return Sat;
                     }
+                    // choose next assignment (VSIDS)
                     let (lit, _) = self
                         .lit_prio
                         .clone()
@@ -143,7 +148,24 @@ impl Cdcl {
                                 .is_none()
                         })
                         .unwrap();
-                    self.decide(Assignment::new(lit.unsigned_abs(), lit.signum() == 1, None));
+                    if self.enable_phase_saving
+                        && self
+                            .phase
+                            .get(lit.unsigned_abs() as usize - 1)
+                            .unwrap()
+                            .is_some()
+                    {
+                        self.decide(Assignment::new(
+                            lit.unsigned_abs(),
+                            self.phase
+                                .get(lit.unsigned_abs() as usize - 1)
+                                .unwrap()
+                                .unwrap(),
+                            None,
+                        ));
+                    } else {
+                        self.decide(Assignment::new(lit.unsigned_abs(), lit.signum() == 1, None));
+                    }
                 }
             }
         }
@@ -175,6 +197,9 @@ impl Cdcl {
     }
 
     pub fn restart(&mut self) {
+        if self.enable_phase_saving {
+            self.phase = self.cnf_formula.assignments.clone();
+        }
         self.backjump(0);
         self.stats.conflict_count = 0;
         self.stats.number_of_restarts += 1;

@@ -37,7 +37,3 @@ criterion = "0.5"
 [[test]]
 name = "all_provided_inputs"
 harness = false
-
-[[bench]]
-name = "bench"
-harness = false
