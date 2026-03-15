@@ -143,7 +143,7 @@ impl CnfFormula {
             Success
         }
     }
-
+    #[inline]
     fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
         let id = lit.unsigned_abs();
         if lit.is_positive() {
