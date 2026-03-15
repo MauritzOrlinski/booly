@@ -8,7 +8,16 @@ pub type AssignmentValue = bool;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AssignmentResult {
     Success,
-    Conflict,
+    Conflict(usize),
+}
+
+impl AssignmentResult {
+    pub fn is_conflict(&self) -> bool {
+        match self {
+            AssignmentResult::Success => false,
+            AssignmentResult::Conflict(_) => true,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

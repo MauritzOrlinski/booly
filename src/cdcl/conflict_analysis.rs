@@ -35,7 +35,7 @@ impl Cdcl {
                     .collect();
 
             match variables_from_current_decision_level_in_learned_clause.len() {
-                n if n == 1 => {
+                1 => {
                     first_uip = variables_from_current_decision_level_in_learned_clause[0];
                     break;
                 }

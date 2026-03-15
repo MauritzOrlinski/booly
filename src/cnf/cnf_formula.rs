@@ -49,7 +49,7 @@ impl CnfFormula {
 
         match self.assignments[var_index] {
             Some(v) if v == assignment.value => return Success,
-            Some(_) => return Conflict,
+            Some(_) => unreachable!(), // we assume that we do not assign twice
             None => {
                 self.unset_vars -= 1;
             }
@@ -59,7 +59,7 @@ impl CnfFormula {
 
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
-        let mut is_conflict = false;
+        let mut is_conflict_id = None;
         let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
 
         for &clause_id in unsatisfied_clause_ids {
@@ -115,7 +115,7 @@ impl CnfFormula {
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
             } else {
-                is_conflict = true;
+                is_conflict_id = Some(clause_id);
                 break;
             }
         }
@@ -124,7 +124,11 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict { Conflict } else { Success }
+        if is_conflict_id.is_some() {
+            Conflict(is_conflict_id.unwrap())
+        } else {
+            Success
+        }
     }
 
     fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {

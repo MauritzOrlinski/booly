@@ -1,10 +1,10 @@
 use clap::Parser;
+use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::cli::CliArguments;
 use dpml::cnf::cnf_formula::{AssignedVarsView, CnfFormula};
 use dpml::parser::parse_cnf;
 use std::fs;
 use std::time::Instant;
-use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -51,6 +51,6 @@ s UNSATISFIABLE
 t {:.7}",
             elapsed.as_secs_f64()
         ),
-        CdclStatus::Incomplete | CdclStatus::Conflict => unreachable!(),
+        CdclStatus::Incomplete | CdclStatus::Conflict(_) => unreachable!(),
     }
 }
