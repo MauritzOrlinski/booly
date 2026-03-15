@@ -1,7 +1,7 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{to_lit, Literals};
+use crate::cnf::literals::{Literals, to_lit};
 use crate::cnf::variable::Variables;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
@@ -124,12 +124,7 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict {
-            println!("Here1");
-            Conflict
-        } else {
-            Success
-        }
+        if is_conflict { Conflict } else { Success }
     }
 
     fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
@@ -232,7 +227,7 @@ impl<'a> fmt::Display for AssignedVarsView<'a> {
             f,
             "{}",
             self.0
-                 .0
+                .0
                 .iter()
                 .enumerate()
                 .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))

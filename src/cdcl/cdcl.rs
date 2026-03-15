@@ -39,12 +39,10 @@ impl Cdcl {
             self.propagate_unit_clauses();
             match self.status {
                 Sat | Unsat => {
-                    println!("Exit2");
                     return self.status;
                 }
                 Conflict => {
                     if self.implication_graph.get_current_decision_level() == 0 {
-                        println!("Exit1");
                         return Unsat;
                     }
                     let latest_assignment = self

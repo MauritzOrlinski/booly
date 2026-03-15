@@ -42,7 +42,6 @@ impl Clause {
             }
         }
 
-        // first different lit
         Clause {
             satisfied_by: None,
             literals,
@@ -74,7 +73,6 @@ impl Clause {
             }
         }
 
-        // first different lit
         Clause {
             satisfied_by: None,
             literals,

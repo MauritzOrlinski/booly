@@ -73,7 +73,6 @@ impl Cdcl {
             learned_clause_literals = resolution;
         }
 
-        println!("we learned: ");
         let second_latest = self
             .implication_graph
             .get_2nd_latest_assignment_for_given_literals(&learned_clause_literals);
@@ -99,12 +98,6 @@ impl Cdcl {
                 clause_id,
             )
         }
-        // Clause {
-        //     satisfied_by: None,
-        //     literals: learned_clause_literals,
-        //     watched1: first_uip,
-        //     watched2: first_uip,
-        // }
     }
 
     pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {
