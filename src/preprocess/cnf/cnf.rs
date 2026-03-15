@@ -132,7 +132,7 @@ impl CNF {
     }
 
     pub fn to_cnf_formula(&mut self) -> CnfFormula {
-        // reactive units so that the assigment to recovered
+        // reactive units so that the assigment is recovered
         self.clauses.iter_mut().for_each(|(_, clause)| {
             if clause.lits.len() == 1 {
                 clause.active = true;
@@ -156,6 +156,13 @@ impl CNF {
                         Polarity::Negative
                     }
                 });
+
+                let variable = variables.get_mut(lit.var_id());
+                if lit.pos() {
+                    variable.positive_occurrences_count += 1;
+                } else {
+                    variable.negative_occurrences_count += 1;
+                }
             }
             let clause = crate::cnf::clause::Clause::new(literals, &mut variables, clause_id);
             clauses.push(clause);

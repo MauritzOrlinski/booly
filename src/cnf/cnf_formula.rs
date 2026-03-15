@@ -190,31 +190,6 @@ impl CnfFormula {
             .collect()
     }
 
-    pub fn pure_literals(&self) -> Vec<Assignment> {
-        self.variables
-            .iter()
-            .enumerate()
-            .filter(|(id, _)| self.assignments[*id].is_none())
-            .filter_map(|(i, v)| {
-                if v.positive_occurrences_count != 0 && v.negative_occurrences_count == 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: true,
-                        reason: None,
-                    })
-                } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: false,
-                        reason: None,
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
     }

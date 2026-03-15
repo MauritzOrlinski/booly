@@ -8,10 +8,6 @@ default-run = "main"
 name = "main"
 path = "src/bin/main.rs"
 
-#[[bin]]
-#name = "plot"
-#path = "src/bin/plot.rs"
-
 [profile.release]
 debug = true
 codegen-units = 1
