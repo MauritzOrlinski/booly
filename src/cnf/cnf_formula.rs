@@ -1,16 +1,17 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{Polarity, to_lit};
+use crate::cnf::literals::{to_lit, Polarity};
 use crate::cnf::variable::Variables;
-use std::collections::{BTreeMap, VecDeque};
+use rustc_hash::FxHashMap;
+use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
 use std::mem::swap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: BTreeMap<ClauseID, Clause>,
+    pub(crate) clauses: FxHashMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
     pub(crate) variable_count: usize,
@@ -21,7 +22,7 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
-        let clauses_tree: BTreeMap<ClauseID, Clause> = clauses.into_iter().enumerate().collect();
+        let clauses_tree: FxHashMap<ClauseID, Clause> = clauses.into_iter().enumerate().collect();
 
         CnfFormula {
             clauses: clauses_tree,
@@ -228,7 +229,7 @@ impl<'a> fmt::Display for AssignedVarsView<'a> {
             f,
             "{}",
             self.0
-                .0
+                 .0
                 .iter()
                 .enumerate()
                 .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))

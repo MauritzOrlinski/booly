@@ -1,17 +1,22 @@
 use crate::preprocess::cnf::{clause::ClauseID, cnf::CNF, lit::Lit};
 
+fn bloom_check(clause_sig1: u128, clause_sig2: u128, lit: Lit) -> bool {
+    (clause_sig1 & !(1 << lit.neg().hash1())) & !(clause_sig2 & !(1 << lit.hash1())) != 0
+        && (clause_sig1 & !(1 << lit.neg().hash2())) & !(clause_sig2 & !(1 << lit.hash2())) != 0
+}
+
 // C_1 \ -a subset C_2 \ a
 fn selfsubsumes_aux(clause_id_1: ClauseID, clause_id_2: ClauseID, lit: Lit, cnf: &CNF) -> bool {
     let clause_1 = cnf.clauses.get(&clause_id_1).unwrap();
     let clause_2 = cnf.clauses.get(&clause_id_2).unwrap();
 
-    if (clause_1.sig & !(1 << lit.not().hash())) & !(clause_2.sig & !(1 << lit.hash())) != 0 {
+    if bloom_check(clause_1.sig, clause_2.sig, lit) {
         false
     } else {
         clause_1
             .lits
             .iter()
-            .all(|lit_| lit_.not() == lit || clause_2.lits.contains(lit_))
+            .all(|lit_| lit_.neg() == lit || clause_2.lits.contains(lit_))
     }
 }
 

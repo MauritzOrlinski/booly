@@ -127,7 +127,9 @@ impl ImplicationGraph {
         cnf_formula: &mut CnfFormula,
         desired_decision_level: DecisionLevel,
     ) {
-        if self.get_current_decision_level() < desired_decision_level {
+        if self.get_current_decision_level() < desired_decision_level
+            || self.get_current_decision_level() == 0
+        {
             return;
         }
         let split_point = self.decision_level_start[desired_decision_level];
