@@ -62,7 +62,7 @@ impl Cdcl {
                     most_recent_assignment
                 ),
             );
-            let antecedent_clause = &self.cnf_formula.clauses.get(&antecedent_clause_id).unwrap();
+            let antecedent_clause = &self.cnf_formula.clauses.get(antecedent_clause_id).unwrap();
 
             let resolution = Self::resolve(
                 &learned_clause_literals,
@@ -85,9 +85,13 @@ impl Cdcl {
                     .find(|x| x.0 == second_latest.variable_id)
                     .expect("should be included"),
             )
-        } else {first_uip};
+        } else {
+            first_uip
+        };
 
-        let lbd = self.implication_graph.calculate_lbd(&learned_clause_literals);
+        let lbd = self
+            .implication_graph
+            .calculate_lbd(&learned_clause_literals);
 
         Clause::new_with_watched(
             learned_clause_literals,
@@ -134,7 +138,7 @@ impl Cdcl {
 #[cfg(test)]
 mod tests {
     use crate::cdcl::assignment::Assignment;
-    use crate::cdcl::cdcl::{Cdcl, CdclStatus, CLAUSES_INITIAL_LIMIT};
+    use crate::cdcl::cdcl::{CLAUSES_INITIAL_LIMIT, Cdcl, CdclStatus};
     use crate::cdcl::heuristics::SolverStats;
     use crate::cdcl::heuristics::restart::Never;
     use crate::cdcl::implication_graph::ImplicationGraph;
@@ -181,7 +185,7 @@ mod tests {
         }
 
         fn execute(&self, conflict_clause_id: ClauseID) -> Clause {
-            let conflict_clause = &self.cnf.clauses.get(&conflict_clause_id).unwrap();
+            let conflict_clause = &self.cnf.clauses.get(conflict_clause_id).unwrap();
 
             let mut cdcl = Cdcl {
                 cnf_formula: self.cnf.clone(),
@@ -196,10 +200,8 @@ mod tests {
                 enable_phase_saving: false,
                 phase: vec![],
             };
-
-            let learned = cdcl
-                .generate_learned_clause(conflict_clause, cdcl.cnf_formula.get_next_clause_id());
-            learned
+            let id = cdcl.cnf_formula.get_next_clause_id();
+            cdcl.generate_learned_clause(conflict_clause, id)
         }
     }
 

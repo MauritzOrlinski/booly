@@ -121,7 +121,7 @@ impl Cdcl {
                     let conflict_clause = self
                         .cnf_formula
                         .clauses
-                        .get(&conflict_clause_id)
+                        .get(conflict_clause_id)
                         .unwrap()
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();

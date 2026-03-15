@@ -14,10 +14,9 @@ impl Cdcl {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && !self.status.is_conflict()
         {
-
-            if !self.cnf_formula.clauses.contains_key(&unit_clause_id) {
-                continue;
-            }
+            // if !self.cnf_formula.clauses.contains_key(&unit_clause_id) {
+            //     continue;
+            // }
 
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause_id);
             let old_assignment =
@@ -63,7 +62,7 @@ impl Cdcl {
     /// # Returns
     /// The satisfying assignment.
     fn find_satisfying_assignment_for_unit_clause(&self, unit_clause_id: ClauseID) -> Assignment {
-        let unit_clause = &self.cnf_formula.clauses.get(&unit_clause_id).unwrap();
+        let unit_clause = &self.cnf_formula.clauses.get(unit_clause_id).unwrap();
         Assignment::new(
             unit_clause.watched1.unsigned_abs(),
             unit_clause.watched1.is_positive(),

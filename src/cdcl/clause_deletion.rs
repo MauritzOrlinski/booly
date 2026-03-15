@@ -39,13 +39,13 @@ impl Cdcl {
             .get(self.clauses_limit..)
             .unwrap()
             .iter()
-            .map(|id| **id)
+            .map(|id| *id)
             .collect();
 
         for clause_id in &delete_candidates {
-            if let Some(clause) = self.cnf_formula.clauses.remove(clause_id) {
+            if let Some(clause) = self.cnf_formula.clauses.get_mut(*clause_id) {
                 for &lit in &clause.literals.0 {
-                    let variable = &mut self.cnf_formula.variables.get_mut(lit.abs() as VariableId);
+                    let variable = self.cnf_formula.variables.get_mut(lit.abs() as VariableId);
 
                     if lit.is_positive() {
                         variable
@@ -57,8 +57,10 @@ impl Cdcl {
                             .retain(|&w_id| w_id != *clause_id);
                     }
                 }
+                self.cnf_formula.delete_clause(*clause_id);
             }
         }
+        self.unit_queue.clear();
     }
 }
 
