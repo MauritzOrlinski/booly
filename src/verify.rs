@@ -8,7 +8,7 @@ use crate::cnf::cnf_formula::CnfFormula;
 /// # Returns
 /// A boolean depending on whether the given CNF formula is satisfied.
 pub fn verify_satisfied(cnf_formula: &CnfFormula) -> bool {
-    cnf_formula.clauses.iter().all(|clause| {
+    cnf_formula.clauses.iter().all(|(_, clause)| {
         clause
             .literals
             .iter()

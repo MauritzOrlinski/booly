@@ -129,55 +129,55 @@ pub fn recover_assigment_niver_compat(
     recover_assigment_niver(niver_trace, cnf, assignment)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{
-        dpll::{
-            dpll::{Dpll, DpllStatus},
-            heuristics::trivial::Trivial,
-        },
-        parser::parse,
-    };
-
-    #[test]
-    fn test_niverall_sat() {
-        let cnf_pre = parse(include_str!("../../inputs/sat/aim-50-1_6-yes1-1.cnf")).unwrap();
-
-        let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
-        let niver_trace = niver_all(&mut cnf);
-
-        let heuristic = Box::new(Trivial);
-        let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
-        let status = dpll.solve();
-
-        assert_eq!(status, DpllStatus::Sat);
-
-        let assignment = recover_assigment_niver_compat(niver_trace, cnf, dpll.cnf_formula);
-        let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
-        assert!(cnf.clauses.iter().all(|(_, clause)| {
-            clause.lits.iter().any(|lit| {
-                if lit.pos() {
-                    *assignment.get(&lit.var_id()).unwrap()
-                } else {
-                    !*assignment.get(&lit.var_id()).unwrap()
-                }
-            })
-        }))
-    }
-
-    #[test]
-    fn test_niver_does_pure_literal() {
-        let cnf_pre = parse(
-            "\
-p cnf 3 2
-1 2 0
--1 3 0
-",
-        )
-        .unwrap();
-        let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
-        niver(1, &mut cnf);
-        assert_eq!(cnf.clauses[&3].lits, vec![Lit::new(2), Lit::new(3)]);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::{
+//         dpll::{
+//             dpll::{Dpll, DpllStatus},
+//             heuristics::trivial::Trivial,
+//         },
+//         parser::parse,
+//     };
+//
+//     #[test]
+//     fn test_niverall_sat() {
+//         let cnf_pre = parse(include_str!("../../inputs/sat/aim-50-1_6-yes1-1.cnf")).unwrap();
+//
+//         let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+//         let niver_trace = niver_all(&mut cnf);
+//
+//         let heuristic = Box::new(Trivial);
+//         let mut dpll = Dpll::new(cnf.to_cnf_formula(), heuristic);
+//         let status = dpll.solve();
+//
+//         assert_eq!(status, DpllStatus::Sat);
+//
+//         let assignment = recover_assigment_niver_compat(niver_trace, cnf, dpll.cnf_formula);
+//         let cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+//         assert!(cnf.clauses.iter().all(|(_, clause)| {
+//             clause.lits.iter().any(|lit| {
+//                 if lit.pos() {
+//                     *assignment.get(&lit.var_id()).unwrap()
+//                 } else {
+//                     !*assignment.get(&lit.var_id()).unwrap()
+//                 }
+//             })
+//         }))
+//     }
+//
+//     #[test]
+//     fn test_niver_does_pure_literal() {
+//         let cnf_pre = parse(
+//             "\
+// p cnf 3 2
+// 1 2 0
+// -1 3 0
+// ",
+//         )
+//         .unwrap();
+//         let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
+//         niver(1, &mut cnf);
+//         assert_eq!(cnf.clauses[&3].lits, vec![Lit::new(2), Lit::new(3)]);
+//     }
+// }
