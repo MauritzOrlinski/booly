@@ -189,12 +189,13 @@ mod tests {
                 implication_graph: self.implication_graph.clone(),
                 status: CdclStatus::Incomplete,
                 unit_queue: Default::default(),
-                heuristic: Box::new(Trivial),
                 stats: SolverStats::new(),
                 restart_heuristic: Box::new(FixedIntervalHeuristic {
                     fixed_restart_policy: 700,
                     max_restarts: 8,
                 }),
+                lit_prio: Default::default(),
+                lit_counter: Default::default(),
             };
 
             let learned = cdcl

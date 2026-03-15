@@ -13,6 +13,7 @@ pub struct CnfFormula {
     pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
+    pub(crate) variable_count: usize,
     /// we store the variable assignments now in this assignments vector, as it makes the values
     /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
@@ -26,7 +27,8 @@ impl CnfFormula {
             clauses: clauses_tree,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
-            variables,
+            variable_count: variables.len(),
+            variables: variables,
         }
     }
 
@@ -181,31 +183,6 @@ impl CnfFormula {
             .filter_map(|(clause_id, clause)| {
                 if clause.is_unit(&self.assignments) {
                     Some(*clause_id)
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
-    pub fn pure_literals(&self) -> Vec<Assignment> {
-        self.variables
-            .iter()
-            .enumerate()
-            .filter(|(id, _)| self.assignments[*id].is_none())
-            .filter_map(|(i, v)| {
-                if v.positive_occurrences_count != 0 && v.negative_occurrences_count == 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: true,
-                        reason: None,
-                    })
-                } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
-                    Some(Assignment {
-                        variable_id: i as u32 + 1,
-                        value: false,
-                        reason: None,
-                    })
                 } else {
                     None
                 }

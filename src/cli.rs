@@ -1,18 +1,6 @@
-use crate::cdcl::heuristics::Heuristic;
-use crate::cdcl::heuristics::trivial::Trivial;
+use clap::Parser;
 use clap::ValueHint;
-use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
-
-#[derive(ValueEnum, Debug, Clone, Copy)]
-enum SimpleHeuristicCliArgument {
-    Trivial,
-}
-
-#[derive(ValueEnum, Debug, Clone, Copy)]
-enum CompositeHeuristicCliArgument {
-    Trivial,
-}
 
 #[derive(Parser, Debug)]
 #[command(name = "dpml", version)]
@@ -23,13 +11,6 @@ pub struct CliArguments {
 }
 
 impl CliArguments {
-    pub fn get_heuristic(&self) -> Box<dyn Heuristic> {
-        Box::new(Trivial)
-    }
-    pub fn load_heuristic(&self) -> Box<dyn Heuristic> {
-        self.get_heuristic()
-    }
-
     pub fn get_input_file(&self) -> PathBuf {
         self.input_file.clone()
     }

@@ -5,6 +5,9 @@ use crate::cdcl::heuristics::{Heuristic, RestartHeuristic, SolverStats};
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::cnf_formula::CnfFormula;
+use crate::cnf::literals::Literal;
+use priority_queue::PriorityQueue;
+use std::collections::BTreeMap;
 use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -29,19 +32,40 @@ pub struct Cdcl {
     pub(crate) implication_graph: ImplicationGraph,
     pub(crate) status: CdclStatus,
     pub(crate) unit_queue: VecDeque<ClauseID>,
-    pub(crate) heuristic: Box<dyn Heuristic>,
     pub(crate) restart_heuristic: Box<dyn RestartHeuristic>,
     pub(crate) stats: SolverStats,
+    pub(crate) lit_prio: PriorityQueue<Literal, usize>,
+    pub(crate) lit_counter: BTreeMap<Literal, usize>,
 }
 
 impl Cdcl {
-    pub fn new(cnf_formula: CnfFormula, heuristic: Box<dyn Heuristic>) -> Cdcl {
+    pub fn new(cnf_formula: CnfFormula) -> Cdcl {
         Cdcl {
             unit_queue: cnf_formula.generate_unit_queue(),
-            cnf_formula,
+            lit_counter: {
+                (-(cnf_formula.variable_count as i32)..0)
+                    .chain(1..=cnf_formula.variable_count as i32)
+                    .map(|lit| (lit, 0))
+                    .collect()
+            },
+            lit_prio: {
+                (-(cnf_formula.variable_count as i32)..0)
+                    .chain(1..=cnf_formula.variable_count as i32)
+                    .map(|lit| {
+                        (lit, {
+                            let var = cnf_formula.variables.get(lit.unsigned_abs());
+                            if lit.signum() == 1 {
+                                var.positive_occurrences_count
+                            } else {
+                                var.negative_occurrences_count
+                            }
+                        })
+                    })
+                    .collect()
+            },
+            cnf_formula: cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
-            heuristic,
             stats: SolverStats::new(),
             restart_heuristic: Box::new(GeometricHeuristic {
                 threshold: 100,
@@ -52,10 +76,23 @@ impl Cdcl {
     }
 
     pub fn solve(&mut self) -> CdclStatus {
+        let mut count: u32 = 0;
         if self.cnf_formula.clauses.is_empty() {
             return CdclStatus::Sat;
         }
         loop {
+            count += 1;
+            if count == 255 {
+                count = 0;
+                for lit in (-(self.cnf_formula.variable_count as i32)..0)
+                    .chain(1..=self.cnf_formula.variable_count as i32)
+                {
+                    self.lit_prio.change_priority_by(&lit, |p| {
+                        *p = *p / 2 + self.lit_counter.get(&lit).unwrap()
+                    });
+                    self.lit_counter.insert(lit, 0);
+                }
+            }
             self.propagate_unit_clauses();
             match self.status {
                 Sat | Unsat => {
@@ -73,6 +110,11 @@ impl Cdcl {
                         .clone();
                     let clause_id = self.cnf_formula.get_next_clause_id();
                     let learned_clause = self.generate_learned_clause(conflict_clause, clause_id);
+                    for &literal in learned_clause.literals.0.iter() {
+                        self.lit_counter
+                            .entry(literal)
+                            .and_modify(|counter| *counter += 1);
+                    }
                     let backjump_decision_level =
                         self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
@@ -89,8 +131,19 @@ impl Cdcl {
                     if self.cnf_formula.all_assigned() {
                         return Sat;
                     }
-                    let next_assignment = self.heuristic.chose_next_assignment(&self.cnf_formula);
-                    self.decide(next_assignment);
+                    let (lit, _) = self
+                        .lit_prio
+                        .clone()
+                        .into_sorted_iter()
+                        .find(|(lit, _)| {
+                            self.cnf_formula
+                                .assignments
+                                .get(lit.unsigned_abs() as usize - 1)
+                                .unwrap()
+                                .is_none()
+                        })
+                        .unwrap();
+                    self.decide(Assignment::new(lit.unsigned_abs(), lit.signum() == 1, None));
                 }
             }
         }
@@ -131,7 +184,6 @@ impl Cdcl {
 #[cfg(test)]
 mod tests {
     use crate::cdcl::cdcl::Cdcl;
-    use crate::cdcl::heuristics::trivial::Trivial;
     use crate::parser::parse_cnf;
 
     #[test]
@@ -440,7 +492,7 @@ p cnf 50 300
 -16 18 21 0";
 
         let cnf = parse_cnf(raw_cnf).unwrap();
-        let mut cdcl = Cdcl::new(cnf, Box::new(Trivial));
+        let mut cdcl = Cdcl::new(cnf);
         cdcl.solve();
 
         println!("\n\n\n\n\n\n{:#?}", cdcl.status);

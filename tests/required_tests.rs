@@ -1,5 +1,4 @@
 use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
-use dpml::cdcl::heuristics::trivial::Trivial;
 use dpml::parser::{parse, parse_cnf};
 use dpml::preprocess::cnf::cnf::CNF;
 use dpml::preprocess::niver::recover_assigment_niver_compat;
@@ -9,8 +8,7 @@ use std::path::Path;
 
 fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = Trivial;
-    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf);
 
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Sat);
@@ -21,8 +19,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
 fn test_unsatisfiable(_: &Path, input: String) -> datatest_stable::Result<()> {
     let cnf = parse_cnf(input.as_str()).unwrap();
-    let heuristic = Trivial;
-    let mut dpll = Cdcl::new(cnf, Box::new(heuristic));
+    let mut dpll = Cdcl::new(cnf);
 
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Unsat);
@@ -35,8 +32,7 @@ fn test_preprocess_sat(_: &Path, input: String) -> datatest_stable::Result<()> {
     let mut cnf = CNF::from_pre(&cnf_pre.0, cnf_pre.1);
     let niver_trace = preprocess(&mut cnf);
 
-    let heuristic = Box::new(Trivial);
-    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), heuristic);
+    let mut cdcl = Cdcl::new(cnf.to_cnf_formula());
     let status = cdcl.solve();
 
     assert_eq!(status, CdclStatus::Sat);
@@ -69,8 +65,7 @@ fn test_preprocess_unsat(_: &Path, input: String) -> datatest_stable::Result<()>
         return Ok(());
     }
 
-    let heuristic = Box::new(Trivial);
-    let mut cdcl = Cdcl::new(cnf.to_cnf_formula(), heuristic);
+    let mut cdcl = Cdcl::new(cnf.to_cnf_formula());
     let status = cdcl.solve();
 
     assert_eq!(status, CdclStatus::Unsat);
