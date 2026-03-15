@@ -60,6 +60,18 @@ impl ImplicationGraph {
         })
     }
 
+    // Finds the n assignments within a clause that occurred most recently on the trail.
+    /// This is used during conflict analysis to identify the most recent contributor to a conflict.
+    pub fn get_latest_n_for_given_literals(&self, n: usize, clause: &Literals) -> Vec<&Assignment> {
+        self.trail.iter()
+            .rev()
+            .filter(|assignment| {
+                clause.iter()
+                    .any(|(variable_id, _)| variable_id == assignment.variable_id)
+            }).take(n)
+            .collect()
+    }
+
     /// Calculates the decision level of a specific variable.
     ///
     /// # Returns
