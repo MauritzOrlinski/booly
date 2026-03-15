@@ -51,12 +51,13 @@ impl Cdcl {
                 }
                 Conflict(conflict_clause_id) => {
                     if self.implication_graph.get_current_decision_level() == 0 {
+                        println!("{}", self.cnf_formula);
                         return Unsat;
                     }
-                    let latest_assignment = self
-                        .implication_graph
-                        .get_latest_assignment()
-                        .expect("If there is a conflict, there must at least be one assignment.");
+                    // let latest_assignment = self
+                    //     .implication_graph
+                    //     .get_latest_assignment()
+                    //     .expect("If there is a conflict, there must at least be one assignment.");
                     let conflict_clause: &Clause = &self
                         .cnf_formula
                         .clauses
