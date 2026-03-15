@@ -1,9 +1,8 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{to_lit, Polarity};
+use crate::cnf::literals::{Polarity, to_lit};
 use crate::cnf::variable::Variables;
-use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 use std::fmt;
 use std::fmt::Formatter;
@@ -11,7 +10,7 @@ use std::mem::swap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CnfFormula {
-    pub(crate) clauses: FxHashMap<ClauseID, Clause>,
+    pub(crate) clauses: Vec<Clause>,
     pub variables: Variables,
     unset_vars: usize,
     pub(crate) variable_count: usize,
@@ -22,10 +21,8 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
-        let clauses_tree: FxHashMap<ClauseID, Clause> = clauses.into_iter().enumerate().collect();
-
         CnfFormula {
-            clauses: clauses_tree,
+            clauses: clauses,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
             variable_count: variables.len(),
@@ -72,7 +69,7 @@ impl CnfFormula {
                 var_id as i32
             };
 
-            let clause = self.clauses.get_mut(&clause_id).unwrap();
+            let clause = self.clauses.get_mut(clause_id).unwrap();
 
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
@@ -181,9 +178,10 @@ impl CnfFormula {
     pub fn generate_unit_queue(&self) -> VecDeque<ClauseID> {
         self.clauses
             .iter()
+            .enumerate()
             .filter_map(|(clause_id, clause)| {
                 if clause.is_unit(&self.assignments) {
-                    Some(*clause_id)
+                    Some(clause_id)
                 } else {
                     None
                 }
@@ -197,12 +195,12 @@ impl CnfFormula {
 
     pub fn get_next_clause_id(&self) -> ClauseID {
         let id = self.clauses.len() as ClauseID;
-        assert!(!self.clauses.contains_key(&id));
+        // assert!(!self.clauses.contains_key(&id));
         id
     }
 
     pub fn test_sat(&self) -> bool {
-        self.clauses.iter().all(|(_, clause)| {
+        self.clauses.iter().all(|clause| {
             clause
                 .literals
                 .iter()
@@ -229,7 +227,7 @@ impl<'a> fmt::Display for AssignedVarsView<'a> {
             f,
             "{}",
             self.0
-                 .0
+                .0
                 .iter()
                 .enumerate()
                 .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))
@@ -256,7 +254,7 @@ impl fmt::Display for CnfFormula {
             self.clauses.len(),
             self.clauses
                 .iter()
-                .map(|(_, clause)| clause.to_string())
+                .map(|clause| clause.to_string())
                 .collect::<Vec<String>>()
                 .join("\n")
         )

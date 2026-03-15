@@ -36,11 +36,6 @@ impl Lit {
         (mix32(self.0 as u32) & 0x7f) as u8
     }
 
-    #[inline]
-    pub fn hash2(self) -> u8 {
-        (mix32((self.0 as u32) ^ 0x9e37_79b9) & 0x7f) as u8
-    }
-
     pub fn var_id(self) -> VarId {
         self.0.unsigned_abs()
     }

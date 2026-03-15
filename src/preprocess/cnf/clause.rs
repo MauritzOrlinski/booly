@@ -14,8 +14,7 @@ impl Clause {
         Clause {
             sig: lits.iter().fold(0u128, |acc, &lit| {
                 let h1 = lit.hash1() as u32;
-                let h2 = lit.hash2() as u32;
-                acc | (1u128 << h1) | (1u128 << h2)
+                acc | (1u128 << h1)
             }),
             lits,
             active: true,

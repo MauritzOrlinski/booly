@@ -1,8 +1,7 @@
 use crate::preprocess::cnf::{clause::ClauseID, cnf::CNF, lit::Lit};
 
 fn bloom_check(clause_sig1: u128, clause_sig2: u128, lit: Lit) -> bool {
-    (clause_sig1 & !(1 << lit.neg().hash1())) & !(clause_sig2 & !(1 << lit.hash1())) != 0
-        && (clause_sig1 & !(1 << lit.neg().hash2())) & !(clause_sig2 & !(1 << lit.hash2())) != 0
+    (clause_sig1 & !(1u128 << lit.neg().hash1())) & !(clause_sig2 & !(1u128 << lit.hash1())) != 0
 }
 
 // C_1 \ -a subset C_2 \ a
