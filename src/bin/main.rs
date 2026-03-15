@@ -49,6 +49,6 @@ s UNSATISFIABLE
 t {:.7}",
             elapsed.as_secs_f64()
         ),
-        CdclStatus::Incomplete | CdclStatus::Conflict => unreachable!(),
+        CdclStatus::Incomplete | CdclStatus::Conflict(_) => unreachable!(),
     }
 }

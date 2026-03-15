@@ -1,7 +1,7 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{Literals, to_lit};
+use crate::cnf::literals::{Polarity, to_lit};
 use crate::cnf::variable::Variables;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
@@ -51,7 +51,7 @@ impl CnfFormula {
 
         match self.assignments[var_index] {
             Some(v) if v == assignment.value => return Success,
-            Some(_) => return Conflict,
+            Some(_) => unreachable!(), // we assume that we do not assign twice
             None => {
                 self.unset_vars -= 1;
             }
@@ -61,7 +61,7 @@ impl CnfFormula {
 
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
-        let mut is_conflict = false;
+        let mut is_conflict_id = None;
         let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
 
         for &clause_id in unsatisfied_clause_ids {
@@ -117,7 +117,7 @@ impl CnfFormula {
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
             } else {
-                is_conflict = true;
+                is_conflict_id = Some(clause_id);
                 break;
             }
         }
@@ -126,7 +126,11 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict { Conflict } else { Success }
+        if is_conflict_id.is_some() {
+            Conflict(is_conflict_id.unwrap())
+        } else {
+            Success
+        }
     }
 
     fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
@@ -215,11 +219,30 @@ impl CnfFormula {
         AssignedVarsView(&self.variables, &self.assignments)
     }
 
-    pub fn add_clause(&mut self, literals: Literals) -> ClauseID {
-        let id = self.clauses.len();
-        let clause = Clause::new(literals, &mut self.variables, id);
-        self.clauses.insert(id, clause);
+    pub fn get_next_clause_id(&self) -> ClauseID {
+        let id = self.clauses.len() as ClauseID;
+        assert!(!self.clauses.contains_key(&id));
         id
+    }
+
+    pub fn test_sat(&self) -> bool {
+        self.clauses.iter().all(|(_, clause)| {
+            clause
+                .literals
+                .iter()
+                .any(|(var_id, polarity)| match polarity {
+                    Polarity::Positive => self
+                        .assignments
+                        .get((var_id - 1) as usize)
+                        .unwrap()
+                        .unwrap(),
+                    Polarity::Negative => !self
+                        .assignments
+                        .get((var_id - 1) as usize)
+                        .unwrap()
+                        .unwrap(),
+                })
+        })
     }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);

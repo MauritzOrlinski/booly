@@ -9,6 +9,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
 
     let result = dpll.solve();
     assert_eq!(result, Sat);
+    assert!(dpll.cnf_formula.test_sat());
     Ok(())
 }
 

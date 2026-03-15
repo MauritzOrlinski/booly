@@ -10,6 +10,7 @@ fn test_satisfied(_: &Path, input: String) -> datatest_stable::Result<()> {
     let result = dpll.solve();
     assert_eq!(result, CdclStatus::Sat);
     assert!(verify_satisfied(&dpll.cnf_formula));
+
     Ok(())
 }
 

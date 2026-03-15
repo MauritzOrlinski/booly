@@ -1,9 +1,9 @@
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 
+use crate::cdcl::assignment::AssignmentValue;
 use crate::cnf::variable::VariableId;
 use std::fmt;
 use std::fmt::Formatter;
-use crate::cdcl::assignment::AssignmentValue;
 
 pub type Literal = i32;
 
@@ -81,7 +81,7 @@ impl Literals {
     }
 
     pub fn remove(&mut self, var: VariableId) {
-        self.0.retain(|literal| literal.abs() != var as i32);
+        self.0.retain(|literal| literal.unsigned_abs() != var);
     }
 
     pub fn combine(a: &Literals, b: &Literals) -> Literals {

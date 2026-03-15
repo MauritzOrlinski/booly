@@ -1,7 +1,9 @@
 use crate::cdcl::assignment::Assignment;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
-use crate::cnf::variable::{VariableId};
+use crate::cnf::variable::VariableId;
+use std::fmt;
+use std::fmt::Formatter;
 
 pub type DecisionLevel = usize;
 
@@ -50,11 +52,45 @@ impl ImplicationGraph {
 
     /// Finds the assignment within a clause that occurred most recently on the trail.
     /// This is used during conflict analysis to identify the most recent contributor to a conflict.
-    pub fn get_latest_assignment_for_given_literals(&self, clause: &Literals) -> Option<&Assignment> {
+    pub fn get_latest_assignment_for_given_literals(
+        &self,
+        clause: &Literals,
+    ) -> Option<&Assignment> {
         self.trail.iter().rfind(|assignment| {
-            clause.iter()
+            clause
+                .iter()
                 .any(|(variable_id, _)| variable_id == assignment.variable_id)
         })
+    }
+    /// Finds the assignment within a clause that occurred 2nd most recently on the trail.
+    /// This is used during conflict analysis to identify the 2nd most recent contributor to a conflict.
+    pub fn get_2nd_latest_assignment_for_given_literals(
+        &self,
+        clause: &Literals,
+    ) -> Option<&Assignment> {
+        self.trail
+            .iter()
+            .filter(|assignment| {
+                clause
+                    .iter()
+                    .any(|(variable_id, _)| variable_id == assignment.variable_id)
+            })
+            .nth_back(1)
+    }
+
+    // Finds the n assignments within a clause that occurred most recently on the trail.
+    /// This is used during conflict analysis to identify the most recent contributor to a conflict.
+    pub fn get_latest_n_for_given_literals(&self, n: usize, clause: &Literals) -> Vec<&Assignment> {
+        self.trail
+            .iter()
+            .rev()
+            .filter(|assignment| {
+                clause
+                    .iter()
+                    .any(|(variable_id, _)| variable_id == assignment.variable_id)
+            })
+            .take(n)
+            .collect()
     }
 
     /// Calculates the decision level of a specific variable.
@@ -64,7 +100,9 @@ impl ImplicationGraph {
     /// * `None` - If the variable has not been assigned.
     pub fn get_decision_level(&self, variable: &VariableId) -> Option<usize> {
         let trail_index = self.trail.iter().position(|a| a.variable_id == *variable)?;
-        let level = self.decision_level_start.partition_point(|&start_index| start_index <= trail_index);
+        let level = self
+            .decision_level_start
+            .partition_point(|&start_index| start_index <= trail_index);
         Some(level)
     }
 
@@ -84,13 +122,35 @@ impl ImplicationGraph {
     ///
     /// # Panics
     /// Panics if `desired_decision_level` is higher than current decision level or negative.
-    pub fn backjump(&mut self, cnf_formula: &mut CnfFormula, desired_decision_level: DecisionLevel) {
+    pub fn backjump(
+        &mut self,
+        cnf_formula: &mut CnfFormula,
+        desired_decision_level: DecisionLevel,
+    ) {
         let split_point = self.decision_level_start[desired_decision_level];
-        for assignment in &self.trail[split_point..]{
+        for assignment in &self.trail[split_point..] {
             cnf_formula.undo_assignment(assignment);
         }
         self.trail.truncate(split_point);
         self.decision_level_start.truncate(desired_decision_level);
+    }
+}
 
+impl fmt::Display for ImplicationGraph {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.trail
+                .iter()
+                .map(|assignment| {
+                    match assignment.reason {
+                        None => format!(" D:{}", assignment),
+                        Some(_) => format!("→{}", assignment),
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join("")
+        )
     }
 }
