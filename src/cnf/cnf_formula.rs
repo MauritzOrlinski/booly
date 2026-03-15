@@ -229,8 +229,16 @@ impl CnfFormula {
                 .literals
                 .iter()
                 .any(|(var_id, polarity)| match polarity {
-                    Polarity::Positive => self.assignments.get(var_id as usize).unwrap().unwrap(),
-                    Polarity::Negative => !self.assignments.get(var_id as usize).unwrap().unwrap(),
+                    Polarity::Positive => self
+                        .assignments
+                        .get((var_id - 1) as usize)
+                        .unwrap()
+                        .unwrap(),
+                    Polarity::Negative => !self
+                        .assignments
+                        .get((var_id - 1) as usize)
+                        .unwrap()
+                        .unwrap(),
                 })
         })
     }
