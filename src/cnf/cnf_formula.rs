@@ -198,26 +198,6 @@ impl CnfFormula {
         // assert!(!self.clauses.contains_key(&id));
         id
     }
-
-    pub fn test_sat(&self) -> bool {
-        self.clauses.iter().all(|clause| {
-            clause
-                .literals
-                .iter()
-                .any(|(var_id, polarity)| match polarity {
-                    Polarity::Positive => self
-                        .assignments
-                        .get((var_id - 1) as usize)
-                        .unwrap()
-                        .unwrap(),
-                    Polarity::Negative => !self
-                        .assignments
-                        .get((var_id - 1) as usize)
-                        .unwrap()
-                        .unwrap(),
-                })
-        })
-    }
 }
 pub struct AssignedVarsView<'a>(pub &'a Variables, pub &'a [Option<bool>]);
 
