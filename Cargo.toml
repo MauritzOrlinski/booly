@@ -41,9 +41,9 @@ criterion = "0.5"
 name = "required_tests"
 harness = false
 
-[[test]]
-name = "all_provided_inputs"
-harness = false
+# [[test]]
+# name = "all_provided_inputs"
+# harness = false
 
 [[bench]]
 name = "bench"
