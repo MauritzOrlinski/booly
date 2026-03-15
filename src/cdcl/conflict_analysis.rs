@@ -135,6 +135,8 @@ impl Cdcl {
 mod tests {
     use crate::cdcl::assignment::Assignment;
     use crate::cdcl::cdcl::{Cdcl, CdclStatus};
+    use crate::cdcl::heuristics::SolverStats;
+    use crate::cdcl::heuristics::restart::FixedIntervalHeuristic;
     use crate::cdcl::heuristics::trivial::Trivial;
     use crate::cdcl::implication_graph::ImplicationGraph;
     use crate::cnf::clause::{Clause, ClauseID};
@@ -188,6 +190,11 @@ mod tests {
                 status: CdclStatus::Incomplete,
                 unit_queue: Default::default(),
                 heuristic: Box::new(Trivial),
+                stats: SolverStats::new(),
+                restart_heuristic: Box::new(FixedIntervalHeuristic {
+                    fixed_restart_policy: 700,
+                    max_restarts: 8,
+                }),
             };
 
             let learned = cdcl

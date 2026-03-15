@@ -121,12 +121,15 @@ impl ImplicationGraph {
     /// * `desired_decision_level` - The target level to return to. All assignments above this decision level will be removed.
     ///
     /// # Panics
-    /// Panics if `desired_decision_level` is higher than current decision level or negative.
+    /// Panics if `desired_decision_level` is negative.
     pub fn backjump(
         &mut self,
         cnf_formula: &mut CnfFormula,
         desired_decision_level: DecisionLevel,
     ) {
+        if self.get_current_decision_level() < desired_decision_level {
+            return;
+        }
         let split_point = self.decision_level_start[desired_decision_level];
         for assignment in &self.trail[split_point..] {
             cnf_formula.undo_assignment(assignment);
