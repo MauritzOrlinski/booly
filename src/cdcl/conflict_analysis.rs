@@ -75,6 +75,9 @@ impl Cdcl {
 
         let decision_levels = clause.literals.iter()
             .map(|(variable, _)| {
+
+
+
                 self.implication_graph.get_decision_level(&variable)
                     .expect("Variables in learned clause must have a decision level.")
             })

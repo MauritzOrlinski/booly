@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fmt::Formatter;
 use crate::cdcl::assignment::Assignment;
+use crate::cnf::clause::ClauseID;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
 use crate::cnf::variable::{VariableId};
