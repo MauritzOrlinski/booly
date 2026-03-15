@@ -48,6 +48,10 @@ pub struct CliArguments {
     #[arg(long, help = "enable phase saving")]
     phase_saving: bool,
 
+    /// Enable proof logging (disables preprocessing)
+    #[arg(long, help = "enable proof logging", requires = "disable_preprocess")]
+    proof_logging: bool,
+
     /// The heuristic to use for restarts
     #[arg(long, value_enum, default_value = "luby")]
     restart_heuristic: HeuristicCliArgument,
@@ -60,6 +64,10 @@ impl CliArguments {
 
     pub fn get_disable_preprocess(&self) -> bool {
         self.disable_preprocess
+    }
+
+    pub fn get_proof_logging(&self) -> bool {
+        self.proof_logging
     }
 
     pub fn get_phase_saving(&self) -> bool {

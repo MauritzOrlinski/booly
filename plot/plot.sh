@@ -17,7 +17,7 @@ generate_data() {
     if [ -z "$2" ]; then
       output=$(timeout 60s $BIN "$f" | grep "^t")
     else
-      output=$(timeout 60s $BIN "-d" "$f" | grep "^t")
+      output=$(timeout 60s $BIN "--disable-preprocess" "$f" | grep "^t")
     fi
 
     if [ $? -eq 0 ]; then
