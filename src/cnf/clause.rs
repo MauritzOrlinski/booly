@@ -51,6 +51,38 @@ impl Clause {
         }
     }
 
+    pub fn new_with_watched(
+        literals: Literals,
+        w1: i32,
+        w2: i32,
+        variables: &mut Variables,
+        clause_id: usize,
+    ) -> Self {
+        let w1_var = variables.get_mut(w1.unsigned_abs());
+
+        if w1.is_positive() {
+            w1_var.positive_watched_occurrences.push(clause_id);
+        } else {
+            w1_var.negative_watched_occurrences.push(clause_id);
+        }
+        if w1 != w2 {
+            let w2_var = variables.get_mut(w2.unsigned_abs());
+            if w2.is_positive() {
+                w2_var.positive_watched_occurrences.push(clause_id);
+            } else {
+                w2_var.negative_watched_occurrences.push(clause_id);
+            }
+        }
+
+        // first different lit
+        Clause {
+            satisfied_by: None,
+            literals,
+            watched1: w1,
+            watched2: w2,
+        }
+    }
+
     pub fn is_watched(&self, var: i32) -> bool {
         var == self.watched1 || var == self.watched2
     }

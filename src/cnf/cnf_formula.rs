@@ -1,8 +1,8 @@
+use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
+use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::literals::{to_lit, Literals};
 use crate::cnf::variable::Variables;
-use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
-use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 use std::fmt::Formatter;
@@ -20,8 +20,7 @@ pub struct CnfFormula {
 
 impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
-
-        let clauses_tree: BTreeMap<ClauseID, Clause>  = clauses.into_iter().enumerate().collect();
+        let clauses_tree: BTreeMap<ClauseID, Clause> = clauses.into_iter().enumerate().collect();
 
         CnfFormula {
             clauses: clauses_tree,
@@ -125,7 +124,12 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict { Conflict } else { Success }
+        if is_conflict {
+            println!("Here1");
+            Conflict
+        } else {
+            Success
+        }
     }
 
     fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
@@ -195,13 +199,13 @@ impl CnfFormula {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: true,
-                        reason: None
+                        reason: None,
                     })
                 } else if v.positive_occurrences_count == 0 && v.negative_occurrences_count != 0 {
                     Some(Assignment {
                         variable_id: i as u32 + 1,
                         value: false,
-                        reason: None
+                        reason: None,
                     })
                 } else {
                     None
@@ -213,7 +217,7 @@ impl CnfFormula {
     pub fn get_assignment_view(&self) -> AssignedVarsView<'_> {
         AssignedVarsView(&self.variables, &self.assignments)
     }
-    
+
     pub fn get_next_clause_id(&self) -> ClauseID {
         let id = self.clauses.len() as ClauseID;
         assert!(!self.clauses.contains_key(&id));
@@ -228,7 +232,7 @@ impl<'a> fmt::Display for AssignedVarsView<'a> {
             f,
             "{}",
             self.0
-                .0
+                 .0
                 .iter()
                 .enumerate()
                 .filter_map(|(i, _)| self.1[i].map(|value| (i, value)))

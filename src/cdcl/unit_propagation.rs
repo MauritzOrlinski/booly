@@ -1,7 +1,7 @@
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::Cdcl;
 use crate::cdcl::cdcl::CdclStatus::{Conflict, Sat};
-use crate::cnf::clause::{ClauseID};
+use crate::cnf::clause::ClauseID;
 
 impl Cdcl {
     /// Execute unit propagation. As long as there are unit clauses present in the unit queue,
@@ -19,13 +19,14 @@ impl Cdcl {
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
             if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
                 self.implication_graph.push_forced(new_assignment);
+                println!("here");
                 self.status = Conflict;
             } else {
                 self.assign_propagation(new_assignment);
             }
         }
     }
-    
+
     fn assign_propagation(&mut self, assignment: Assignment) {
         let assignment_result = self
             .cnf_formula
@@ -51,7 +52,7 @@ impl Cdcl {
         Assignment::new(
             unit_clause.watched1.unsigned_abs(),
             unit_clause.watched1.is_positive(),
-            Some(unit_clause_id)
+            Some(unit_clause_id),
         )
     }
 }
