@@ -1,8 +1,7 @@
 use clap::Parser;
 use dpml::cdcl::cdcl::{Cdcl, CdclStatus};
 use dpml::cli::CliArguments;
-use dpml::cnf::cnf_formula::CnfFormula;
-use dpml::parser::{parse, parse_cnf};
+use dpml::parser::parse;
 use dpml::preprocess::cnf::cnf::CNF;
 use dpml::preprocess::niver::recover_assigment_niver_compat;
 use dpml::preprocess::preprocess::preprocess;
@@ -32,19 +31,17 @@ fn main() {
     };
 
     let mut cnf = CNF::from_pre(&cnf_formula_pre.0, cnf_formula_pre.1);
-    let heuristic = cli.load_heuristic();
-
-    let mut dpll = Cdcl::new(cnf.to_cnf_formula(), heuristic);
+    let mut cdcl = Cdcl::new(cnf.to_cnf_formula());
 
     let start_pre = Instant::now();
     let niver_trace = preprocess(&mut cnf);
     let elapsed_pre = start_pre.elapsed();
 
     let start = Instant::now();
-    let result = dpll.solve();
+    let result = cdcl.solve();
     let elapsed = start.elapsed();
 
-    let assignment = recover_assigment_niver_compat(niver_trace, cnf, dpll.cnf_formula);
+    let assignment = recover_assigment_niver_compat(niver_trace, cnf, cdcl.cnf_formula);
 
     match result {
         CdclStatus::Sat => println!(

@@ -13,6 +13,7 @@ pub struct CnfFormula {
     pub(crate) clauses: BTreeMap<ClauseID, Clause>,
     pub variables: Variables,
     unset_vars: usize,
+    pub(crate) variable_count: usize,
     /// we store the variable assignments now in this assignments vector, as it makes the values
     /// lay closer to each other
     pub(crate) assignments: Vec<Option<bool>>,
@@ -26,7 +27,8 @@ impl CnfFormula {
             clauses: clauses_tree,
             unset_vars: variables.len(),
             assignments: vec![None; variables.len()],
-            variables,
+            variable_count: variables.len(),
+            variables: variables,
         }
     }
 
