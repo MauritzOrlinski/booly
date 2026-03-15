@@ -77,30 +77,26 @@ impl Cdcl {
             .implication_graph
             .get_2nd_latest_assignment_for_given_literals(&learned_clause_literals);
 
-        if let Some(second_latest) = second_latest {
-            let watched2 = to_lit(
+        let watched1 = first_uip;
+        let watched2 = if let Some(second_latest) = second_latest {
+            to_lit(
                 &learned_clause_literals
                     .iter()
                     .find(|x| x.0 == second_latest.variable_id)
                     .expect("should be included"),
-            );
-
-            Clause::new_with_watched(
-                learned_clause_literals,
-                first_uip,
-                watched2,
-                &mut self.cnf_formula.variables,
-                clause_id,
             )
-        } else {
-            Clause::new_with_watched(
-                learned_clause_literals,
-                first_uip,
-                first_uip,
-                &mut self.cnf_formula.variables,
-                clause_id,
-            )
-        }
+        } else {first_uip};
+        
+        let lbd = self.implication_graph.calculate_lbd(&learned_clause_literals);
+        
+        Clause::new_with_watched(
+            learned_clause_literals,
+            watched1,
+            watched2,
+            &mut self.cnf_formula.variables,
+            clause_id,
+            lbd,
+        )
     }
 
     pub(crate) fn get_backjump_level_for_learned_clause(&self, clause: &Clause) -> DecisionLevel {

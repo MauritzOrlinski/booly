@@ -14,8 +14,8 @@ pub type DecisionLevel = usize;
 /// * `decision_level_start` - A list of indices in the trail at which new decision level start
 #[derive(Debug, Clone)]
 pub struct ImplicationGraph {
-    trail: Vec<Assignment>,
-    decision_level_start: Vec<usize>,
+    pub(crate) trail: Vec<Assignment>,
+    pub(crate) decision_level_start: Vec<usize>,
 }
 
 impl ImplicationGraph {

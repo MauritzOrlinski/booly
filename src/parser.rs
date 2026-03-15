@@ -106,7 +106,7 @@ pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {
             literals.insert(variable_id, polarity);
         }
         // clauses.push(Clause::new(literals))
-        let clause = Clause::new(literals, &mut variables, clause_id);
+        let clause = Clause::new(literals, &mut variables, clause_id, 0);
         clauses.push(clause);
     }
 

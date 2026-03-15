@@ -164,7 +164,7 @@ impl CNF {
                     variable.negative_occurrences_count += 1;
                 }
             }
-            let clause = crate::cnf::clause::Clause::new(literals, &mut variables, clause_id);
+            let clause = crate::cnf::clause::Clause::new(literals, &mut variables, clause_id, 0);
             clauses.push(clause);
         }
         CnfFormula::new(clauses, variables)

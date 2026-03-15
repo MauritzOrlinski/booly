@@ -18,10 +18,11 @@ pub struct Clause {
     pub(crate) literals: Literals,
     pub(crate) watched1: Literal,
     pub(crate) watched2: Literal,
+    literal_block_distance: usize,
 }
 
 impl Clause {
-    pub fn new(literals: Literals, variables: &mut Variables, clause_id: usize) -> Self {
+    pub fn new(literals: Literals, variables: &mut Variables, clause_id: usize, literal_block_distance: usize) -> Self {
         // Safety note: Assumes at least one element
         let w1 = literals.iter().last().unwrap();
         let w2 = literals.iter().find(|x| x.0 != w1.0).unwrap_or(w1); // picks
@@ -47,6 +48,7 @@ impl Clause {
             literals,
             watched1: to_lit(&w1),
             watched2: to_lit(&w2),
+            literal_block_distance,
         }
     }
 
@@ -56,6 +58,7 @@ impl Clause {
         w2: i32,
         variables: &mut Variables,
         clause_id: usize,
+        literal_block_distance: usize,
     ) -> Self {
         let w1_var = variables.get_mut(w1.unsigned_abs());
 
@@ -78,6 +81,7 @@ impl Clause {
             literals,
             watched1: w1,
             watched2: w2,
+            literal_block_distance,
         }
     }
 
