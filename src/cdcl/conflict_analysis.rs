@@ -73,9 +73,6 @@ impl Cdcl {
             return 0;
         }
 
-        println!("Implication trail: {}", self.implication_graph);
-        println!("Clause: {}", clause);
-
         let decision_levels = clause.literals.iter()
             .map(|(variable, _)| {
 

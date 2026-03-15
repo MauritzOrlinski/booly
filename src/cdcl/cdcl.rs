@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cdcl::cdcl::CdclStatus::{Incomplete, Sat, Unsat, Conflict};
 use crate::cdcl::heuristics::Heuristic;
-use crate::cdcl::heuristics::trivial::Trivial;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
@@ -61,10 +60,8 @@ impl Cdcl {
                     let learned_clause = self.generate_learned_clause(&conflict_clause);
                     let backjump_decision_level = self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
-
                     let clause_id = self.cnf_formula.get_next_clause_id();
                     self.cnf_formula.clauses.insert(clause_id, learned_clause);
-
                     self.unit_queue.push_back(clause_id);
                 },
                 Incomplete => {
