@@ -132,11 +132,9 @@ impl Cdcl {
                     let clause_id = self.cnf_formula.get_next_clause_id();
                     let learned_clause = self.generate_learned_clause(&conflict_clause, clause_id);
 
-                    // if let Some(proof_logger) = &mut self.proof_logger {
-                    //     proof_logger
-                    //         .log_clause(ProofClause::new(learned_clause))
-                    //         .unwrap();
-                    // }
+                    if let Some(proof_logger) = &mut self.proof_logger {
+                        proof_logger.log_clause((&learned_clause).into()).unwrap();
+                    }
 
                     for &literal in learned_clause.literals.0.iter() {
                         self.lit_counter

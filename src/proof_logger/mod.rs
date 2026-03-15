@@ -2,10 +2,28 @@ use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::Path;
 
+use crate::cnf::clause::Clause;
+use crate::cnf::literals::to_lit;
+
 pub type Literal = i32;
 
 pub struct ProofClause {
     lits: Vec<Literal>,
+}
+
+impl From<&Clause> for ProofClause {
+    fn from(value: &Clause) -> Self {
+        ProofClause {
+            lits: value.literals.iter().map(|x| to_lit(&x)).collect(),
+        }
+    }
+}
+impl From<&mut Clause> for ProofClause {
+    fn from(value: &mut Clause) -> Self {
+        ProofClause {
+            lits: value.literals.iter().map(|x| to_lit(&x)).collect(),
+        }
+    }
 }
 
 impl ProofClause {

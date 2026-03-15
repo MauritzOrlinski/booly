@@ -44,6 +44,9 @@ impl Cdcl {
 
         for clause_id in &delete_candidates {
             if let Some(clause) = self.cnf_formula.clauses.get_mut(*clause_id) {
+                if let Some(proof_logger) = &mut self.proof_logger {
+                    proof_logger.log_delete(clause.into()).unwrap();
+                }
                 for &lit in &clause.literals.0 {
                     let variable = self.cnf_formula.variables.get_mut(lit.abs() as VariableId);
 
