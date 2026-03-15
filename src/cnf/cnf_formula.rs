@@ -24,7 +24,7 @@ impl CnfFormula {
     pub fn new(clauses: Vec<Clause>, variables: Variables) -> Self {
         let len = clauses.len();
         let clause_map = clauses.into_iter().enumerate().collect();
-        
+
         CnfFormula {
             learned_clause_start: len,
             clauses: clause_map,
@@ -199,26 +199,6 @@ impl CnfFormula {
 
     pub fn get_next_clause_id(&self) -> ClauseID {
         self.clauses.keys().last().map(|id| id + 1).unwrap_or(0)
-    }
-
-    pub fn test_sat(&self) -> bool {
-        self.clauses.iter().all(|(_, clause)| {
-            clause
-                .literals
-                .iter()
-                .any(|(var_id, polarity)| match polarity {
-                    Polarity::Positive => self
-                        .assignments
-                        .get((var_id - 1) as usize)
-                        .unwrap()
-                        .unwrap(),
-                    Polarity::Negative => !self
-                        .assignments
-                        .get((var_id - 1) as usize)
-                        .unwrap()
-                        .unwrap(),
-                })
-        })
     }
 
     pub fn get_learned_clauses(&self) -> Vec<(&ClauseID, &Clause)>{
