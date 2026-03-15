@@ -11,9 +11,17 @@ pub enum CdclStatus {
     Sat,
     Unsat,
     Incomplete,
-    Conflict,
+    Conflict(usize),
 }
 
+impl CdclStatus {
+    pub fn is_conflict(&self) -> bool {
+        match self {
+            Conflict(_) => true,
+            _ => false,
+        }
+    }
+}
 #[derive(Debug)]
 pub struct Cdcl {
     pub cnf_formula: CnfFormula,
@@ -39,25 +47,16 @@ impl Cdcl {
             self.propagate_unit_clauses();
             match self.status {
                 Sat | Unsat => {
-                    println!("Exit2");
                     return self.status;
                 }
-                Conflict => {
+                Conflict(conflict_clause_id) => {
                     if self.implication_graph.get_current_decision_level() == 0 {
-                        println!("Exit1");
                         return Unsat;
                     }
                     let latest_assignment = self
                         .implication_graph
                         .get_latest_assignment()
                         .expect("If there is a conflict, there must at least be one assignment.");
-                    let conflict_clause_id_option = latest_assignment.reason;
-
-                    if matches!(conflict_clause_id_option, None) {
-                        println!("asdf");
-                    }
-
-                    let conflict_clause_id = conflict_clause_id_option.expect("If there is a conflict, the latest assignment must not have been made as a decision.");
                     let conflict_clause: &Clause = &self
                         .cnf_formula
                         .clauses
@@ -90,10 +89,8 @@ impl Cdcl {
         self.implication_graph.push_decision(assignment);
 
         match assignment_result {
-            AssignmentResult::Conflict => {
-                panic!(
-                    "There should not be a conflict in a decision. There must be something wrong with the heuristic."
-                )
+            AssignmentResult::Conflict(conflict_clause_id) => {
+                self.status = Conflict(conflict_clause_id);
             }
             AssignmentResult::Success => {
                 if self.cnf_formula.all_assigned() {

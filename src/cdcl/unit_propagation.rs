@@ -12,15 +12,15 @@ impl Cdcl {
     /// `Conflict`, if there has been a conflict during unit propagation. `None` otherwise.
     pub(crate) fn propagate_unit_clauses(&mut self) {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
-            && self.status != Conflict
+            && !self.status.is_conflict()
         {
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause_id);
             let old_assignment =
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];
             if old_assignment.is_some() && old_assignment != Some(new_assignment.value) {
                 self.implication_graph.push_forced(new_assignment);
-                println!("here");
-                self.status = Conflict;
+                // TODO: Is that correct?
+                self.status = Conflict(unit_clause_id);
             } else {
                 self.assign_propagation(new_assignment);
             }
@@ -32,11 +32,10 @@ impl Cdcl {
             .cnf_formula
             .apply_assignment(&assignment, &mut self.unit_queue);
         self.implication_graph.push_forced(assignment);
-
-        if assignment_result == AssignmentResult::Conflict {
-            self.status = Conflict;
-        } else if self.cnf_formula.all_assigned() {
-            self.status = Sat;
+        match assignment_result {
+            AssignmentResult::Conflict(clause_id) => self.status = Conflict(clause_id),
+            AssignmentResult::Success if self.cnf_formula.all_assigned() => self.status = Sat,
+            AssignmentResult::Success => (),
         }
     }
 

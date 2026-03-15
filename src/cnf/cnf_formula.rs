@@ -1,7 +1,7 @@
 use crate::cdcl::assignment::AssignmentResult::{Conflict, Success};
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
 use crate::cnf::clause::{Clause, ClauseID};
-use crate::cnf::literals::{Literals, Polarity, to_lit};
+use crate::cnf::literals::{Polarity, to_lit};
 use crate::cnf::variable::Variables;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
@@ -49,7 +49,7 @@ impl CnfFormula {
 
         match self.assignments[var_index] {
             Some(v) if v == assignment.value => return Success,
-            Some(_) => return Conflict,
+            Some(_) => unreachable!(), // we assume that we do not assign twice
             None => {
                 self.unset_vars -= 1;
             }
@@ -59,7 +59,7 @@ impl CnfFormula {
 
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
-        let mut is_conflict = false;
+        let mut is_conflict_id = None;
         let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
 
         for &clause_id in unsatisfied_clause_ids {
@@ -115,7 +115,7 @@ impl CnfFormula {
             } else if self.assignments[other_id] == other_satisfying_assignment {
                 continue;
             } else {
-                is_conflict = true;
+                is_conflict_id = Some(clause_id);
                 break;
             }
         }
@@ -124,9 +124,8 @@ impl CnfFormula {
             self.update_watchlists(lit, clause_id, old_lit);
         }
 
-        if is_conflict {
-            println!("Here1");
-            Conflict
+        if is_conflict_id.is_some() {
+            Conflict(is_conflict_id.unwrap())
         } else {
             Success
         }
