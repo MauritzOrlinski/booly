@@ -7,11 +7,11 @@ use itertools::Itertools;
 
 impl Cdcl {
 
-    pub fn determine_clauses_for_deletion(&self) -> Vec<&ClauseID> {
+    pub fn delete_clauses(&mut self) {
         let learned_clauses = self.cnf_formula.get_learned_clauses();
 
         if self.clauses_limit >= learned_clauses.len() {
-            return vec![];
+            return;
         }
 
         let locked_clauses = self.implication_graph.locked_clauses(&self.cnf_formula);
@@ -21,8 +21,8 @@ impl Cdcl {
             .filter(|(learned_clause_id, _)| !locked_clauses.contains(learned_clause_id))
             .collect();
 
-        if learned_clauses_filtered.len() <= self.clauses_limit  {
-            return vec![];
+        if learned_clauses_filtered.len() <= self.clauses_limit {
+            return;
         }
 
         let learned_clauses_sorted: Vec<_> = learned_clauses_filtered.iter()
@@ -30,7 +30,34 @@ impl Cdcl {
             .map(|(id, _)| *id)
             .collect();
 
-        learned_clauses_sorted.get(self.clauses_limit..).unwrap().to_vec()
+        let delete_candidates: Vec<_> = learned_clauses_sorted
+            .get(self.clauses_limit..)
+            .unwrap()
+            .iter()
+            .map(|id| **id)
+            .sorted()
+            .rev()
+            .collect();
+
+        delete_candidates.iter().for_each(|id| {
+            self.cnf_formula.clauses.remove(id);
+        });
+
+        for clause_id in &delete_candidates {
+            if let Some(clause) = self.cnf_formula.clauses.remove(clause_id) {
+                for &lit in &clause.literals.0 {
+                    let variable = &mut self.cnf_formula.variables.0[lit.abs() as usize];
+
+                    if lit.is_positive() {
+                        variable.positive_occurrences_count -= 1;
+                        variable.positive_watched_occurrences.retain(|&w_id| w_id != *clause_id);
+                    } else {
+                        variable.negative_occurrences_count -= 1;
+                        variable.negative_watched_occurrences.retain(|&w_id| w_id != *clause_id);
+                    }
+                }
+            }
+        }
     }
 }
 
