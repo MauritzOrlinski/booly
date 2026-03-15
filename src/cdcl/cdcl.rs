@@ -11,7 +11,8 @@ use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
 pub const CLAUSES_INITIAL_LIMIT : usize = 1000;
-pub const CLAUSES_LIMIT_STEP_SIZE : usize = 1000;
+pub const CLAUSES_LIMIT_STEP_SIZE : usize = 100;
+pub const DELETION_INTERVAL: u32 = 1000;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CdclStatus {
@@ -82,10 +83,16 @@ impl Cdcl {
 
     pub fn solve(&mut self) -> CdclStatus {
         let mut count: u32 = 0;
+        let mut conflicts = 0;
         if self.cnf_formula.clauses.is_empty() {
             return CdclStatus::Sat;
         }
         loop {
+            if conflicts > self.clauses_limit {
+                conflicts -= self.clauses_limit;
+                self.delete_clauses();
+                self.clauses_limit += CLAUSES_LIMIT_STEP_SIZE;
+            }
             count += 1;
             if count == 255 {
                 count = 0;
@@ -104,6 +111,7 @@ impl Cdcl {
                     return self.status;
                 }
                 Conflict(conflict_clause_id) => {
+                    conflicts += 1;
                     if self.implication_graph.get_current_decision_level() == 0 {
                         return Unsat;
                     }

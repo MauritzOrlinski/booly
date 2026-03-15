@@ -14,6 +14,11 @@ impl Cdcl {
         while let Some(unit_clause_id) = self.unit_queue.pop_front()
             && !self.status.is_conflict()
         {
+
+            if !self.cnf_formula.clauses.contains_key(&unit_clause_id) {
+                continue;
+            }
+
             let new_assignment = self.find_satisfying_assignment_for_unit_clause(unit_clause_id);
             let old_assignment =
                 self.cnf_formula.assignments[new_assignment.variable_id as usize - 1];

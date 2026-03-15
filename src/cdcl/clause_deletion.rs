@@ -4,6 +4,7 @@ use crate::cnf::clause::{Clause, ClauseID};
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
 use itertools::Itertools;
+use crate::cnf::variable::VariableId;
 
 impl Cdcl {
 
@@ -18,7 +19,11 @@ impl Cdcl {
 
         let learned_clauses_filtered: Vec<_> = learned_clauses
             .iter()
-            .filter(|(learned_clause_id, _)| !locked_clauses.contains(learned_clause_id))
+            .filter(|(learned_clause_id, clause)|
+                !locked_clauses.contains(learned_clause_id)
+                    && !self.unit_queue.contains(learned_clause_id)
+                    && clause.literal_block_distance > 2
+            )
             .collect();
 
         if learned_clauses_filtered.len() <= self.clauses_limit {
@@ -35,24 +40,16 @@ impl Cdcl {
             .unwrap()
             .iter()
             .map(|id| **id)
-            .sorted()
-            .rev()
             .collect();
-
-        delete_candidates.iter().for_each(|id| {
-            self.cnf_formula.clauses.remove(id);
-        });
 
         for clause_id in &delete_candidates {
             if let Some(clause) = self.cnf_formula.clauses.remove(clause_id) {
                 for &lit in &clause.literals.0 {
-                    let variable = &mut self.cnf_formula.variables.0[lit.abs() as usize];
+                    let variable = &mut self.cnf_formula.variables.get_mut(lit.abs() as VariableId);
 
                     if lit.is_positive() {
-                        variable.positive_occurrences_count -= 1;
                         variable.positive_watched_occurrences.retain(|&w_id| w_id != *clause_id);
                     } else {
-                        variable.negative_occurrences_count -= 1;
                         variable.negative_watched_occurrences.retain(|&w_id| w_id != *clause_id);
                     }
                 }

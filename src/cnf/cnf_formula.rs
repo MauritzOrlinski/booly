@@ -198,9 +198,7 @@ impl CnfFormula {
     }
 
     pub fn get_next_clause_id(&self) -> ClauseID {
-        let id = self.clauses.len() as ClauseID;
-        // assert!(!self.clauses.contains_key(&id));
-        id
+        self.clauses.keys().last().map(|id| id + 1).unwrap_or(0)
     }
 
     pub fn test_sat(&self) -> bool {
