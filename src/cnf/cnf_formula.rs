@@ -112,7 +112,7 @@ impl CnfFormula {
 
             if let Some(lit) = new_watched {
                 let lit = to_lit(&lit);
-                newly_watched.push((lit, clause_id, clause.watched2));
+                newly_watched.push((lit, clause_id));
                 clause.watched2 = lit;
                 continue;
             }
@@ -132,9 +132,20 @@ impl CnfFormula {
                 break;
             }
         }
+        let unsat_clauses_set: FxHashSet<ClauseID> =
+            newly_watched.iter().copied().map(|(_, cid)| cid).collect();
 
-        for (lit, clause_id, old_lit) in newly_watched {
-            self.update_watchlists(lit, clause_id, old_lit);
+        let assignee = self.variables.get_mut(var_id);
+        assignee
+            .positive_watched_occurrences
+            .retain(|x| !unsat_clauses_set.contains(x));
+
+        assignee
+            .negative_watched_occurrences
+            .retain(|x| !unsat_clauses_set.contains(x));
+
+        for (lit, clause_id) in newly_watched {
+            self.update_watchlists(lit, clause_id);
         }
 
         if let Some(is_conflict_id) = is_conflict_id {
@@ -143,8 +154,9 @@ impl CnfFormula {
             Success
         }
     }
+
     #[inline]
-    fn update_watchlists(&mut self, lit: i32, clause_id: usize, old_lit: i32) {
+    fn update_watchlists(&mut self, lit: i32, clause_id: usize) {
         let id = lit.unsigned_abs();
         if lit.is_positive() {
             self.variables
@@ -156,17 +168,6 @@ impl CnfFormula {
                 .get_mut(id)
                 .negative_watched_occurrences
                 .push(clause_id);
-        }
-
-        let assignee = self.variables.get_mut(old_lit.unsigned_abs());
-        if old_lit.is_positive() {
-            let occurrences = &mut assignee.positive_watched_occurrences;
-            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-            occurrences.swap_remove(pos);
-        } else {
-            let occurrences = &mut assignee.negative_watched_occurrences;
-            let pos = occurrences.iter().position(|&x| x == clause_id).unwrap();
-            occurrences.swap_remove(pos);
         }
     }
 
