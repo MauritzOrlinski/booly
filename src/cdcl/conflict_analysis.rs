@@ -86,9 +86,9 @@ impl Cdcl {
                     .expect("should be included"),
             )
         } else {first_uip};
-        
+
         let lbd = self.implication_graph.calculate_lbd(&learned_clause_literals);
-        
+
         Clause::new_with_watched(
             learned_clause_literals,
             watched1,
@@ -136,7 +136,7 @@ mod tests {
     use crate::cdcl::assignment::Assignment;
     use crate::cdcl::cdcl::{Cdcl, CdclStatus, CLAUSES_INITIAL_LIMIT};
     use crate::cdcl::heuristics::SolverStats;
-    use crate::cdcl::heuristics::restart::FixedIntervalHeuristic;
+    use crate::cdcl::heuristics::restart::Never;
     use crate::cdcl::implication_graph::ImplicationGraph;
     use crate::cnf::clause::{Clause, ClauseID};
     use crate::cnf::cnf_formula::CnfFormula;
@@ -189,13 +189,12 @@ mod tests {
                 status: CdclStatus::Incomplete,
                 unit_queue: Default::default(),
                 stats: SolverStats::new(),
-                restart_heuristic: Box::new(FixedIntervalHeuristic {
-                    fixed_restart_policy: 700,
-                    max_restarts: 8,
-                }),
+                restart_heuristic: Box::new(Never {}),
                 lit_prio: Default::default(),
                 lit_counter: Default::default(),
                 clauses_limit: CLAUSES_INITIAL_LIMIT,
+                enable_phase_saving: false,
+                phase: vec![],
             };
 
             let learned = cdcl

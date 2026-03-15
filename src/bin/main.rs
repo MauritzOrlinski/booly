@@ -33,7 +33,11 @@ fn main() {
         };
 
         let mut cnf = CNF::from_pre(&cnf_formula_pre.0, cnf_formula_pre.1);
-        let mut cdcl = Cdcl::new(cnf.to_cnf_formula());
+        let mut cdcl = Cdcl::new(
+            cnf.to_cnf_formula(),
+            cli.get_disable_preprocess(),
+            cli.get_restart_heuristic(),
+        );
 
         let start = Instant::now();
 
@@ -85,7 +89,11 @@ tp {:.7}",
             }
         };
 
-        let mut dpll = Cdcl::new(cnf_formula);
+        let mut dpll = Cdcl::new(
+            cnf_formula,
+            cli.get_disable_preprocess(),
+            cli.get_restart_heuristic(),
+        );
 
         let start = Instant::now();
         let result = dpll.solve();
