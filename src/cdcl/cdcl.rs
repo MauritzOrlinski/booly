@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
 use crate::cdcl::assignment::{Assignment, AssignmentResult};
-use crate::cdcl::cdcl::CdclStatus::{Incomplete, Sat, Unsat, Conflict};
+use crate::cdcl::cdcl::CdclStatus::{Conflict, Incomplete, Sat, Unsat};
 use crate::cdcl::heuristics::Heuristic;
-use crate::cnf::cnf_formula::CnfFormula;
 use crate::cdcl::implication_graph::{DecisionLevel, ImplicationGraph};
 use crate::cnf::clause::{Clause, ClauseID};
+use crate::cnf::cnf_formula::CnfFormula;
+use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CdclStatus {
@@ -24,20 +24,17 @@ pub struct Cdcl {
 }
 
 impl Cdcl {
-    pub fn new(
-        cnf_formula: CnfFormula,
-        heuristic: Box<dyn Heuristic>,
-    ) -> Cdcl {
+    pub fn new(cnf_formula: CnfFormula, heuristic: Box<dyn Heuristic>) -> Cdcl {
         Cdcl {
+            unit_queue: cnf_formula.generate_unit_queue(),
             cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
-            unit_queue: VecDeque::new(),
             heuristic,
         }
     }
 
-    pub fn solve(&mut self) -> CdclStatus  {
+    pub fn solve(&mut self) -> CdclStatus {
         loop {
             self.propagate_unit_clauses();
             match self.status {
@@ -46,26 +43,29 @@ impl Cdcl {
                     if self.implication_graph.get_current_decision_level() == 0 {
                         return Unsat;
                     }
-                    let latest_assignment = self.implication_graph
+                    let latest_assignment = self
+                        .implication_graph
                         .get_latest_assignment()
                         .expect("If there is a conflict, there must at least be one assignment.");
                     let conflict_clause_id: ClauseID = latest_assignment.reason
                         .expect("If there is a conflict, the latest assignment must not have been made as a decision.");
-                    let conflict_clause: &Clause = &self.cnf_formula.clauses.get(&conflict_clause_id).unwrap();
+                    let conflict_clause: &Clause =
+                        &self.cnf_formula.clauses.get(&conflict_clause_id).unwrap();
                     let learned_clause = self.generate_learned_clause(&conflict_clause);
-                    let backjump_decision_level = self.get_backjump_level_for_learned_clause(&learned_clause);
+                    let backjump_decision_level =
+                        self.get_backjump_level_for_learned_clause(&learned_clause);
                     self.backjump(backjump_decision_level);
                     let clause_id = self.cnf_formula.get_next_clause_id();
                     self.cnf_formula.clauses.insert(clause_id, learned_clause);
                     self.unit_queue.push_back(clause_id);
-                },
+                }
                 Incomplete => {
                     if self.cnf_formula.all_assigned() {
                         return Sat;
                     }
-                    let next_assignment= self.heuristic.chose_next_assignment(&self.cnf_formula);
+                    let next_assignment = self.heuristic.chose_next_assignment(&self.cnf_formula);
                     self.decide(next_assignment);
-                },
+                }
             }
         }
     }
@@ -78,23 +78,25 @@ impl Cdcl {
 
         match assignment_result {
             AssignmentResult::Conflict => {
-                panic!("There should not be a conflict in a decision. There must be something wrong with the heuristic.")
-            },
+                panic!(
+                    "There should not be a conflict in a decision. There must be something wrong with the heuristic."
+                )
+            }
             AssignmentResult::Success => {
                 if self.cnf_formula.all_assigned() {
                     self.status = Sat;
                 }
-            },
+            }
         }
     }
 
     pub fn backjump(&mut self, decision_level: DecisionLevel) {
         self.status = Incomplete;
-        self.implication_graph.backjump(&mut self.cnf_formula, decision_level);
+        self.implication_graph
+            .backjump(&mut self.cnf_formula, decision_level);
         self.unit_queue.clear();
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -414,3 +416,4 @@ p cnf 50 300
         println!("\n\n\n\n\n\n{:#?}", cdcl.status);
     }
 }
+
