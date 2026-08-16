@@ -62,6 +62,9 @@ impl Cdcl {
                 self.cnf_formula.delete_clause(*clause_id);
             }
         }
+        self.cnf_formula
+            .free_indices
+            .sort_unstable_by_key(|&x| -(x as i32));
         self.unit_queue.clear();
     }
 }

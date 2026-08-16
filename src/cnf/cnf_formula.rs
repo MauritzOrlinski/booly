@@ -13,7 +13,6 @@ use std::mem::swap;
 pub struct CnfFormula {
     pub(crate) clauses: Vec<Clause>,
     pub(crate) free_indices: Vec<usize>,
-    pub(crate) current_id: usize,
     pub variables: Variables,
     unset_vars: usize,
     pub(crate) variable_count: usize,
@@ -29,7 +28,6 @@ impl CnfFormula {
         // let clause_map = clauses.into_iter().enumerate().collect();
 
         CnfFormula {
-            current_id: len,
             free_indices: Vec::new(),
             learned_clause_start: len,
             clauses,
@@ -69,28 +67,25 @@ impl CnfFormula {
 
         let (_, unsatisfied_clause_ids) = assignee.associated_clauses(assignment.value);
 
-        let mut is_conflict_id = None;
         let mut newly_watched = Vec::with_capacity(unsatisfied_clause_ids.len());
-
-        for &clause_id in unsatisfied_clause_ids {
+        let is_conflict_id = unsatisfied_clause_ids.iter().copied().find(|&clause_id| {
             let falsified_lit = if assignment.value {
                 -(var_id as i32)
             } else {
                 var_id as i32
             };
 
-            let clause = self.clauses.get_mut(clause_id).unwrap();
+            let clause = unsafe { self.clauses.get_mut(clause_id).unwrap_unchecked() };
 
             if clause.watched1 == falsified_lit {
                 swap(&mut clause.watched1, &mut clause.watched2);
             }
-            assert!(clause.watched2 == falsified_lit);
             // Invariant: watched2 is our assignee that we want to switch out
 
             if self.assignments[clause.watched1.unsigned_abs() as usize - 1]
                 == Some(clause.watched1.is_positive())
             {
-                continue;
+                return false;
             }
             let other = clause.watched1;
 
@@ -114,28 +109,26 @@ impl CnfFormula {
                 let lit = to_lit(&lit);
                 newly_watched.push((lit, clause_id));
                 clause.watched2 = lit;
-                continue;
+                return false;
             }
 
             let other_id = other.unsigned_abs() as usize - 1;
             let other_satisfying_assignment = Some(other.is_positive());
 
             if self.assignments[other_id].is_none() {
-                assert!(clause.is_unit(&self.assignments));
-                assert!(clause.watched1 != 0);
-                assert!(self.assignments[clause.watched1.unsigned_abs() as usize - 1].is_none());
                 unit_queue.push_back(clause_id);
+                false
             } else if self.assignments[other_id] == other_satisfying_assignment {
-                continue;
+                false
             } else {
-                is_conflict_id = Some(clause_id);
-                break;
+                // is_conflict_id = Some(clause_id);
+                true
             }
-        }
+        });
         let unsat_clauses_set: FxHashSet<ClauseID> =
             newly_watched.iter().copied().map(|(_, cid)| cid).collect();
 
-        let assignee = self.variables.get_mut(var_id);
+        // let assignee = self.variables.get_mut(var_id);
         assignee
             .positive_watched_occurrences
             .retain(|x| !unsat_clauses_set.contains(x));
@@ -144,9 +137,9 @@ impl CnfFormula {
             .negative_watched_occurrences
             .retain(|x| !unsat_clauses_set.contains(x));
 
-        for (lit, clause_id) in newly_watched {
-            self.update_watchlists(lit, clause_id);
-        }
+        newly_watched
+            .iter()
+            .for_each(|(lit, clause_id)| self.update_watchlists(lit, clause_id));
 
         if let Some(is_conflict_id) = is_conflict_id {
             Conflict(is_conflict_id)
@@ -156,18 +149,18 @@ impl CnfFormula {
     }
 
     #[inline]
-    fn update_watchlists(&mut self, lit: i32, clause_id: usize) {
+    fn update_watchlists(&mut self, lit: &i32, clause_id: &usize) {
         let id = lit.unsigned_abs();
         if lit.is_positive() {
             self.variables
                 .get_mut(id)
                 .positive_watched_occurrences
-                .push(clause_id);
+                .push(*clause_id);
         } else {
             self.variables
                 .get_mut(id)
                 .negative_watched_occurrences
-                .push(clause_id);
+                .push(*clause_id);
         }
     }
 
@@ -208,11 +201,8 @@ impl CnfFormula {
     }
 
     pub fn get_next_clause_id(&mut self) -> ClauseID {
-        // self.clauses.keys().last().map(|id| id + 1).unwrap_or(0)
         if self.free_indices.is_empty() {
-            let id = self.current_id;
-            self.current_id += 1;
-            return id;
+            return self.clauses.len();
         }
         self.free_indices.pop().unwrap()
     }

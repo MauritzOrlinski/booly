@@ -22,7 +22,12 @@ pub struct Clause {
 }
 
 impl Clause {
-    pub fn new(literals: Literals, variables: &mut Variables, clause_id: usize, literal_block_distance: usize) -> Self {
+    pub fn new(
+        literals: Literals,
+        variables: &mut Variables,
+        clause_id: usize,
+        literal_block_distance: usize,
+    ) -> Self {
         // Safety note: Assumes at least one element
         let w1 = literals.iter().last().unwrap();
         let w2 = literals.iter().find(|x| x.0 != w1.0).unwrap_or(w1); // picks

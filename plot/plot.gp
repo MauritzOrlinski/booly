@@ -8,7 +8,6 @@ set title "Cactus Plot"
 
 set datafile separator ";"
 
-plot "data/pre.csv" using 3:2 with linespoints title "preprocess", \
-     "data/nopre.csv" using 3:2 with linespoints title "no preprocess"
+plot "data/np_luby.csv" using 3:4 with linespoints title "no preprocess", \
 
 set output

@@ -1,11 +1,10 @@
-# Project 3: CDCL Solver
+# booly: A modern CDCL SAT Solver
 
-- Grabmann, Hofstetter, Orlinski
-- SAT Solving WS25/26
+> A conflict driven clause learning (CDCL) SAT Solver written in Rust.
 
 ## Requirements
 
-- rust
+For running this project a working Rust environment is necessary. To install rust consider following [this guide](https://doc.rust-lang.org/book/ch01-01-installation.html).
 
 ## Usage
 

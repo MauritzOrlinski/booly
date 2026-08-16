@@ -1,3 +1,6 @@
+use rand::rand_core::le;
+use rustc_hash::FxHashMap;
+
 use crate::cdcl::assignment::Assignment;
 use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literals;
@@ -30,7 +33,7 @@ impl ImplicationGraph {
     /// If no decisions have been made yet (level 0), this returns an empty vector.
     pub fn get_assignments_of_current_decision_level(&self) -> Vec<Assignment> {
         let current_decision_level_start = match self.decision_level_start.last() {
-            Some(decision_level_start) => decision_level_start.clone(),
+            Some(decision_level_start) => *decision_level_start,
             None => return vec![],
         };
 
@@ -41,7 +44,7 @@ impl ImplicationGraph {
     /// This should be called when the solver picks a literal to satisfy that isn't currently forced by unit propagation.
     pub fn push_decision(&mut self, assignment: Assignment) {
         self.decision_level_start.push(self.trail.len());
-        self.trail.push(assignment);
+        self.push_forced(assignment);
     }
 
     /// Records an assignment forced by unit propagation.
@@ -113,6 +116,7 @@ impl ImplicationGraph {
     pub fn get_current_decision_level(&self) -> usize {
         self.decision_level_start.len()
     }
+
     #[allow(unused)]
     pub fn get_latest_assignment(&self) -> Option<&Assignment> {
         self.trail.last()

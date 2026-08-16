@@ -17,12 +17,12 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 fn main() {
     let cli = CliArguments::parse();
     let proof_logger = if cli.get_proof_logging() {
-        Some(ProofLogger::create("proof.drat")).unwrap().ok()
+        ProofLogger::create("proof.drat").ok()
     } else {
         None
     };
 
-    let cnf_formula_str: String = match fs::read_to_string(&cli.get_input_file()) {
+    let cnf_formula_str: String = match fs::read_to_string(cli.get_input_file()) {
         Ok(value) => value,
         Err(_) => {
             println!("Failed to read input file.");
@@ -33,8 +33,8 @@ fn main() {
     if !cli.get_disable_preprocess() {
         let cnf_formula_pre = match parse(&cnf_formula_str) {
             Ok(value) => value,
-            Err(_) => {
-                println!("Failed to parse input file.");
+            Err(t) => {
+                println!("Failed to parse input file. {}", t.input);
                 return;
             }
         };

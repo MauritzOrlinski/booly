@@ -7,13 +7,13 @@ use crate::cnf::cnf_formula::CnfFormula;
 use crate::cnf::literals::Literal;
 use crate::proof_logger::{ProofClause, ProofLogger};
 use priority_queue::PriorityQueue;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::VecDeque;
 use std::fs::File;
 
-pub const CLAUSES_INITIAL_LIMIT: usize = 1000;
+pub const CLAUSES_INITIAL_LIMIT: usize = 2000;
 pub const CLAUSES_LIMIT_STEP_SIZE: usize = 100;
-pub const DELETION_INTERVAL: u32 = 1000;
+pub const DELETION_INTERVAL: u32 = 2000;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CdclStatus {
@@ -40,11 +40,19 @@ pub struct Cdcl {
     pub(crate) restart_heuristic: Box<dyn RestartHeuristic>,
     pub(crate) stats: SolverStats,
     pub(crate) lit_prio: PriorityQueue<Literal, usize>,
-    pub(crate) lit_counter: FxHashMap<Literal, usize>,
+    pub(crate) lit_counter: Vec<usize>,
     pub(crate) clauses_limit: usize,
     pub(crate) enable_phase_saving: bool,
     pub(crate) phase: Vec<Option<bool>>,
     pub(crate) proof_logger: Option<ProofLogger<File>>,
+}
+
+fn lit_index(lit: i32) -> usize {
+    if lit > 0 {
+        (lit as usize - 1) * 2
+    } else {
+        ((-lit) as usize - 1) * 2 + 1
+    }
 }
 
 impl Cdcl {
@@ -59,7 +67,7 @@ impl Cdcl {
             lit_counter: {
                 (-(cnf_formula.variable_count as i32)..0)
                     .chain(1..=cnf_formula.variable_count as i32)
-                    .map(|lit| (lit, 0))
+                    .map(|_| 0)
                     .collect()
             },
             lit_prio: {
@@ -78,12 +86,12 @@ impl Cdcl {
                     .collect()
             },
             phase: cnf_formula.assignments.clone(),
-            cnf_formula: cnf_formula,
+            cnf_formula,
             implication_graph: ImplicationGraph::new(),
             status: Incomplete,
             stats: SolverStats::new(),
-            restart_heuristic: restart_heuristic,
-            enable_phase_saving: enable_phase_saving,
+            restart_heuristic,
+            enable_phase_saving,
             clauses_limit: CLAUSES_INITIAL_LIMIT,
             proof_logger,
         }
@@ -104,13 +112,14 @@ impl Cdcl {
             count += 1;
             if count == 255 {
                 count = 0;
-                for lit in (-(self.cnf_formula.variable_count as i32)..0)
-                    .chain(1..=self.cnf_formula.variable_count as i32)
-                {
-                    self.lit_prio.change_priority_by(&lit, |p| {
-                        *p = *p / 2 + self.lit_counter.get(&lit).unwrap()
-                    });
-                    self.lit_counter.insert(lit, 0);
+                for var in 1..=self.cnf_formula.variable_count as i32 {
+                    for lit in [var, -var] {
+                        let counter = self.lit_counter[lit_index(lit)];
+                        self.lit_counter[lit_index(lit)] = 0;
+                        self.lit_prio.change_priority_by(&lit, |p| {
+                            *p = *p / 2 + counter;
+                        });
+                    }
                 }
             }
             self.propagate_unit_clauses();
@@ -150,9 +159,7 @@ impl Cdcl {
                     }
 
                     for &literal in learned_clause.literals.0.iter() {
-                        self.lit_counter
-                            .entry(literal)
-                            .and_modify(|counter| *counter += 1);
+                        self.lit_counter[lit_index(literal)] += 1;
                     }
                     let backjump_decision_level =
                         self.get_backjump_level_for_learned_clause(&learned_clause);
@@ -164,7 +171,7 @@ impl Cdcl {
                     // Check if restart is needed
                     self.stats.conflict_count += 1;
                     if self.restart_heuristic.should_restart(&self.stats) {
-                        self.restart();
+                        self.restart()
                     }
                 }
                 Incomplete => {
@@ -172,18 +179,16 @@ impl Cdcl {
                         return Sat;
                     }
                     // choose next assignment (VSIDS)
-                    let (lit, _) = self
+                    let lit = *self
                         .lit_prio
-                        .clone()
-                        .into_sorted_iter()
-                        .find(|(lit, _)| {
-                            self.cnf_formula
-                                .assignments
-                                .get(lit.unsigned_abs() as usize - 1)
-                                .unwrap()
-                                .is_none()
+                        .iter()
+                        .filter(|(lit, _)| {
+                            self.cnf_formula.assignments[lit.unsigned_abs() as usize - 1].is_none()
                         })
+                        .max_by_key(|(_, prio)| *prio)
+                        .map(|(lit, _)| lit)
                         .unwrap();
+
                     if self.enable_phase_saving
                         && self
                             .phase

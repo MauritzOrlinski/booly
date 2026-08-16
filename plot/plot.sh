@@ -14,7 +14,7 @@ generate_data() {
 
     echo "$filename"...
 
-    output=$(timeout 60s $BIN "${@:2}" "$f" | grep "^t")
+    output=$(timeout 20s $BIN "${@:2}" "$f" | grep "^t")
 
     if [ $? -eq 0 ]; then
       t=$(echo "$output" | grep "^t " | awk '{print $2}')
@@ -34,22 +34,22 @@ generate_data() {
   rm "tmp$1"
 }
 
-generate_data "luby.csv" &
-generate_data "never.csv" "--restart-heuristic" "never" &
-generate_data "fi.csv" "--restart-heuristic" "fixed-interval" &
-generate_data "geo.csv" "--restart-heuristic" "geometric" &
+generate_data "np_luby.csv" "--disable-preprocess"
+# generate_data "never.csv" "--restart-heuristic" "never" &
+# generate_data "fi.csv" "--restart-heuristic" "fixed-interval" &
+# generate_data "geo.csv" "--restart-heuristic" "geometric" &
 
-generate_data "ps_luby.csv" "--phase-saving" &
-generate_data "ps_never.csv" "--restart-heuristic" "never" "--phase-saving" &
-generate_data "ps_fi.csv" "--restart-heuristic" "fixed-interval" "--phase-saving" &
-generate_data "ps_geo.csv" "--restart-heuristic" "geometric" "--phase-saving" &
-
-generate_data "np_luby.csv" "--disable-preprocess" &
-generate_data "np_never.csv" "--restart-heuristic" "never" "--disable-preprocess" &
-generate_data "np_fi.csv" "--restart-heuristic" "fixed-interval" "--disable-preprocess" &
-generate_data "np_geo.csv" "--restart-heuristic" "geometric" "--disable-preprocess" &
-
-generate_data "np_ps_luby.csv" "--phase-saving" "--disable-preprocess" &
-generate_data "np_ps_never.csv" "--restart-heuristic" "never" "--phase-saving" "--disable-preprocess" &
-generate_data "np_ps_fi.csv" "--restart-heuristic" "fixed-interval" "--phase-saving" "--disable-preprocess" &
-generate_data "np_ps_geo.csv" "--restart-heuristic" "geometric" "--phase-saving" "--disable-preprocess" &
+# generate_data "ps_luby.csv" "--phase-saving" &
+# generate_data "ps_never.csv" "--restart-heuristic" "never" "--phase-saving" &
+# generate_data "ps_fi.csv" "--restart-heuristic" "fixed-interval" "--phase-saving" &
+# generate_data "ps_geo.csv" "--restart-heuristic" "geometric" "--phase-saving" &
+#
+# generate_data "np_luby.csv" "--disable-preprocess" &
+# generate_data "np_never.csv" "--restart-heuristic" "never" "--disable-preprocess" &
+# generate_data "np_fi.csv" "--restart-heuristic" "fixed-interval" "--disable-preprocess" &
+# generate_data "np_geo.csv" "--restart-heuristic" "geometric" "--disable-preprocess" &
+#
+# generate_data "np_ps_luby.csv" "--phase-saving" "--disable-preprocess" &
+# generate_data "np_ps_never.csv" "--restart-heuristic" "never" "--phase-saving" "--disable-preprocess" &
+# generate_data "np_ps_fi.csv" "--restart-heuristic" "fixed-interval" "--phase-saving" "--disable-preprocess" &
+# generate_data "np_ps_geo.csv" "--restart-heuristic" "geometric" "--phase-saving" "--disable-preprocess" &
