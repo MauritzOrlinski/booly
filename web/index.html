@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>doesitsat</title>
+  <meta name="description" content="Type a propositional formula and let booly, a CDCL SAT solver written in Rust, check it in your browser." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2316181f'/%3E%3Ctext x='16' y='22' font-size='17' font-family='serif' font-style='italic' text-anchor='middle' fill='white'%3E%3F%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="head">
+      <div class="title-row">
+        <h1>doesitsat</h1>
+        <a class="gh" href="https://github.com/MauritzOrlinski/booly" target="_blank" rel="noopener" aria-label="booly on GitHub" title="booly on GitHub">
+          <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
+      </div>
+      <p class="sub">Type a formula. <a href="https://github.com/MauritzOrlinski/booly" target="_blank" rel="noopener">booly</a> tells you whether it can be true.</p>
+    </header>
+
+    <section class="entry">
+      <label class="visually-hidden" for="formula">Propositional formula</label>
+      <textarea id="formula" rows="1" autofocus spellcheck="false" autocomplete="off" autocapitalize="off"
+        placeholder="(a → b) ∧ a ∧ ¬b"></textarea>
+      <div class="toolbar" id="symbols" aria-label="Insert symbol">
+        <button type="button" data-insert="¬" title="not (also ! ~ not)">¬</button>
+        <button type="button" data-insert="∧" title="and (also & and)">∧</button>
+        <button type="button" data-insert="∨" title="or (also | or)">∨</button>
+        <button type="button" data-insert="→" title="implies (also -> implies)">→</button>
+        <button type="button" data-insert="↔" title="if and only if (also <-> iff)">↔</button>
+        <button type="button" data-insert="⊕" title="exclusive or (also ^ xor)">⊕</button>
+        <button type="button" data-insert="()" data-cursor="1" title="parentheses">( )</button>
+        <span class="spacer"></span>
+        <span class="examples">
+          try
+          <button type="button" class="ex">a ∧ ¬a</button>
+          <button type="button" class="ex">(p → q) → (¬q → ¬p)</button>
+          <button type="button" class="ex">(a ∨ b) ∧ (¬a ∨ c) ∧ ¬c</button>
+        </span>
+      </div>
+    </section>
+
+    <section id="out" class="out" aria-live="polite"></section>
+  </main>
+
+  <footer class="foot">
+    <span>Variables are words, <code>true</code> and <code>false</code> are constants, operators bind as ¬ &gt; ∧ &gt; ⊕ &gt; ∨ &gt; → &gt; ↔.</span>
+    <span id="engine">Loading solver…</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

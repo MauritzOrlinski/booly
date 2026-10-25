@@ -1,7 +1,10 @@
 pub mod cdcl;
+#[cfg(feature = "cli")]
 pub mod cli;
 pub mod cnf;
 pub mod parser;
 pub mod preprocess;
 pub mod proof_logger;
 pub mod verify;
+#[cfg(feature = "wasm")]
+pub mod wasm;

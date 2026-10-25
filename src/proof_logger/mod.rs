@@ -38,12 +38,17 @@ pub enum ProofStep {
     Delete(ProofClause),
 }
 
-#[derive(Debug)]
 pub struct ProofLogger<W>
 where
     W: Write,
 {
     log: BufWriter<W>,
+}
+
+impl<W: Write> std::fmt::Debug for ProofLogger<W> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ProofLogger").finish_non_exhaustive()
+    }
 }
 
 impl<W> ProofLogger<W>
@@ -84,5 +89,12 @@ where
 impl ProofLogger<File> {
     pub fn create(path: impl AsRef<Path>) -> io::Result<Self> {
         Ok(Self::new(File::create(path)?))
+    }
+}
+
+impl ProofLogger<Box<dyn Write>> {
+    /// Like [`ProofLogger::create`], but with the writer type the solver expects.
+    pub fn create_boxed(path: impl AsRef<Path>) -> io::Result<Self> {
+        Ok(Self::new(Box::new(File::create(path)?)))
     }
 }

@@ -1,0 +1,5 @@
+build.sh
+pkg/.gitignore
+pkg/package.json
+pkg/README.md
+pkg/*.d.ts

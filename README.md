@@ -6,6 +6,24 @@
 
 For running this project a working Rust environment is necessary. To install rust consider following [this guide](https://doc.rust-lang.org/book/ch01-01-installation.html).
 
+## Web tryout (doesitsat)
+
+The solver also compiles to WebAssembly. `web/` contains **doesitsat**: a single text box where
+visitors type a propositional formula such as `(a → b) ∧ a ∧ ¬b`. The page parses it, converts it
+to CNF with the Tseitin transformation (`web/logic.js`) and hands the DIMACS text to booly running
+in a Web Worker. It reports *satisfiable* (with an assignment), *always true* or *never true*.
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+./web/build.sh                       # writes web/pkg/
+cd web && python3 -m http.server 8000   # any static file server works; then open http://localhost:8000
+```
+
+`web/` is a plain static site and can be deployed to any static host such as GitLab or GitHub Pages.
+`.wasm` files must be served as `application/wasm`. The browser bindings live in `src/wasm.rs`
+behind the `wasm` cargo feature; the command line tool is behind the default `cli` feature.
+
 ## Usage
 
 **Via Cargo**

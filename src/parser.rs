@@ -1,11 +1,11 @@
 use nom::{
-    Finish, IResult, Parser,
+    IResult, Parser,
     branch::alt,
     bytes::tag,
     character::complete::{char, digit1, line_ending, multispace1, not_line_ending},
     combinator::{map, map_res, opt, value, verify},
     error::Error,
-    multi::{count, many_m_n, many0, many1},
+    multi::{count, many0, many1},
     sequence::{preceded, separated_pair, terminated},
 };
 use std::str::FromStr;
@@ -65,20 +65,26 @@ fn pheader(i: &str) -> IResult<&str, (usize, usize)> {
     Ok((i, (n, m)))
 }
 
-fn pclauses(n: usize, i: &str) -> IResult<&str, Vec<i32>> {
-    terminated(many_m_n(1, n, pvariable), char('0')).parse(i)
+fn pclauses(i: &str) -> IResult<&str, Vec<i32>> {
+    // A clause may repeat variables (e.g. `2 -1 1 0`), so its length is not bounded by the variable count.
+    terminated(many1(pvariable), char('0')).parse(i)
 }
 
 fn pdimacs(i: &str) -> IResult<&str, (Vec<Vec<i32>>, u16, u16)> {
     let (i, _) = many0(peol_comment).parse(i)?;
     let (i, (n, m)) = pheader.parse(i)?;
-    let (i, cs) = count(|i| pclauses(n, i), m).parse(i)?;
+    let (i, cs) = count(pclauses, m).parse(i)?;
 
     Ok((i, (cs, n as u16, m as u16)))
 }
 
 pub fn parse(i: &str) -> Result<(Vec<Vec<i32>>, u16, u16), Error<&str>> {
-    pdimacs(i).finish().map(|t| t.1)
+    match pdimacs(i) {
+        Ok((_, parsed)) => Ok(parsed),
+        Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => Err(e),
+        // Input ended before the announced number of clauses; `finish()` would panic here.
+        Err(nom::Err::Incomplete(_)) => Err(Error::new("", nom::error::ErrorKind::Eof)),
+    }
 }
 
 pub fn parse_cnf(cnf_string: &str) -> Result<CnfFormula, Error<&str>> {

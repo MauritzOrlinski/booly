@@ -1,4 +1,3 @@
-use rand::rand_core::le;
 use rustc_hash::FxHashMap;
 
 use crate::cdcl::assignment::Assignment;

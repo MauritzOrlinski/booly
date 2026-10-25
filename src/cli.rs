@@ -2,10 +2,7 @@ use clap::ValueHint;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
-use crate::cdcl::heuristics::RestartHeuristic;
-use crate::cdcl::heuristics::restart::{
-    FixedIntervalHeuristic, GeometricHeuristic, LubyHeuristic, Never,
-};
+use crate::cdcl::heuristics::{RestartHeuristic, restart_heuristic_by_name};
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
 enum HeuristicCliArgument {
@@ -17,19 +14,13 @@ enum HeuristicCliArgument {
 
 impl HeuristicCliArgument {
     fn get(&self) -> Box<dyn RestartHeuristic> {
-        match self {
-            HeuristicCliArgument::Never => Box::new(Never {}),
-            HeuristicCliArgument::FixedInterval => Box::new(FixedIntervalHeuristic {
-                fixed_restart_policy: 700,
-                max_restarts: 10,
-            }),
-            HeuristicCliArgument::Geometric => Box::new(GeometricHeuristic {
-                max_restarts: 10,
-                threshold: 400,
-                factor: 1.5,
-            }),
-            HeuristicCliArgument::Luby => Box::new(LubyHeuristic::new(10)),
-        }
+        let name = match self {
+            HeuristicCliArgument::Never => "never",
+            HeuristicCliArgument::FixedInterval => "fixed-interval",
+            HeuristicCliArgument::Geometric => "geometric",
+            HeuristicCliArgument::Luby => "luby",
+        };
+        restart_heuristic_by_name(name).unwrap()
     }
 }
 

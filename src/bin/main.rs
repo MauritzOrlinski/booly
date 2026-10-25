@@ -17,7 +17,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 fn main() {
     let cli = CliArguments::parse();
     let proof_logger = if cli.get_proof_logging() {
-        ProofLogger::create("proof.drat").ok()
+        ProofLogger::create_boxed("proof.drat").ok()
     } else {
         None
     };

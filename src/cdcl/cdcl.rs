@@ -9,7 +9,7 @@ use crate::proof_logger::{ProofClause, ProofLogger};
 use priority_queue::PriorityQueue;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::VecDeque;
-use std::fs::File;
+use std::io::Write;
 
 pub const CLAUSES_INITIAL_LIMIT: usize = 2000;
 pub const CLAUSES_LIMIT_STEP_SIZE: usize = 100;
@@ -44,7 +44,7 @@ pub struct Cdcl {
     pub(crate) clauses_limit: usize,
     pub(crate) enable_phase_saving: bool,
     pub(crate) phase: Vec<Option<bool>>,
-    pub(crate) proof_logger: Option<ProofLogger<File>>,
+    pub(crate) proof_logger: Option<ProofLogger<Box<dyn Write>>>,
 }
 
 fn lit_index(lit: i32) -> usize {
@@ -60,7 +60,7 @@ impl Cdcl {
         cnf_formula: CnfFormula,
         enable_phase_saving: bool,
         restart_heuristic: Box<dyn RestartHeuristic>,
-        proof_logger: Option<ProofLogger<File>>,
+        proof_logger: Option<ProofLogger<Box<dyn Write>>>,
     ) -> Cdcl {
         Cdcl {
             unit_queue: cnf_formula.generate_unit_queue(),

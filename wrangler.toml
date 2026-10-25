@@ -1,0 +1,16 @@
+# Cloudflare deployment of the doesitsat tryout (static assets only, no server code).
+# Deploy:  ./web/build.sh && npx wrangler deploy
+name = "doesitsat"
+compatibility_date = "2025-10-01"
+
+# The zone doesitsat.com must be on Cloudflare; Wrangler creates the DNS records
+# and certificates for both hostnames automatically. (Must stay above [assets].)
+routes = [
+  { pattern = "doesitsat.com", custom_domain = true },
+  { pattern = "www.doesitsat.com", custom_domain = true }
+]
+
+[assets]
+directory = "./web"
+# Serve index.html for unknown paths instead of a 404 page.
+not_found_handling = "single-page-application"

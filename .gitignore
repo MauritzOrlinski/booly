@@ -8,3 +8,5 @@ plot.png
 plot/data/*.csv
 model.json
 proof.drat
+/web/pkg
+/.wrangler
