@@ -2,6 +2,8 @@
 
 > A conflict driven clause learning (CDCL) SAT Solver written in Rust.
 
+Try it out in our web-assembly based live demo on [doesitsat.com/](https://doesitsat.com/)
+
 ## Requirements
 
 For running this project a working Rust environment is necessary. To install rust consider following [this guide](https://doc.rust-lang.org/book/ch01-01-installation.html).
